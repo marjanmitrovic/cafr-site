@@ -17,20 +17,34 @@
   }
 
   .dashboard-sidebar {
-    position: relative !important;
-    top: auto !important;
+    position: sticky !important;
+    top: 0 !important;
     left: auto !important;
     width: 100% !important;
     max-width: 100% !important;
     height: auto !important;
     min-height: 0 !important;
-    padding: 18px 14px 14px !important;
+    padding: 12px 14px !important;
     border-right: 0 !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-    z-index: 2;
+    z-index: 30;
   }
 
-  .dashboard-brand {
+  .dashboard-mobile-top {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .dashboard-sidebar > .dashboard-brand {
+    display: none !important;
+  }
+
+  .dashboard-mobile-top .dashboard-brand {
+    display: inline-flex !important;
+    min-width: 0;
     font-size: 20px !important;
   }
 
@@ -39,40 +53,66 @@
     height: 46px !important;
   }
 
+  .dashboard-mobile-menu-btn,
+  .dashboard-mobile-logout {
+    border: 0;
+    border-radius: 999px;
+    min-height: 42px;
+    padding: 10px 13px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 850;
+    white-space: nowrap;
+  }
+
+  .dashboard-mobile-menu-btn {
+    background: #ffffff;
+    color: #0e253f;
+  }
+
+  .dashboard-mobile-logout {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    margin: 0 !important;
+    width: auto !important;
+    background: #dc1f2d !important;
+    color: #ffffff !important;
+  }
+
+  .dashboard-sidebar > .dashboard-logout {
+    display: none !important;
+  }
+
   .dashboard-nav {
-    display: flex !important;
-    flex-direction: row !important;
+    display: none !important;
+    grid-template-columns: 1fr !important;
     gap: 8px !important;
-    margin-top: 18px !important;
-    padding-bottom: 10px !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    white-space: nowrap !important;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
+    margin-top: 12px !important;
+    padding: 12px 0 2px !important;
+    overflow: visible !important;
+    white-space: normal !important;
+  }
+
+  .dashboard-sidebar.dashboard-menu-open .dashboard-nav {
+    display: grid !important;
   }
 
   .dashboard-nav button,
-  .dashboard-nav .dashboard-external-link,
-  .dashboard-logout {
-    flex: 0 0 auto !important;
-    display: inline-flex !important;
+  .dashboard-nav .dashboard-external-link {
+    flex: none !important;
+    display: flex !important;
     align-items: center !important;
-    justify-content: center !important;
+    justify-content: space-between !important;
     gap: 8px !important;
-    min-height: 42px !important;
-    width: auto !important;
-    max-width: none !important;
-    padding: 10px 14px !important;
-    border-radius: 999px !important;
+    min-height: 44px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 11px 14px !important;
+    border-radius: 12px !important;
     font-size: 14px !important;
     line-height: 1.2 !important;
-    text-align: center !important;
-  }
-
-  .dashboard-logout {
-    margin-top: 12px !important;
-    width: 100% !important;
+    text-align: left !important;
   }
 
   .notification-badge {
@@ -171,6 +211,14 @@
   }
 }
 
+@media (min-width: 981px) {
+  .dashboard-mobile-top,
+  .dashboard-mobile-menu-btn,
+  .dashboard-mobile-logout {
+    display: none !important;
+  }
+}
+
 .dashboard-nav .dashboard-external-link {
   border: 0;
   background: rgba(255, 255, 255, 0.08);
@@ -205,9 +253,19 @@
     border-radius: 18px !important;
   }
 
+  .dashboard-mobile-top {
+    grid-template-columns: 1fr auto;
+  }
+
+  .dashboard-mobile-logout {
+    grid-column: 1 / -1;
+    width: 100% !important;
+  }
+
   .dashboard-nav button,
   .dashboard-nav .dashboard-external-link,
-  .dashboard-logout {
+  .dashboard-mobile-menu-btn,
+  .dashboard-mobile-logout {
     font-size: 13px !important;
     padding: 9px 12px !important;
   }
