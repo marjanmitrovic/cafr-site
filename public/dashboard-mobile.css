@@ -53,6 +53,7 @@
   }
 
   .dashboard-nav button,
+  .dashboard-nav .dashboard-external-link,
   .dashboard-logout {
     flex: 0 0 auto !important;
     display: inline-flex !important;
@@ -170,6 +171,24 @@
   }
 }
 
+.dashboard-nav .dashboard-external-link {
+  border: 0;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  padding: 13px 15px;
+  border-radius: 12px;
+  text-align: left;
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.dashboard-nav .dashboard-external-link:hover {
+  background: #ffffff;
+  color: #0e253f;
+}
+
 @media (max-width: 420px) {
   .dashboard-sidebar {
     padding-left: 10px !important;
@@ -187,6 +206,7 @@
   }
 
   .dashboard-nav button,
+  .dashboard-nav .dashboard-external-link,
   .dashboard-logout {
     font-size: 13px !important;
     padding: 9px 12px !important;
