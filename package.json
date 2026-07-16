@@ -4,26 +4,20 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-   "dev:web": "vite --host 0.0.0.0",
+  "dev:web": "vite --host 0.0.0.0",
   "dev:api": "node --env-file=.env --watch server/server.js",
   "dev": "concurrently -k \"npm:dev:web\" \"npm:dev:api\"",
   "build": "vite build",
- 
-  
+  "db:generate": "prisma generate --config ./prisma.config.ts",
+  "db:push": "prisma db push --config ./prisma.config.ts",
+  "db:seed": "node --env-file=.env prisma/seed.js",
   "start:production": "node server/server.js",
-    
-   
     "preview": "vite preview --host 0.0.0.0",
-    "dev:web": "vite --host 0.0.0.0",
-    
+   
     "start:api": "node --env-file=.env server/server.js",
-    "db:generate": "prisma generate --config ./prisma.config.ts",
-     "db:push": "prisma db push --config ./prisma.config.ts",
-
-    "db:seed": "node --env-file=.env prisma/seed.js",
-    "db:studio": "node --env-file=.env ./node_modules/prisma/build/index.js studio --config ./prisma.config.ts",
-    "start": "node server/server.js",
     
+    "db:studio": "node --env-file=.env ./node_modules/prisma/build/index.js studio --config ./prisma.config.ts",
+   
     "render:build": "npm run db:generate && npm run build"
   },
   "devDependencies": {
