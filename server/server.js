@@ -217,6 +217,13 @@ app.get('/api/health', async (_req, res) => {
     res.status(503).json({ ok: false, service: 'cafr-api', database: 'unavailable', error: error.message });
   }
 });
+app.get('/api/debug-origin', (_req, res) => {
+  res.json({
+    WEB_ORIGIN,
+    env_WEB_ORIGIN: process.env.WEB_ORIGIN || null,
+    NODE_ENV: process.env.NODE_ENV || null
+  });
+});
 
 if (process.env.NODE_ENV !== 'production') {
   app.get('/api/test-email', async (request, response) => {
