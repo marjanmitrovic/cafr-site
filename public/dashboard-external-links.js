@@ -1,24 +1,26 @@
 (() => {
-  function addInternalTestLink() {
+  function addFotbaltestyLink() {
     const nav = document.querySelector('.dashboard-nav');
     if (!nav) return false;
 
-    if (document.getElementById('cafr-tests-link')) return true;
+    if (document.getElementById('fotbaltesty-link')) return true;
 
     const link = document.createElement('a');
-    link.id = 'cafr-tests-link';
-    link.className = 'dashboard-external-link dashboard-internal-test-link';
-    link.href = '/#tests';
-    link.title = 'Otevřít testy v aplikaci ČAFR';
-    link.textContent = 'Fotbaltesty';
+    link.id = 'fotbaltesty-link';
+    link.className = 'dashboard-external-link dashboard-fotbaltesty-link';
+    link.href = 'https://fotbaltesty.22web.org';
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.title = 'Otevřít aplikaci Fotbaltesty';
+    link.textContent = 'Fotbaltesty ↗';
     nav.insertBefore(link, nav.children[3] || null);
 
     return true;
   }
 
-  if (!addInternalTestLink()) {
+  if (!addFotbaltestyLink()) {
     const observer = new MutationObserver(() => {
-      if (addInternalTestLink()) observer.disconnect();
+      if (addFotbaltestyLink()) observer.disconnect();
     });
 
     observer.observe(document.body, {
