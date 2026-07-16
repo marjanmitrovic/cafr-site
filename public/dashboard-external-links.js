@@ -1,36 +1,24 @@
 (() => {
-  const links = [
-    {
-      id: 'facr-tests-link',
-      href: 'https://vzdelavani.fotbal.cz/static/home',
-      label: 'FAČR testy ↗',
-      title: 'Otevřít oficiální E-vzdělávání FAČR a testy z pravidel fotbalu'
-    }
-  ];
-
-  function addExternalLinks() {
+  function addInternalTestLink() {
     const nav = document.querySelector('.dashboard-nav');
     if (!nav) return false;
 
-    for (const item of links) {
-      if (document.getElementById(item.id)) continue;
-      const link = document.createElement('a');
-      link.id = item.id;
-      link.className = 'dashboard-external-link';
-      link.href = item.href;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      link.title = item.title;
-      link.textContent = item.label;
-      nav.appendChild(link);
-    }
+    if (document.getElementById('cafr-tests-link')) return true;
+
+    const link = document.createElement('a');
+    link.id = 'cafr-tests-link';
+    link.className = 'dashboard-external-link dashboard-internal-test-link';
+    link.href = '/#tests';
+    link.title = 'Otevřít testy v aplikaci ČAFR';
+    link.textContent = 'Fotbaltesty';
+    nav.insertBefore(link, nav.children[3] || null);
 
     return true;
   }
 
-  if (!addExternalLinks()) {
+  if (!addInternalTestLink()) {
     const observer = new MutationObserver(() => {
-      if (addExternalLinks()) observer.disconnect();
+      if (addInternalTestLink()) observer.disconnect();
     });
 
     observer.observe(document.body, {
