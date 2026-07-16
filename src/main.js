@@ -2,7 +2,12 @@ import './style.css';
 
 const API_BASE =
   localStorage.getItem('cafr-api-base') ||
-  'http://localhost:3001';
+  (
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1'
+      ? 'http://localhost:3001'
+      : window.location.origin
+  );
 
 let lang = localStorage.getItem('cafr-lang') || 'cs';
 let adminToken =

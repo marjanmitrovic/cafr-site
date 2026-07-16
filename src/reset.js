@@ -1,6 +1,13 @@
 import './style.css';
 
-const API_BASE = localStorage.getItem('cafr-api-base') || 'http://localhost:3001';
+const API_BASE =
+  localStorage.getItem('cafr-api-base') ||
+  (
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1'
+      ? 'http://localhost:3001'
+      : window.location.origin
+  );
 const app = document.querySelector('#app');
 const token = new URLSearchParams(window.location.search).get('token') || '';
 
