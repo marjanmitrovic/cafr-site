@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: cafr-site
+    env: node
+    plan: free
+    buildCommand: npm install --no-audit --no-fund && npm run render:build
+    startCommand: npm run start:production
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: TOKEN_SECRET
+        sync: false
+      - key: ADMIN_EMAIL
+        value: admin@cafr.cz
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: WEB_ORIGIN
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: ADMIN_NOTIFY_EMAIL
+        value: marjan.posao@gmail.com
+      - key: EMAIL_DISABLED
+        value: "false"

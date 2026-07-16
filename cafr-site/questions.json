@@ -1,0 +1,314 @@
+[
+  {
+    "id": 1,
+    "category": "Pravidlo 5",
+    "difficulty": "basic",
+    "cs": {
+      "q": "Může rozhodčí změnit své rozhodnutí po navázání hry?",
+      "a": [
+        "Ano, kdykoli během utkání",
+        "Ne, pokud již byla hra navázána nebo utkání ukončeno",
+        "Ano, pouze na žádost kapitána",
+        "Ano, pokud souhlasí oba týmy"
+      ],
+      "e": "Po navázání hry již rozhodčí předchozí rozhodnutí měnit nemůže, s výjimkou postupů výslovně stanovených pravidly."
+    },
+    "en": {
+      "q": "May the referee change a decision after play has restarted?",
+      "a": [
+        "Yes, at any time",
+        "No, once play has restarted or the match has ended",
+        "Yes, if the captain asks",
+        "Yes, if both teams agree"
+      ],
+      "e": "Once play has restarted, the referee may not change the previous decision except where the Laws expressly provide otherwise."
+    },
+    "correct": 1
+  },
+  {
+    "id": 2,
+    "category": "Pravidlo 12",
+    "difficulty": "basic",
+    "cs": {
+      "q": "Jak se trestá nebezpečná hra bez kontaktu se soupeřem?",
+      "a": [
+        "Přímým volným kopem",
+        "Nepřímým volným kopem",
+        "Míčem rozhodčího",
+        "Vždy pokutovým kopem"
+      ],
+      "e": "Nebezpečná hra bez kontaktu je přestupkem trestaným nepřímým volným kopem."
+    },
+    "en": {
+      "q": "How is dangerous play without contact punished?",
+      "a": [
+        "Direct free kick",
+        "Indirect free kick",
+        "Dropped ball",
+        "Always a penalty kick"
+      ],
+      "e": "Dangerous play without contact is punished by an indirect free kick."
+    },
+    "correct": 1
+  },
+  {
+    "id": 3,
+    "category": "Pravidlo 11",
+    "difficulty": "basic",
+    "cs": {
+      "q": "Je hráč v ofsajdové pozici přestupkem automaticky?",
+      "a": [
+        "Ano, vždy",
+        "Ne, pouze pokud se aktivně zapojí do hry",
+        "Ano, pokud je za polovinou hřiště",
+        "Ne, ofsajd se již netrestá"
+      ],
+      "e": "Samotná ofsajdová pozice není přestupkem. Trestá se až aktivní zapojení podle Pravidla 11."
+    },
+    "en": {
+      "q": "Is being in an offside position automatically an offence?",
+      "a": [
+        "Yes, always",
+        "No, only when the player becomes actively involved",
+        "Yes, whenever beyond halfway",
+        "No, offside is no longer punished"
+      ],
+      "e": "An offside position alone is not an offence. It is punished only when the player becomes actively involved."
+    },
+    "correct": 1
+  },
+  {
+    "id": 4,
+    "category": "Pravidlo 8",
+    "difficulty": "basic",
+    "cs": {
+      "q": "Kdy je míč při výkopu ve hře?",
+      "a": [
+        "Když se pohne jakýmkoli směrem po kopnutí",
+        "Až opustí středový kruh",
+        "Po druhém doteku",
+        "Po signálu asistenta"
+      ],
+      "e": "Při výkopu je míč ve hře, když je kopnut a zjevně se pohne."
+    },
+    "en": {
+      "q": "When is the ball in play at a kick-off?",
+      "a": [
+        "When it is kicked and clearly moves",
+        "When it leaves the centre circle",
+        "After a second touch",
+        "After the assistant referee signals"
+      ],
+      "e": "At kick-off, the ball is in play when it is kicked and clearly moves."
+    },
+    "correct": 0
+  },
+  {
+    "id": 5,
+    "category": "Pravidlo 14",
+    "difficulty": "medium",
+    "cs": {
+      "q": "Brankář se při pokutovém kopu pohne předčasně, ale střelec branku mine. Co je rozhodující?",
+      "a": [
+        "Kop se vždy opakuje",
+        "Zda pohyb brankáře zjevně ovlivnil střelce",
+        "Vždy se nařídí nepřímý kop",
+        "Brankář je vždy vyloučen"
+      ],
+      "e": "Při posouzení se zohledňuje, zda předčasný pohyb brankáře měl na neúspěšné provedení zjevný vliv."
+    },
+    "en": {
+      "q": "The goalkeeper moves early at a penalty kick and the kicker misses. What is decisive?",
+      "a": [
+        "The kick is always retaken",
+        "Whether the goalkeeper clearly affected the kicker",
+        "An indirect free kick is always awarded",
+        "The goalkeeper is always sent off"
+      ],
+      "e": "The referee considers whether the goalkeeper’s early movement clearly affected the unsuccessful kick."
+    },
+    "correct": 1
+  },
+  {
+    "id": 6,
+    "category": "Pravidlo 3",
+    "difficulty": "medium",
+    "cs": {
+      "q": "Náhradník vstoupí bez dovolení na hrací plochu a ovlivní hru. Jak se hra naváže?",
+      "a": [
+        "Míčem rozhodčího",
+        "Nepřímým volným kopem",
+        "Přímým volným kopem nebo pokutovým kopem z místa ovlivnění",
+        "Vhazováním"
+      ],
+      "e": "Pokud náhradník bez dovolení ovlivní hru, navazuje se přímým volným kopem nebo pokutovým kopem z místa ovlivnění."
+    },
+    "en": {
+      "q": "A substitute enters without permission and interferes with play. How is play restarted?",
+      "a": [
+        "Dropped ball",
+        "Indirect free kick",
+        "Direct free kick or penalty kick from the place of interference",
+        "Throw-in"
+      ],
+      "e": "If a substitute enters without permission and interferes, play restarts with a direct free kick or penalty kick from the place of interference."
+    },
+    "correct": 2
+  },
+  {
+    "id": 7,
+    "category": "Pravidlo 4",
+    "difficulty": "basic",
+    "cs": {
+      "q": "Co musí rozhodčí udělat, zjistí-li, že hráč má nebezpečný šperk?",
+      "a": [
+        "Povolit jej, pokud je přelepený",
+        "Nařídit hráči, aby jej odstranil",
+        "Vždy hráče vyloučit",
+        "Ignorovat jej do poločasu"
+      ],
+      "e": "Šperky jsou zakázané a nelze je bezpečně řešit pouhým přelepením. Hráč je musí odstranit."
+    },
+    "en": {
+      "q": "What must the referee do if a player is wearing dangerous jewellery?",
+      "a": [
+        "Allow it if taped",
+        "Order the player to remove it",
+        "Always send the player off",
+        "Ignore it until half-time"
+      ],
+      "e": "Jewellery is prohibited and may not simply be covered with tape; it must be removed."
+    },
+    "correct": 1
+  },
+  {
+    "id": 8,
+    "category": "Pravidlo 9",
+    "difficulty": "basic",
+    "cs": {
+      "q": "Kdy je míč ze hry?",
+      "a": [
+        "Když rozhodčí zvedne ruku",
+        "Když zcela přejde pomezní nebo brankovou čáru, nebo rozhodčí hru přeruší",
+        "Když se dotkne rozhodčího",
+        "Když hráči přestanou hrát"
+      ],
+      "e": "Míč je ze hry, když zcela přejde čáru nebo když rozhodčí hru přeruší."
+    },
+    "en": {
+      "q": "When is the ball out of play?",
+      "a": [
+        "When the referee raises an arm",
+        "When it wholly crosses a touchline or goal line, or play is stopped by the referee",
+        "Whenever it touches the referee",
+        "When players stop playing"
+      ],
+      "e": "The ball is out of play when it wholly crosses a boundary line or the referee stops play."
+    },
+    "correct": 1
+  },
+  {
+    "id": 9,
+    "category": "Pravidlo 13",
+    "difficulty": "medium",
+    "cs": {
+      "q": "Hráč provede volný kop a znovu zahraje míč dříve, než se jej dotkne jiný hráč. Jaký je restart?",
+      "a": [
+        "Přímý volný kop soupeře",
+        "Nepřímý volný kop soupeře, pokud druhý dotek není samostatným přestupkem rukou",
+        "Opakování kopu",
+        "Míč rozhodčího"
+      ],
+      "e": "Za druhý dotek se běžně nařizuje nepřímý volný kop; úmyslné hraní rukou se posuzuje samostatně."
+    },
+    "en": {
+      "q": "A player takes a free kick and touches the ball again before another player touches it. What is the restart?",
+      "a": [
+        "Direct free kick to the opponents",
+        "Indirect free kick, unless the second touch is a separate handball offence",
+        "Retake",
+        "Dropped ball"
+      ],
+      "e": "A second touch is normally punished by an indirect free kick; deliberate handball is judged separately."
+    },
+    "correct": 1
+  },
+  {
+    "id": 10,
+    "category": "Pravidlo 15",
+    "difficulty": "basic",
+    "cs": {
+      "q": "Musí být při vhazování část obou chodidel na pomezní čáře nebo mimo hrací plochu?",
+      "a": [
+        "Ano",
+        "Ne, stačí jedno chodidlo",
+        "Pouze u dlouhého vhazování",
+        "Rozhoduje kapitán"
+      ],
+      "e": "Při správném vhazování musí mít hráč část obou chodidel na pomezní čáře nebo na zemi mimo hrací plochu."
+    },
+    "en": {
+      "q": "At a throw-in, must part of each foot be on the touchline or on the ground outside the field?",
+      "a": [
+        "Yes",
+        "No, one foot is enough",
+        "Only for a long throw",
+        "The captain decides"
+      ],
+      "e": "For a correct throw-in, part of each foot must be on the touchline or on the ground outside the field."
+    },
+    "correct": 0
+  },
+  {
+    "id": 11,
+    "category": "Komunikace",
+    "difficulty": "medium",
+    "cs": {
+      "q": "Jaký je nejvhodnější první krok při narůstajícím napětí mezi hráči?",
+      "a": [
+        "Okamžitě ukončit utkání",
+        "Včasná, klidná a jasná preventivní komunikace",
+        "Ignorovat situaci",
+        "Diskutovat pouze s diváky"
+      ],
+      "e": "Včasná preventivní komunikace může konflikt zklidnit dříve, než bude nutný disciplinární zásah."
+    },
+    "en": {
+      "q": "What is the best first step when tension between players is rising?",
+      "a": [
+        "Abandon the match immediately",
+        "Early, calm and clear preventive communication",
+        "Ignore the situation",
+        "Discuss it only with spectators"
+      ],
+      "e": "Early preventive communication can calm a conflict before disciplinary action becomes necessary."
+    },
+    "correct": 1
+  },
+  {
+    "id": 12,
+    "category": "Bezpečnost",
+    "difficulty": "medium",
+    "cs": {
+      "q": "Co má rozhodčí po závažném incidentu udělat jako jednu z prvních administrativních věcí?",
+      "a": [
+        "Smazat vlastní poznámky",
+        "Co nejpřesněji zaznamenat čas, osoby, průběh a dostupné důkazy",
+        "Zveřejnit jména na sociální síti",
+        "Čekat několik týdnů"
+      ],
+      "e": "Přesný a včasný záznam okolností a důkazů je zásadní pro další postup."
+    },
+    "en": {
+      "q": "What should a referee do as one of the first administrative steps after a serious incident?",
+      "a": [
+        "Delete personal notes",
+        "Record the time, persons, events and available evidence as accurately as possible",
+        "Publish names on social media",
+        "Wait several weeks"
+      ],
+      "e": "An accurate and timely record of circumstances and evidence is essential for follow-up."
+    },
+    "correct": 1
+  }
+]

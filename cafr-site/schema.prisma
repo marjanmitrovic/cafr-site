@@ -1,0 +1,466 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  MEMBER
+  LECTURER
+  QUESTION_EDITOR
+  ADMIN
+  BOARD
+}
+
+enum MembershipStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum IncidentStatus {
+  NEW
+  IN_REVIEW
+  CONTACTED
+  RESOLVED
+  CLOSED
+}
+
+enum IncidentUrgency {
+  NORMAL
+  HIGH
+  CRITICAL
+}
+
+enum QuestionStatus {
+  DRAFT
+  REVIEW
+  APPROVED
+  ARCHIVED
+}
+
+enum TestType {
+  PRACTICE
+  EXAM
+  VIDEO
+  OFFICIAL
+}
+
+
+enum SeminarStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+  COMPLETED
+}
+
+enum SeminarRegistrationStatus {
+  REGISTERED
+  CANCELLED
+  ATTENDED
+}
+
+enum MembershipFeeStatus {
+  PENDING
+  PAID
+  OVERDUE
+  WAIVED
+}
+
+enum LegalRequestStatus {
+  NEW
+  IN_REVIEW
+  NEEDS_INFO
+  ANSWERED
+  CLOSED
+}
+
+enum LegalRequestUrgency {
+  NORMAL
+  HIGH
+  URGENT
+}
+
+
+enum DocumentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum DocumentVisibility {
+  PUBLIC
+  MEMBERS
+  APPROVED_MEMBERS
+  ADMIN_ONLY
+}
+
+model User {
+  id               String           @id @default(cuid())
+  email            String           @unique
+  passwordHash     String
+  firstName        String
+  lastName         String
+  phone            String?
+  region           String?
+  refereeStatus    String?
+  role             UserRole         @default(MEMBER)
+  membershipStatus MembershipStatus @default(PENDING)
+  language         String           @default("cs")
+  isActive         Boolean          @default(true)
+  approvedAt       DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  questions      Question[]
+  attempts       Attempt[]
+  incidents      Incident[]
+  incidentEvents IncidentEvent[]
+  notifications  Notification[]
+  passwordResetTokens PasswordResetToken[]
+  seminarRegistrations SeminarRegistration[]
+  seminarsCreated Seminar[] @relation("SeminarCreatedBy")
+  membershipFees MembershipFee[]
+  legalRequests LegalRequest[]
+  documentsCreated Document[] @relation("DocumentCreatedBy")
+}
+
+model Category {
+  id       String  @id @default(cuid())
+  nameCs   String
+  nameEn   String
+  slug     String  @unique
+  order    Int     @default(0)
+  isActive Boolean @default(true)
+
+  questions Question[]
+}
+
+model Question {
+  id            String         @id @default(cuid())
+  legacyId      Int?           @unique
+  categoryId    String
+  textCs        String
+  textEn        String
+  explanationCs String?
+  explanationEn String?
+  difficulty    String         @default("basic")
+  source        String?
+  ruleReference String?
+  status        QuestionStatus @default(APPROVED)
+  isActive      Boolean        @default(true)
+  createdById   String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  category      Category         @relation(fields: [categoryId], references: [id])
+  createdBy     User?            @relation(fields: [createdById], references: [id])
+  options       QuestionOption[]
+  testQuestions TestQuestion[]
+  answers       AttemptAnswer[]
+
+  @@index([categoryId])
+  @@index([status, isActive])
+}
+
+model QuestionOption {
+  id         String  @id @default(cuid())
+  questionId String
+  textCs     String
+  textEn     String
+  isCorrect  Boolean @default(false)
+  position   Int
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, position])
+  @@index([questionId])
+}
+
+model Test {
+  id               String   @id @default(cuid())
+  slug             String   @unique
+  titleCs          String
+  titleEn          String
+  type             TestType
+  questionCount    Int
+  timeLimitMinutes Int?
+  passingScore     Int?
+  isPublic         Boolean  @default(false)
+  isActive         Boolean  @default(true)
+  availableFrom    DateTime?
+  availableUntil   DateTime?
+  createdAt        DateTime @default(now())
+
+  questions TestQuestion[]
+  attempts  Attempt[]
+}
+
+model TestQuestion {
+  testId     String
+  questionId String
+  position   Int?
+
+  test     Test     @relation(fields: [testId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@id([testId, questionId])
+  @@index([questionId])
+}
+
+model Attempt {
+  id              String   @id @default(cuid())
+  userId          String?
+  guestKey        String?
+  testId          String
+  mode            String
+  score           Float
+  correctAnswers  Int
+  totalQuestions  Int
+  durationSeconds Int
+  passed          Boolean?
+  startedAt       DateTime
+  finishedAt      DateTime @default(now())
+
+  user    User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  test    Test            @relation(fields: [testId], references: [id])
+  answers AttemptAnswer[]
+
+  @@index([userId])
+  @@index([guestKey])
+  @@index([testId])
+  @@index([finishedAt])
+}
+
+model AttemptAnswer {
+  id               String   @id @default(cuid())
+  attemptId        String
+  questionId       String
+  selectedOptionId String?
+  isCorrect        Boolean
+  answeredAt       DateTime @default(now())
+
+  attempt  Attempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id])
+
+  @@index([attemptId])
+  @@index([questionId])
+}
+
+
+model Incident {
+  id                String          @id @default(cuid())
+  userId            String
+  incidentDate      DateTime
+  matchInfo         String
+  competition       String?
+  location          String?
+  incidentType      String
+  description       String
+  urgency           IncidentUrgency @default(NORMAL)
+  contactPreference String?
+  status            IncidentStatus  @default(NEW)
+  adminNote         String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  events      IncidentEvent[]
+  attachments IncidentAttachment[]
+
+  @@index([userId])
+  @@index([status, createdAt])
+}
+
+
+model IncidentEvent {
+  id         String   @id @default(cuid())
+  incidentId String
+  actorId    String?
+  type       String
+  message    String?
+  oldStatus  IncidentStatus?
+  newStatus  IncidentStatus?
+  createdAt  DateTime @default(now())
+
+  incident Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  actor    User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([incidentId, createdAt])
+  @@index([actorId])
+}
+
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  message   String
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead, createdAt])
+}
+
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+}
+
+
+model Seminar {
+  id          String        @id @default(cuid())
+  titleCs     String
+  titleEn     String
+  descriptionCs String?
+  descriptionEn String?
+  location    String
+  startsAt    DateTime
+  endsAt      DateTime
+  capacity    Int?
+  status      SeminarStatus @default(DRAFT)
+  createdById String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  createdBy    User?                 @relation("SeminarCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  registrations SeminarRegistration[]
+
+  @@index([status, startsAt])
+}
+
+model SeminarRegistration {
+  id        String                      @id @default(cuid())
+  seminarId String
+  userId    String
+  status    SeminarRegistrationStatus   @default(REGISTERED)
+  createdAt DateTime                    @default(now())
+  updatedAt DateTime                    @updatedAt
+
+  seminar Seminar @relation(fields: [seminarId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([seminarId, userId])
+  @@index([userId, status])
+}
+
+
+model LegalRequest {
+  id          String              @id @default(cuid())
+  userId      String
+  subject     String
+  category    String
+  description String
+  urgency     LegalRequestUrgency @default(NORMAL)
+  status      LegalRequestStatus  @default(NEW)
+  adminReply  String?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  user        User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  attachments LegalRequestAttachment[]
+
+  @@index([userId, createdAt])
+  @@index([status, urgency, createdAt])
+}
+
+model IncidentAttachment {
+  id          String   @id @default(cuid())
+  incidentId  String
+  fileName    String
+  fileUrl     String
+  mimeType    String
+  sizeBytes   Int
+  createdAt   DateTime @default(now())
+
+  incident Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  @@index([incidentId])
+}
+
+model LegalRequestAttachment {
+  id             String   @id @default(cuid())
+  legalRequestId String
+  fileName       String
+  fileUrl        String
+  mimeType       String
+  sizeBytes      Int
+  createdAt      DateTime @default(now())
+
+  legalRequest LegalRequest @relation(fields: [legalRequestId], references: [id], onDelete: Cascade)
+
+  @@index([legalRequestId])
+}
+
+model MembershipFee {
+  id        String              @id @default(cuid())
+  userId    String
+  year      Int
+  amountCzk Int
+  dueDate   DateTime
+  status    MembershipFeeStatus @default(PENDING)
+  paidAt    DateTime?
+  note      String?
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, year])
+  @@index([year, status])
+  @@index([userId, year])
+}
+
+
+model EmailLog {
+  id        String   @id @default(cuid())
+  to        String
+  subject   String
+  type      String?
+  status    String   @default("PENDING")
+  provider  String?
+  providerId String?
+  error     String?
+  userId    String?
+  createdAt DateTime @default(now())
+
+  @@index([status, createdAt])
+  @@index([userId, createdAt])
+}
+
+
+model Document {
+  id          String             @id @default(cuid())
+  titleCs     String
+  titleEn     String
+  descriptionCs String?
+  descriptionEn String?
+  category    String             @default("GENERAL")
+  url         String
+  visibility  DocumentVisibility @default(APPROVED_MEMBERS)
+  status      DocumentStatus     @default(PUBLISHED)
+  createdById String?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  createdBy User? @relation("DocumentCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([status, visibility, category])
+  @@index([createdAt])
+}
