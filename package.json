@@ -15,7 +15,7 @@
     "db:seed": "node --env-file=.env prisma/seed.js",
     "db:studio": "node --env-file=.env ./node_modules/prisma/build/index.js studio --config ./prisma.config.ts",
     "start": "node server/server.js",
-    "start:production": "NODE_ENV=production node server/server.js",
+    "start:production": "node --env-file=.env server/server.js",
     "render:build": "npm run db:generate && npm run build"
   },
   "devDependencies": {
