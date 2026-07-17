@@ -1,0 +1,137 @@
+/* Site-wide dark/light theme controls */
+:root {
+  color-scheme: light;
+}
+
+html.theme-dark {
+  color-scheme: dark;
+}
+
+.theme-toggle-btn,
+.site-theme-toggle,
+.dashboard-theme-toggle {
+  border: 0;
+  border-radius: 999px;
+  min-height: 40px;
+  padding: 9px 13px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 850;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.site-theme-toggle {
+  background: #0c2848;
+  color: #fff;
+}
+
+.dashboard-theme-toggle {
+  background: #fff;
+  color: #0e253f;
+}
+
+html.theme-dark body,
+html.theme-dark .portal-body {
+  background: #07111f !important;
+  color: #e7eef8 !important;
+}
+
+html.theme-dark .topbar,
+html.theme-dark .modal-box,
+html.theme-dark .card,
+html.theme-dark .membership-card,
+html.theme-dark .news article,
+html.theme-dark .quiz-preview,
+html.theme-dark .documents-section,
+html.theme-dark .detail-grid div,
+html.theme-dark .detail-section ul,
+html.theme-dark .membership-rules article,
+html.theme-dark .dashboard-panel,
+html.theme-dark .verify-card,
+html.theme-dark .document-card,
+html.theme-dark .seminar-card,
+html.theme-dark .fee-card,
+html.theme-dark .legal-request-card,
+html.theme-dark .notification-item,
+html.theme-dark .incident-history-item,
+html.theme-dark .admin-member-card,
+html.theme-dark .admin-question,
+html.theme-dark .admin-create,
+html.theme-dark .admin-stats article {
+  background: #0f2036 !important;
+  color: #e7eef8 !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+html.theme-dark .membership,
+html.theme-dark .governance,
+html.theme-dark .education-hub,
+html.theme-dark .detail-section.detail-alt,
+html.theme-dark .protection-detail,
+html.theme-dark .dashboard-main {
+  background: #07111f !important;
+}
+
+html.theme-dark nav a,
+html.theme-dark .brand,
+html.theme-dark .ghost,
+html.theme-dark .section-head h2,
+html.theme-dark .incident h2,
+html.theme-dark .split h2,
+html.theme-dark .membership h2,
+html.theme-dark .media h2,
+html.theme-dark .detail-intro h2,
+html.theme-dark .detail-section h2,
+html.theme-dark h1,
+html.theme-dark h2,
+html.theme-dark h3,
+html.theme-dark h4,
+html.theme-dark strong {
+  color: #f5f8ff !important;
+}
+
+html.theme-dark p,
+html.theme-dark .muted,
+html.theme-dark .section-head p,
+html.theme-dark .split p,
+html.theme-dark .membership p,
+html.theme-dark .news p,
+html.theme-dark .detail-intro p,
+html.theme-dark .detail-section p,
+html.theme-dark .dashboard-panel small,
+html.theme-dark .admin-stats span,
+html.theme-dark .admin-member-main p,
+html.theme-dark .notification-item p,
+html.theme-dark .document-card p,
+html.theme-dark .legal-request-card small {
+  color: #b8c6d8 !important;
+}
+
+html.theme-dark input,
+html.theme-dark select,
+html.theme-dark textarea,
+html.theme-dark .answers button,
+html.theme-dark .test-answers button {
+  background: #071527 !important;
+  color: #edf4ff !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+}
+
+html.theme-dark .topbar nav,
+html.theme-dark nav.open {
+  background: #0f2036 !important;
+}
+
+html.theme-dark .site-theme-toggle {
+  background: #fff !important;
+  color: #07111f !important;
+}
+
+@media (max-width: 1100px) {
+  .site-theme-toggle {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+}
