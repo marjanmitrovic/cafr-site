@@ -31,6 +31,42 @@ html.theme-dark {
   color: #0e253f;
 }
 
+html.theme-light body,
+html.theme-light .portal-body {
+  background: #fff !important;
+  color: #172033 !important;
+}
+
+html.theme-light .test-mode-card,
+html.theme-light .dashboard-panel,
+html.theme-light .card,
+html.theme-light .membership-card,
+html.theme-light .news article,
+html.theme-light .document-card,
+html.theme-light .seminar-card,
+html.theme-light .fee-card,
+html.theme-light .legal-request-card,
+html.theme-light .notification-item,
+html.theme-light .incident-history-item {
+  background: #fff !important;
+  color: #172033 !important;
+}
+
+html.theme-light .test-mode-card h3,
+html.theme-light .dashboard-panel h2,
+html.theme-light .dashboard-panel h3,
+html.theme-light .card h3,
+html.theme-light .news h3 {
+  color: #172033 !important;
+}
+
+html.theme-light .test-mode-card p,
+html.theme-light .dashboard-panel p,
+html.theme-light .card p,
+html.theme-light .news p {
+  color: #647084 !important;
+}
+
 html.theme-dark body,
 html.theme-dark .portal-body {
   background: #07111f !important;
@@ -40,6 +76,7 @@ html.theme-dark .portal-body {
 html.theme-dark .topbar,
 html.theme-dark .modal-box,
 html.theme-dark .card,
+html.theme-dark .test-mode-card,
 html.theme-dark .membership-card,
 html.theme-dark .news article,
 html.theme-dark .quiz-preview,
@@ -62,6 +99,15 @@ html.theme-dark .admin-stats article {
   background: #0f2036 !important;
   color: #e7eef8 !important;
   border-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+html.theme-dark .test-mode-card.featured {
+  border-color: #4da3ff !important;
+}
+
+html.theme-dark .test-mode-icon,
+html.theme-dark .icon {
+  background: #132b49 !important;
 }
 
 html.theme-dark .membership,
@@ -97,6 +143,7 @@ html.theme-dark .section-head p,
 html.theme-dark .split p,
 html.theme-dark .membership p,
 html.theme-dark .news p,
+html.theme-dark .test-mode-card p,
 html.theme-dark .detail-intro p,
 html.theme-dark .detail-section p,
 html.theme-dark .dashboard-panel small,
@@ -120,7 +167,7 @@ html.theme-dark .test-answers button {
 
 html.theme-dark .topbar nav,
 html.theme-dark nav.open {
-  background: #0f2036 !important;
+  background: transparent !important;
 }
 
 html.theme-dark .site-theme-toggle {
