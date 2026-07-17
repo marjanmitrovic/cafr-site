@@ -1,11 +1,27 @@
 (() => {
   const MOBILE_MAX_WIDTH = 980;
+  const AUTO_CLOSE_MS = 4500;
+  let autoCloseTimer = null;
 
   function isMobile() {
     return window.matchMedia(`(max-width: ${MOBILE_MAX_WIDTH}px)`).matches;
   }
 
+  function clearAutoClose() {
+    if (autoCloseTimer) {
+      window.clearTimeout(autoCloseTimer);
+      autoCloseTimer = null;
+    }
+  }
+
+  function scheduleAutoClose(sidebar) {
+    clearAutoClose();
+    if (!isMobile()) return;
+    autoCloseTimer = window.setTimeout(() => closeMenu(sidebar), AUTO_CLOSE_MS);
+  }
+
   function closeMenu(sidebar) {
+    clearAutoClose();
     sidebar.classList.remove('dashboard-menu-open');
     const button = sidebar.querySelector('#dashboardMobileMenuBtn');
     if (button) {
@@ -21,6 +37,7 @@
       button.setAttribute('aria-expanded', 'true');
       button.textContent = '✕ Zavřít';
     }
+    scheduleAutoClose(sidebar);
   }
 
   function enhanceDashboardMenu() {
@@ -57,6 +74,14 @@
     menuButton.addEventListener('click', () => {
       if (sidebar.classList.contains('dashboard-menu-open')) closeMenu(sidebar);
       else openMenu(sidebar);
+    });
+
+    sidebar.addEventListener('touchstart', () => {
+      if (sidebar.classList.contains('dashboard-menu-open')) scheduleAutoClose(sidebar);
+    }, { passive: true });
+
+    sidebar.addEventListener('mousemove', () => {
+      if (sidebar.classList.contains('dashboard-menu-open')) scheduleAutoClose(sidebar);
     });
 
     nav.addEventListener('click', (event) => {
