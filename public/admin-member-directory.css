@@ -1,0 +1,125 @@
+/* Admin-only member directory injected into the administration modal */
+.admin-directory-section {
+  margin-top: 28px;
+}
+
+.admin-directory-toolbar {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+  margin: 14px 0 16px;
+}
+
+.admin-directory-search {
+  width: 100%;
+  border: 1px solid #d9e1ea;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font: inherit;
+}
+
+.admin-directory-export {
+  border: 0;
+  border-radius: 12px;
+  padding: 12px 16px;
+  background: #0c2848;
+  color: #fff;
+  font-weight: 850;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.admin-directory-table-wrap {
+  overflow-x: auto;
+  border: 1px solid #e1e8f0;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.admin-directory-table {
+  width: 100%;
+  min-width: 980px;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.admin-directory-table th,
+.admin-directory-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #edf1f6;
+  text-align: left;
+  vertical-align: top;
+}
+
+.admin-directory-table th {
+  background: #f4f7fb;
+  color: #0c2848;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.admin-directory-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.admin-directory-status {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 850;
+  background: #eef4fa;
+  color: #0c2848;
+}
+
+.admin-directory-status.APPROVED {
+  background: #eaf7ee;
+  color: #166b34;
+}
+
+.admin-directory-status.PENDING {
+  background: #fff6df;
+  color: #8a5a00;
+}
+
+.admin-directory-status.REJECTED,
+.admin-directory-status.SUSPENDED {
+  background: #fff0f1;
+  color: #a8121e;
+}
+
+.admin-directory-note {
+  margin: 8px 0 0;
+  color: #647084;
+  font-size: 13px;
+}
+
+html.theme-dark .admin-directory-table-wrap,
+html.theme-dark .admin-directory-table th,
+html.theme-dark .admin-directory-search {
+  background: #071527 !important;
+  color: #edf4ff !important;
+  border-color: rgba(255,255,255,.16) !important;
+}
+
+html.theme-dark .admin-directory-table td,
+html.theme-dark .admin-directory-table th {
+  border-color: rgba(255,255,255,.12) !important;
+}
+
+html.theme-dark .admin-directory-note {
+  color: #b8c6d8 !important;
+}
+
+@media (max-width: 720px) {
+  .admin-directory-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-directory-export {
+    width: 100%;
+  }
+}
