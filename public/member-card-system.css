@@ -1,0 +1,177 @@
+.cafr-card-workbench {
+  display: grid;
+  gap: 20px;
+}
+
+.cafr-card-preview-shell {
+  width: min(100%, 820px);
+  margin: 0 auto;
+  padding: 14px;
+  border: 1px solid #d9e2ed;
+  border-radius: 22px;
+  background: linear-gradient(145deg, #f7f9fc, #eef3f9);
+  box-shadow: 0 18px 45px rgba(10, 43, 83, 0.12);
+}
+
+.cafr-card-preview-shell svg,
+.cafr-card-preview-shell img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 18px;
+}
+
+.cafr-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.cafr-card-actions button,
+.cafr-card-actions a,
+.admin-card-button {
+  appearance: none;
+  border: 1px solid #0b4ea2;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #0b3f91;
+  padding: 10px 14px;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.cafr-card-actions button:hover,
+.cafr-card-actions a:hover,
+.admin-card-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 7px 18px rgba(11, 78, 162, 0.16);
+  background: #f2f7ff;
+}
+
+.cafr-card-actions .primary-card-action {
+  background: #0b4ea2;
+  color: #ffffff;
+}
+
+.cafr-card-note {
+  margin: 0;
+  text-align: center;
+  color: #667085;
+  font-size: 0.92rem;
+}
+
+.cafr-card-message {
+  min-height: 1.4em;
+  margin: 0;
+  text-align: center;
+  color: #0b4ea2;
+  font-weight: 700;
+}
+
+.cafr-admin-card-cell {
+  white-space: nowrap;
+}
+
+.cafr-admin-card-cell .admin-card-button {
+  padding: 7px 10px;
+  font-size: 0.82rem;
+}
+
+.cafr-card-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(3, 18, 40, 0.74);
+  backdrop-filter: blur(8px);
+}
+
+.cafr-card-modal[hidden] {
+  display: none;
+}
+
+.cafr-card-modal-dialog {
+  width: min(940px, 100%);
+  max-height: calc(100vh - 40px);
+  overflow: auto;
+  border-radius: 24px;
+  background: #ffffff;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.34);
+}
+
+.cafr-card-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 22px;
+  border-bottom: 1px solid #e5eaf1;
+}
+
+.cafr-card-modal-head h2 {
+  margin: 0;
+  color: #102f5b;
+  font-size: 1.25rem;
+}
+
+.cafr-card-modal-close {
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 50%;
+  background: #edf2f8;
+  color: #102f5b;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.cafr-card-modal-body {
+  padding: 22px;
+}
+
+.cafr-card-loading {
+  display: grid;
+  min-height: 280px;
+  place-items: center;
+  color: #667085;
+  font-weight: 700;
+}
+
+@media (max-width: 700px) {
+  .cafr-card-preview-shell {
+    padding: 8px;
+    border-radius: 16px;
+  }
+
+  .cafr-card-preview-shell svg,
+  .cafr-card-preview-shell img {
+    border-radius: 12px;
+  }
+
+  .cafr-card-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cafr-card-actions button,
+  .cafr-card-actions a {
+    width: 100%;
+    text-align: center;
+  }
+
+  .cafr-card-modal-body {
+    padding: 14px;
+  }
+}
+
+@media print {
+  body.cafr-card-printing > *:not(.cafr-card-modal) {
+    display: none !important;
+  }
+}
