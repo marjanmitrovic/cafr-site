@@ -120,7 +120,8 @@
     const member = storedUser();
     if (!member?.id) return;
 
-    oldCard.className = 'cafr-defined-card-host';
+    const isAdministrator = ['ADMIN', 'BOARD', 'QUESTION_EDITOR'].includes(String(member.role || '').toUpperCase());
+    oldCard.className = `cafr-defined-card-host${isAdministrator ? ' cafr-defined-card-host-admin' : ''}`;
     oldCard.dataset.definedCard = 'true';
     oldCard.innerHTML = renderCard(member);
   }
