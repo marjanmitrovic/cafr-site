@@ -231,6 +231,84 @@
   margin-top: 28px;
 }
 
+/* Administrator card: same complete card, only smaller inside the profile modal. */
+.cafr-defined-card-host-admin {
+  max-width: 740px;
+  margin: 18px auto 24px;
+}
+
+.cafr-defined-card-host-admin .cafr-id-card {
+  width: min(100%, 680px);
+  border-radius: 18px;
+  box-shadow: 0 16px 42px rgba(3, 21, 45, 0.24);
+}
+
+.cafr-defined-card-host-admin .cafr-card-phone-note {
+  font-size: .84rem;
+}
+
+/* Keep card data dark and readable even when the website uses dark mode. */
+html.theme-dark .cafr-id-card {
+  background: #ffffff !important;
+  color: #102f5b !important;
+}
+
+html.theme-dark .cafr-id-card .cafr-card-brand strong,
+html.theme-dark .cafr-id-card .cafr-card-brand span {
+  color: #ffffff !important;
+}
+
+html.theme-dark .cafr-id-card .cafr-card-type {
+  color: #0a3979 !important;
+}
+
+html.theme-dark .cafr-id-card .cafr-card-field small {
+  color: #5275a4 !important;
+}
+
+html.theme-dark .cafr-id-card .cafr-card-field strong {
+  color: #102f5b !important;
+}
+
+html.theme-dark .cafr-id-card .cafr-card-status {
+  color: #15803d !important;
+}
+
+html.theme-dark .cafr-id-card .cafr-card-status.is-pending {
+  color: #a76b00 !important;
+}
+
+html.theme-dark .cafr-id-card .cafr-card-status.is-suspended,
+html.theme-dark .cafr-id-card .cafr-card-status.is-invalid {
+  color: #b42318 !important;
+}
+
+html.theme-dark .cafr-id-card .cafr-card-footer {
+  color: #8090a5 !important;
+}
+
+html.theme-dark .cafr-card-phone-note {
+  color: #b8c6d8 !important;
+}
+
+/* Keep administration on a second line so the desktop header does not stretch. */
+@media (min-width: 1101px) {
+  .topbar .actions {
+    max-width: 330px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-content: center;
+    row-gap: 5px;
+  }
+
+  .topbar .actions #adminPanelBtn {
+    order: 10;
+    flex: 0 0 100%;
+    padding: 2px 0 0;
+    text-align: right;
+  }
+}
+
 @media (max-width: 680px) {
   .cafr-id-card {
     border-radius: 15px;
@@ -263,5 +341,9 @@
   .cafr-card-footer {
     left: 4.8%;
     right: 34%;
+  }
+
+  .cafr-defined-card-host-admin {
+    max-width: 100%;
   }
 }
