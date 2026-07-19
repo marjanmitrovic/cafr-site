@@ -3,12 +3,15 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "engines": {
+    "node": ">=22.12.0 <23"
+  },
   "scripts": {
     "dev:web": "vite --host 0.0.0.0",
     "dev:api": "node --env-file=.env --watch server/server.js",
     "dev": "concurrently -k \"npm:dev:web\" \"npm:dev:api\"",
     "build": "vite build",
-    "test:cards": "node --check public/member-card-system.js && node --test tests/member-card-template.test.mjs",
+    "test:cards": "node --check public/member-card-system.js && node --check public/simple-member-card.js && node --test tests/member-card-template.test.mjs",
     "db:generate": "prisma generate --config ./prisma.config.ts",
     "db:push": "prisma db push --config ./prisma.config.ts",
     "db:seed": "node --env-file=.env prisma/seed.js",
