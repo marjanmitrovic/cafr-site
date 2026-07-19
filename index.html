@@ -3,8 +3,107 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Česká asociace fotbalových rozhodčích – ochrana, vzdělávání a zastupování rozhodčích." />
-  <title>ČAFR | Česká asociace fotbalových rozhodčích</title>
+
+  <title>ČAFR – Česká asociace fotbalových rozhodčích</title>
+  <meta name="description" content="Česká asociace fotbalových rozhodčích (ČAFR) poskytuje rozhodčím ochranu, vzdělávání, právní podporu, komunitu a profesní zastupování." />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+  <meta name="googlebot" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+  <meta name="author" content="Česká asociace fotbalových rozhodčích, z. s." />
+  <meta name="theme-color" content="#0b2a55" />
+  <meta name="format-detection" content="telephone=no" />
+
+  <link id="canonical-url" rel="canonical" href="/" />
+  <link rel="icon" href="/assets/cafr-logo.png" />
+  <link rel="apple-touch-icon" href="/assets/cafr-logo.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="ČAFR" />
+  <meta property="og:locale" content="cs_CZ" />
+  <meta property="og:locale:alternate" content="en_GB" />
+  <meta property="og:title" content="ČAFR – Česká asociace fotbalových rozhodčích" />
+  <meta property="og:description" content="Ochrana, vzdělávání, právní podpora a profesní zastupování fotbalových rozhodčích v České republice." />
+  <meta property="og:url" content="/" />
+  <meta property="og:image" content="/assets/cafr-logo.png" />
+  <meta property="og:image:alt" content="Logo České asociace fotbalových rozhodčích" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="ČAFR – Česká asociace fotbalových rozhodčích" />
+  <meta name="twitter:description" content="Ochrana, vzdělávání, právní podpora a profesní zastupování fotbalových rozhodčích v České republice." />
+  <meta name="twitter:image" content="/assets/cafr-logo.png" />
+
+  <script id="structured-data" type="application/ld+json"></script>
+  <script>
+    (() => {
+      const siteUrl = `${window.location.origin}/`;
+      const logoUrl = `${window.location.origin}/assets/cafr-logo.png`;
+
+      document.querySelector('#canonical-url').href = siteUrl;
+      document.querySelector('meta[property="og:url"]').content = siteUrl;
+      document.querySelector('meta[property="og:image"]').content = logoUrl;
+      document.querySelector('meta[name="twitter:image"]').content = logoUrl;
+
+      document.querySelector('#structured-data').textContent = JSON.stringify({
+        '@context': 'https://schema.org',
+        '@graph': [
+          {
+            '@type': 'SportsOrganization',
+            '@id': `${siteUrl}#organization`,
+            name: 'Česká asociace fotbalových rozhodčích, z. s.',
+            alternateName: ['ČAFR', 'CAFR', 'Czech Association of Football Referees'],
+            url: siteUrl,
+            logo: {
+              '@type': 'ImageObject',
+              url: logoUrl
+            },
+            description: 'Nezávislá profesní asociace poskytující fotbalovým rozhodčím ochranu, vzdělávání, právní podporu a společné zastupování.',
+            email: 'info@cafr.cz',
+            areaServed: {
+              '@type': 'Country',
+              name: 'Česká republika'
+            },
+            address: {
+              '@type': 'PostalAddress',
+              addressLocality: 'Praha',
+              addressCountry: 'CZ'
+            },
+            contactPoint: {
+              '@type': 'ContactPoint',
+              contactType: 'členská a veřejná podpora',
+              email: 'info@cafr.cz',
+              availableLanguage: ['cs', 'en']
+            }
+          },
+          {
+            '@type': 'WebSite',
+            '@id': `${siteUrl}#website`,
+            url: siteUrl,
+            name: 'ČAFR',
+            alternateName: 'Česká asociace fotbalových rozhodčích',
+            inLanguage: ['cs-CZ', 'en'],
+            publisher: {
+              '@id': `${siteUrl}#organization`
+            }
+          },
+          {
+            '@type': 'WebPage',
+            '@id': `${siteUrl}#webpage`,
+            url: siteUrl,
+            name: 'ČAFR – Česká asociace fotbalových rozhodčích',
+            description: 'Ochrana, vzdělávání, právní podpora a profesní zastupování fotbalových rozhodčích v České republice.',
+            inLanguage: 'cs-CZ',
+            isPartOf: {
+              '@id': `${siteUrl}#website`
+            },
+            about: {
+              '@id': `${siteUrl}#organization`
+            }
+          }
+        ]
+      });
+    })();
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
@@ -16,6 +115,14 @@
   <link rel="stylesheet" href="/simple-member-card.css?v=2">
 </head>
 <body>
+  <noscript>
+    <main>
+      <h1>Česká asociace fotbalových rozhodčích</h1>
+      <p>ČAFR propojuje aktivní i bývalé fotbalové rozhodčí, asistenty, videorozhodčí, delegáty a pozorovatele rozhodčích v celé České republice.</p>
+      <p>Asociace nabízí ochranu při incidentech, vzdělávání, mentoring, právní podporu, profesní komunitu a společné zastupování.</p>
+      <p>Kontakt: <a href="mailto:info@cafr.cz">info@cafr.cz</a></p>
+    </main>
+  </noscript>
   <div id="app"></div>
   <script type="module" src="/src/main.js"></script>
   <script src="/fotbaltesty-bridge.js" defer></script>
