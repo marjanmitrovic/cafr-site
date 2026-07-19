@@ -1,0 +1,93 @@
+.cafr-card-export-actions {
+  width: min(100%, 920px);
+  margin: 18px auto 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.cafr-card-export-actions button {
+  appearance: none;
+  min-height: 42px;
+  padding: 10px 15px;
+  border: 1px solid #0b4ea2;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #0b3f91;
+  font: inherit;
+  font-size: .9rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+}
+
+.cafr-card-export-actions button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: #f2f7ff;
+  box-shadow: 0 8px 20px rgba(11, 78, 162, .16);
+}
+
+.cafr-card-export-actions button:disabled {
+  cursor: wait;
+  opacity: .58;
+}
+
+.cafr-card-export-actions .cafr-card-export-primary {
+  background: #0b4ea2;
+  color: #ffffff;
+}
+
+.cafr-card-export-actions .cafr-card-export-primary:hover:not(:disabled) {
+  background: #083f86;
+}
+
+.cafr-card-export-message {
+  min-height: 1.35em;
+  margin: 10px auto 0;
+  text-align: center;
+  color: #0b4ea2;
+  font-size: .86rem;
+  font-weight: 750;
+}
+
+.cafr-card-export-message.is-error {
+  color: #b42318;
+}
+
+.cafr-defined-card-host-admin .cafr-card-export-actions,
+.cafr-defined-card-host-admin .cafr-card-export-message {
+  width: min(100%, 680px);
+}
+
+html.theme-dark .cafr-card-export-actions button {
+  border-color: #76a9e8 !important;
+  background: #ffffff !important;
+  color: #0b3f91 !important;
+}
+
+html.theme-dark .cafr-card-export-actions .cafr-card-export-primary {
+  background: #0b4ea2 !important;
+  color: #ffffff !important;
+}
+
+html.theme-dark .cafr-card-export-message {
+  color: #9cc6f3 !important;
+}
+
+html.theme-dark .cafr-card-export-message.is-error {
+  color: #ff9aa5 !important;
+}
+
+@media (max-width: 680px) {
+  .cafr-card-export-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cafr-card-export-actions button {
+    width: 100%;
+    padding: 10px 8px;
+    font-size: .8rem;
+  }
+}
