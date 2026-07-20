@@ -5,7 +5,9 @@ services:
     plan: free
     buildCommand: npm install --no-audit --no-fund && npm run render:build
     startCommand: npm run start:production
-    healthCheckPath: /api/health
+    # Check the static homepage instead of /api/health, because that API route
+    # runs a database query and would keep the Neon compute endpoint awake.
+    healthCheckPath: /
     envVars:
       - key: NODE_VERSION
         value: 22
