@@ -28,6 +28,8 @@ services:
       - key: EMAIL_FROM
         sync: false
       - key: ADMIN_NOTIFY_EMAIL
-        value: marjan.posao@gmail.com
+        value: marjan.posao@gmail.com,marapleskac@gmail.com,unierozhodcich@gmail.com
+      - key: ASSOCIATION_ICO
+        value: "24417513"
       - key: EMAIL_DISABLED
         value: "false"
