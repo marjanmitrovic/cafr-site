@@ -18,6 +18,19 @@
   text-decoration: none;
 }
 
+.brand .ucfr-full-brand-name {
+  display: block;
+  max-width: 330px;
+  font-size: 20px;
+  line-height: 1.18;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.brand span[hidden] {
+  display: none !important;
+}
+
 @media (max-width: 720px) {
   .document-links {
     width: 100%;
@@ -27,5 +40,31 @@
   .document-links .document-link {
     width: 100%;
     justify-content: center;
+  }
+
+  .topbar {
+    height: 96px;
+    padding: 0 12px;
+  }
+
+  .brand {
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .brand img {
+    width: 62px;
+    height: 76px;
+    flex: 0 0 auto;
+  }
+
+  .brand .ucfr-full-brand-name {
+    max-width: 165px;
+    font-size: 13px;
+    line-height: 1.2;
+  }
+
+  nav {
+    top: 96px;
   }
 }
