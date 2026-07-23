@@ -5,8 +5,26 @@
   const REGISTER_URL = 'https://or.justice.cz/ias/ui/rejstrik-firma.vysledky?subjektId=1306981&typ=PLATNY';
   const DOCUMENT_URL = 'https://or.justice.cz/ias/ui/vypis-sl-detail?dokument=89888399&subjektId=1306981&spis=1476835';
 
+  let observer = null;
+  let scheduled = false;
+
   function language() {
     return document.documentElement.lang === 'en' ? 'en' : 'cs';
+  }
+
+  function updateBrandHeader() {
+    const brand = document.querySelector('.brand');
+    if (!brand) return;
+
+    const strong = brand.querySelector('strong');
+    const subtitle = brand.querySelector('span');
+
+    if (strong) {
+      strong.textContent = 'Unie českých fotbalových rozhodčích';
+      strong.classList.add('ucfr-full-brand-name');
+    }
+
+    if (subtitle) subtitle.hidden = true;
   }
 
   function updateMemberExample() {
@@ -74,33 +92,47 @@
       </a>
     `;
 
-    const resultsCard = [...grid.children].find((item) => item.textContent.includes('Moje výsledky') || item.textContent.includes('My results'));
+    const resultsCard = [...grid.children].find((item) =>
+      item.textContent.includes('Moje výsledky') || item.textContent.includes('My results')
+    );
+
     if (resultsCard) grid.insertBefore(card, resultsCard);
     else grid.appendChild(card);
   }
 
   function applyUpdates() {
+    observer?.disconnect();
+
+    updateBrandHeader();
     updateMemberExample();
     updateIco();
     updateDocuments();
     addVideoAnalysis();
+
+    const app = document.querySelector('#app');
+    if (observer && app) {
+      observer.observe(app, { childList: true, subtree: true });
+    }
   }
 
-  let scheduled = false;
-  const schedule = () => {
+  function scheduleUpdates() {
     if (scheduled) return;
     scheduled = true;
+
     window.requestAnimationFrame(() => {
       scheduled = false;
       applyUpdates();
     });
-  };
+  }
 
-  new MutationObserver(schedule).observe(document.documentElement, {
-    childList: true,
-    subtree: true,
-  });
+  function start() {
+    observer = new MutationObserver(scheduleUpdates);
+    applyUpdates();
+  }
 
-  document.addEventListener('DOMContentLoaded', schedule, { once: true });
-  schedule();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start, { once: true });
+  } else {
+    start();
+  }
 })();
