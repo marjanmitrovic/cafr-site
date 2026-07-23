@@ -15,9 +15,9 @@
     "db:generate": "prisma generate --config ./prisma.config.ts",
     "db:push": "prisma db push --config ./prisma.config.ts",
     "db:seed": "node --env-file=.env prisma/seed.js",
-    "start:production": "node server/server.js",
+    "start:production": "node --import ./server/ucfr-email-preload.js server/server.js",
     "preview": "vite preview --host 0.0.0.0",
-    "start:api": "node --env-file=.env server/server.js",
+    "start:api": "node --env-file=.env --import ./server/ucfr-email-preload.js server/server.js",
     "db:studio": "node --env-file=.env ./node_modules/prisma/build/index.js studio --config ./prisma.config.ts",
     "render:build": "npm run db:generate && npm run build"
   },
