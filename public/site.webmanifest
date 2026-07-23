@@ -1,6 +1,6 @@
 {
-  "name": "Česká asociace fotbalových rozhodčích",
-  "short_name": "ČAFR",
+  "name": "Unie českých fotbalových rozhodčích",
+  "short_name": "UČFR",
   "description": "Ochrana, vzdělávání, právní podpora a profesní zastupování fotbalových rozhodčích v České republice.",
   "lang": "cs-CZ",
   "start_url": "/",
@@ -10,9 +10,9 @@
   "theme_color": "#0b2a55",
   "icons": [
     {
-      "src": "/assets/cafr-logo.png",
+      "src": "/assets/ucfr-logo.svg",
       "sizes": "any",
-      "type": "image/png",
+      "type": "image/svg+xml",
       "purpose": "any maskable"
     }
   ]
