@@ -19,9 +19,11 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
-      - name: Check member card scripts
+      - name: Check browser and email scripts
         run: |
           node --check public/member-card-system.js
           node --check public/simple-member-card.js
+          node --check public/ucfr-brand.js
+          node --check server/ucfr-email-preload.js
       - name: Build
         run: npm run build
