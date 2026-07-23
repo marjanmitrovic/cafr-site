@@ -13,7 +13,7 @@ In `.env`, replace `re_xxxxxxxxx` with the real Resend API key.
 For local testing, use:
 
 ```env
-EMAIL_FROM="ČAFR <onboarding@resend.dev>"
+EMAIL_FROM="UČFR <onboarding@resend.dev>"
 ADMIN_NOTIFY_EMAIL="marjan.posao@gmail.com"
 EMAIL_DISABLED="false"
 ```

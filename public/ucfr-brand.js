@@ -3,12 +3,12 @@
 
   const LOGO_PATH = '/assets/ucfr-logo.svg';
   const replacements = [
-    ['ČESKÁ ASOCIACE FOTBALOVÝCH ROZHODČÍCH', 'UNIE ČESKÝCH FOTBALOVÝCH ROZHODČÍCH'],
-    ['Česká asociace fotbalových rozhodčích', 'Unie českých fotbalových rozhodčích'],
-    ['Czech Association of Football Referees', 'Union of Czech Football Referees'],
-    ['ČESKÁ ASOCIACE', 'UNIE ČESKÝCH'],
-    ['Česká asociace', 'Unie českých'],
-    ['ČAFR', 'UČFR'],
+    ['UNIE ČESKÝCH FOTBALOVÝCH ROZHODČÍCH', 'UNIE ČESKÝCH FOTBALOVÝCH ROZHODČÍCH'],
+    ['Unie českých fotbalových rozhodčích', 'Unie českých fotbalových rozhodčích'],
+    ['Union of Czech Football Referees', 'Union of Czech Football Referees'],
+    ['UNIE ČESKÝCH', 'UNIE ČESKÝCH'],
+    ['Unie českých', 'Unie českých'],
+    ['UČFR', 'UČFR'],
   ];
 
   function replaceBrand(value) {
@@ -21,13 +21,13 @@
   function updateElement(element) {
     if (!(element instanceof Element)) return;
 
-    if (element.matches('img[src$="/assets/cafr-logo.png"], img[src="/assets/cafr-logo.png"]')) {
+    if (element.matches('img[src$="/assets/ucfr-logo.svg"], img[src="/assets/ucfr-logo.svg"]')) {
       element.setAttribute('src', LOGO_PATH);
     }
 
     if (element.matches('link[rel~="icon"], link[rel="apple-touch-icon"]')) {
       const href = element.getAttribute('href') || '';
-      if (href.endsWith('/assets/cafr-logo.png')) element.setAttribute('href', LOGO_PATH);
+      if (href.endsWith('/assets/ucfr-logo.svg')) element.setAttribute('href', LOGO_PATH);
     }
 
     for (const attribute of ['alt', 'title', 'aria-label', 'placeholder', 'content']) {

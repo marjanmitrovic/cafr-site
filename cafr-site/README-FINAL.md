@@ -1,4 +1,4 @@
-# ČAFR – kompletna verzija
+# UČFR – kompletna verzija
 
 Sadrži:
 - CZ/EN sa zastavicama

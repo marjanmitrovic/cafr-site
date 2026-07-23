@@ -18,13 +18,13 @@ const slugify = value => value.toLowerCase().normalize('NFD').replace(/[\u0300-\
 
 async function main() {
   const adminEmail = process.env.ADMIN_EMAIL || 'admin@cafr.local';
-  const adminPassword = process.env.ADMIN_PASSWORD || 'CAFR-change-me-2026';
+  const adminPassword = process.env.ADMIN_PASSWORD || 'UCFR-change-me-2026';
   const passwordHash = await bcrypt.hash(adminPassword, 12);
 
   await prisma.user.upsert({
     where: { email: adminEmail },
     update: { passwordHash, role: 'ADMIN', membershipStatus: 'APPROVED', approvedAt: new Date(), isActive: true },
-    create: { email: adminEmail, passwordHash, firstName: 'ČAFR', lastName: 'Admin', role: 'ADMIN', membershipStatus: 'APPROVED', approvedAt: new Date(), isActive: true },
+    create: { email: adminEmail, passwordHash, firstName: 'UČFR', lastName: 'Admin', role: 'ADMIN', membershipStatus: 'APPROVED', approvedAt: new Date(), isActive: true },
   });
 
   const rawQuestions = JSON.parse(fs.readFileSync(questionsPath, 'utf8'));
@@ -95,8 +95,8 @@ async function main() {
   await prisma.document.upsert({
     where: { id: 'default-stanovy-cafr' },
     update: {
-      titleCs: 'Stanovy ČAFR',
-      titleEn: 'ČAFR Statutes',
+      titleCs: 'Stanovy UČFR',
+      titleEn: 'UČFR Statutes',
       descriptionCs: 'Pracovní návrh stanov asociace.',
       descriptionEn: 'Draft statutes of the association.',
       category: 'STATUTES',
@@ -106,8 +106,8 @@ async function main() {
     },
     create: {
       id: 'default-stanovy-cafr',
-      titleCs: 'Stanovy ČAFR',
-      titleEn: 'ČAFR Statutes',
+      titleCs: 'Stanovy UČFR',
+      titleEn: 'UČFR Statutes',
       descriptionCs: 'Pracovní návrh stanov asociace.',
       descriptionEn: 'Draft statutes of the association.',
       category: 'STATUTES',

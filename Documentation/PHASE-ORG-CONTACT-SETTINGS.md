@@ -1,4 +1,4 @@
-# ČAFR – nastavení kontaktních údajů organizace
+# UČFR – nastavení kontaktních údajů organizace
 
 Přidána administrátorská správa veřejných kontaktních údajů organizace.
 

@@ -1,6 +1,6 @@
 # PHASE: Integrace FotbalTesty
 
-Integrovaný původní projekt `fotbaltesty.22web.org` do ČAFR platformy.
+Integrovaný původní projekt `fotbaltesty.22web.org` do UČFR platformy.
 
 ## Zdroj
 

@@ -1,4 +1,4 @@
-# ČAFR Phase 4 — Neon PostgreSQL
+# UČFR Phase 4 — Neon PostgreSQL
 
 ## Prvo pokretanje
 

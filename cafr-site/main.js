@@ -29,7 +29,7 @@ const copy = {
     eyebrow: 'Nezávislá profesní komunita rozhodčích',
     hero: 'Silnější hlas. Bezpečnější prostředí. Lepší podmínky.',
     sub:
-      'Česká asociace fotbalových rozhodčích propojuje aktivní i bývalé rozhodčí a nabízí ochranu, vzdělávání, právní podporu a společné zastupování.',
+      'Unie českých fotbalových rozhodčích propojuje aktivní i bývalé rozhodčí a nabízí ochranu, vzdělávání, právní podporu a společné zastupování.',
     pillars: 'Hlavní pilíře činnosti',
     pillarsSub:
       'Praktická pomoc rozhodčím v každé fázi jejich působení.',
@@ -66,7 +66,7 @@ const copy = {
     eyebrow: 'Independent professional referee community',
     hero: 'A stronger voice. A safer environment. Better conditions.',
     sub:
-      'The Czech Association of Football Referees connects active and former referees and provides protection, education, legal support and joint representation.',
+      'The Union of Czech Football Referees connects active and former referees and provides protection, education, legal support and joint representation.',
     pillars: 'Our core pillars',
     pillarsSub: 'Practical support for referees at every stage of their career.',
     cards: [
@@ -179,14 +179,14 @@ function render() {
   document.querySelector('#app').innerHTML = `
     <header class="topbar">
       <a class="brand" href="#home">
-        <img src="/assets/cafr-logo.png" alt="ČAFR logo">
+        <img src="/assets/ucfr-logo.svg" alt="UČFR logo">
         <div>
-          <strong>ČAFR</strong>
+          <strong>UČFR</strong>
           <span>
             ${
               lang === 'cs'
-                ? 'Česká asociace fotbalových rozhodčích'
-                : 'Czech Association of Football Referees'
+                ? 'Unie českých fotbalových rozhodčích'
+                : 'Union of Czech Football Referees'
             }
           </span>
         </div>
@@ -319,7 +319,7 @@ function render() {
 
       <section class="section" id="about">
         <div class="section-head">
-          <span>ČAFR</span>
+          <span>UČFR</span>
           <h2>${x.pillars}</h2>
           <p>${x.pillarsSub}</p>
         </div>
@@ -436,7 +436,7 @@ function render() {
           </div>
 
           <div class="member-card">
-            <img src="/assets/cafr-logo.png" alt="ČAFR">
+            <img src="/assets/ucfr-logo.svg" alt="UČFR">
             <small>ČLENSKÝ PRŮKAZ</small>
             <h3>
               ${
@@ -449,13 +449,13 @@ function render() {
               ID:
               ${
                 currentUser?.id
-                  ? `CAFR-${String(currentUser.id).slice(-8).toUpperCase()}`
-                  : 'CAFR-2026-001'
+                  ? `UCFR-${String(currentUser.id).slice(-8).toUpperCase()}`
+                  : 'UCFR-2026-001'
               }
             </p>
             ${
               currentUser
-                ? `<img class="member-qr" src="${buildQrUrl(currentUser)}" alt="ČAFR member QR code">`
+                ? `<img class="member-qr" src="${buildQrUrl(currentUser)}" alt="UČFR member QR code">`
                 : `<div class="qr">▦</div>`
             }
           </div>
@@ -551,9 +551,9 @@ function render() {
 
     <footer id="contact">
       <div class="footer-brand">
-        <img src="/assets/cafr-logo.png" alt="ČAFR">
+        <img src="/assets/ucfr-logo.svg" alt="UČFR">
         <div>
-          <b>Česká asociace fotbalových rozhodčích, z. s.</b>
+          <b>Unie českých fotbalových rozhodčích, z. s.</b>
           <p>Ochrana • Vzdělávání • Komunita • Reprezentace</p>
         </div>
       </div>
@@ -563,7 +563,7 @@ function render() {
         <p>info@cafr.cz<br>Praha, Česká republika</p>
       </div>
 
-      <div class="copy">© 2026 ČAFR.</div>
+      <div class="copy">© 2026 UČFR.</div>
     </footer>
 
     <div class="modal" id="modal">
@@ -649,7 +649,7 @@ function closeModal() {
 }
 
 function getMemberCardNumber(user) {
-  if (!user?.id) return 'CAFR-UNKNOWN';
+  if (!user?.id) return 'UCFR-UNKNOWN';
   return getMemberCardNumber(user);
 }
 
@@ -855,10 +855,10 @@ function openModal(type) {
             <div>
               <small>${lang === 'cs' ? 'DIGITÁLNÍ ČLENSKÝ PRŮKAZ' : 'DIGITAL MEMBER CARD'}</small>
               <h3>${escapeHtml(user.firstName)} ${escapeHtml(user.lastName)}</h3>
-              <p>CAFR-${String(user.id).slice(-8).toUpperCase()}</p>
+              <p>UCFR-${String(user.id).slice(-8).toUpperCase()}</p>
               <span>${status[lang]}</span>
             </div>
-            <img class="member-qr profile-qr" src="${buildQrUrl(user)}" alt="ČAFR member QR code">
+            <img class="member-qr profile-qr" src="${buildQrUrl(user)}" alt="UČFR member QR code">
           </div>
 
           <div class="profile-grid">
@@ -1432,7 +1432,7 @@ async function renderAdmin() {
             <div>
               <span class="section-label">ADMIN</span>
               <h2>
-                ${lang === 'cs' ? 'Správa ČAFR' : 'ČAFR administration'}
+                ${lang === 'cs' ? 'Správa UČFR' : 'UČFR administration'}
               </h2>
             </div>
 

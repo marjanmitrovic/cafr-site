@@ -1,4 +1,4 @@
-# ČAFR – Incident system
+# UČFR – Incident system
 
 Nova faza dodaje trajno čuvanje incidenata u PostgreSQL bazi.
 

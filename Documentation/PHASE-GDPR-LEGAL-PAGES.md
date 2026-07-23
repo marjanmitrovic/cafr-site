@@ -9,4 +9,4 @@ Přidáno:
 - Vite multi-page build pro nové stránky
 - základní právní texty v češtině
 
-Poznámka: texty jsou pracovní návrhy pro web ČAFR. Před veřejným spuštěním je vhodné doplnit skutečné identifikační údaje spolku a provést právní kontrolu.
+Poznámka: texty jsou pracovní návrhy pro web UČFR. Před veřejným spuštěním je vhodné doplnit skutečné identifikační údaje spolku a provést právní kontrolu.

@@ -1,4 +1,4 @@
-# ČAFR – Document uploads
+# UČFR – Document uploads
 
 This phase adds direct document upload from the admin panel without adding npm upload dependencies.
 

@@ -1,4 +1,4 @@
-# ČAFR – kompletna verzija
+# UČFR – kompletna verzija
 
 Sadrži:
 - CZ/EN sa zastavicama
@@ -49,7 +49,7 @@ IČO: bude doplněno
 Po registraci spolku doplňte skutečné údaje v `.env`:
 
 ```env
-ASSOCIATION_NAME="Česká asociace fotbalových rozhodčích, z. s."
+ASSOCIATION_NAME="Unie českých fotbalových rozhodčích, z. s."
 ASSOCIATION_ICO="12345678"
 ASSOCIATION_SEAT="..."
 ```

@@ -1,4 +1,4 @@
-# ČAFR – QR verification and member dashboard
+# UČFR – QR verification and member dashboard
 
 Added:
 - public `verify.html?member=<USER_ID>` card verification page;

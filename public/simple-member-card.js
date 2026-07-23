@@ -31,7 +31,7 @@
   function cardNumber(member) {
     if (member?.cardNumber) return String(member.cardNumber);
     const suffix = String(member?.id || '').slice(-8).toUpperCase();
-    return `CAFR-${suffix || 'NEVYDANO'}`;
+    return `UCFR-${suffix || 'NEVYDANO'}`;
   }
 
   function verificationUrl(member) {
@@ -108,12 +108,12 @@
     const status = statusInfo(member);
 
     return `
-      <article class="cafr-id-card" aria-label="ČAFR členský průkaz">
+      <article class="cafr-id-card" aria-label="UČFR členský průkaz">
         <div class="cafr-card-top">
-          <img class="cafr-card-logo" src="/assets/cafr-logo.png" alt="ČAFR">
+          <img class="cafr-card-logo" src="/assets/ucfr-logo.svg" alt="UČFR">
           <div class="cafr-card-brand">
-            <strong>ČAFR</strong>
-            <span>ČESKÁ ASOCIACE<br>FOTBALOVÝCH ROZHODČÍCH</span>
+            <strong>UČFR</strong>
+            <span>UNIE ČESKÝCH<br>FOTBALOVÝCH ROZHODČÍCH</span>
           </div>
         </div>
 
@@ -144,7 +144,7 @@
           </div>
 
           <div class="cafr-card-footer">
-            ČESKÁ ASOCIACE FOTBALOVÝCH ROZHODČÍCH • VYDÁNO ${escapeHtml(issuedDate(member))}
+            UNIE ČESKÝCH FOTBALOVÝCH ROZHODČÍCH • VYDÁNO ${escapeHtml(issuedDate(member))}
           </div>
         </div>
       </article>

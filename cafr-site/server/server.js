@@ -30,7 +30,7 @@ app.use('/uploads', express.static(path.join(PUBLIC_DIR, 'uploads')));
 
 
 const WEB_ORIGIN = String(process.env.WEB_ORIGIN || 'http://localhost:5173').replace(/\/$/, '');
-const EMAIL_FROM = process.env.EMAIL_FROM || 'ČAFR <onboarding@resend.dev>';
+const EMAIL_FROM = process.env.EMAIL_FROM || 'UČFR <onboarding@resend.dev>';
 const ADMIN_NOTIFY_EMAIL = process.env.ADMIN_NOTIFY_EMAIL || process.env.ADMIN_EMAIL || 'marjan.posao@gmail.com';
 
 // Resend SDK client. Replace RESEND_API_KEY="re_xxxxxxxxx" in .env with your real Resend API key.
@@ -47,12 +47,12 @@ const escapeEmailHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char
 const emailLayout = (title, bodyHtml) => `
   <div style="font-family:Arial,sans-serif;line-height:1.5;color:#172033;max-width:680px;margin:0 auto;padding:24px">
     <div style="border-bottom:1px solid #e6e8ef;padding-bottom:16px;margin-bottom:20px">
-      <strong style="font-size:20px">ČAFR</strong>
-      <div style="font-size:13px;color:#667085">Česká asociace fotbalových rozhodčích</div>
+      <strong style="font-size:20px">UČFR</strong>
+      <div style="font-size:13px;color:#667085">Unie českých fotbalových rozhodčích</div>
     </div>
     <h1 style="font-size:22px;margin:0 0 16px">${escapeEmailHtml(title)}</h1>
     <div style="font-size:15px">${bodyHtml}</div>
-    <p style="margin-top:28px;font-size:12px;color:#667085">Tento email byl odeslán automaticky systémem ČAFR.</p>
+    <p style="margin-top:28px;font-size:12px;color:#667085">Tento email byl odeslán automaticky systémem UČFR.</p>
   </div>
 `;
 
@@ -255,13 +255,13 @@ app.post('/api/auth/register', async (req, res) => {
     });
     await sendMemberEmail(
       user,
-      'Přihláška ČAFR přijata',
+      'Přihláška UČFR přijata',
       `<p>Dobrý den ${escapeEmailHtml(user.firstName)},</p><p>Vaše členská přihláška byla přijata a čeká na schválení Výkonným výborem.</p><p>Stav můžete sledovat po přihlášení v členském dashboardu.</p>`,
       'REGISTRATION_RECEIVED'
     );
 
     await sendAdminEmail(
-      'Nová členská přihláška ČAFR',
+      'Nová členská přihláška UČFR',
       `<p>Nová přihláška čeká na schválení.</p><p><b>${escapeEmailHtml(user.firstName)} ${escapeEmailHtml(user.lastName)}</b><br>${escapeEmailHtml(user.email)}<br>${escapeEmailHtml(user.region || '')}</p><p><a href="${WEB_ORIGIN}/">Otevřít administraci</a></p>`,
       'ADMIN_NEW_MEMBER'
     );
@@ -364,7 +364,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
 
     await sendMemberEmail(
       user,
-      'Obnovení hesla ČAFR',
+      'Obnovení hesla UČFR',
       `<p>Dobrý den ${escapeEmailHtml(user.firstName)},</p><p>Pro nastavení nového hesla otevřete tento odkaz. Odkaz platí 30 minut.</p><p><a href="${escapeEmailHtml(resetUrl)}" style="display:inline-block;background:#172033;color:#ffffff;padding:10px 14px;border-radius:8px;text-decoration:none">Nastavit nové heslo</a></p><p style="word-break:break-all">${escapeEmailHtml(resetUrl)}</p>`,
       'PASSWORD_RESET'
     );
@@ -653,7 +653,7 @@ app.post('/api/incidents', requireAuth, async (req, res) => {
       include: { attachments: true, events: { orderBy: { createdAt: 'asc' } } },
     });
     await sendAdminEmail(
-      'Nový incident ČAFR',
+      'Nový incident UČFR',
       `<p>Člen odeslal nový incident.</p><p><b>${escapeEmailHtml(req.user.firstName)} ${escapeEmailHtml(req.user.lastName)}</b><br>${escapeEmailHtml(req.user.email)}</p><p><b>${escapeEmailHtml(incident.incidentType)}</b><br>${escapeEmailHtml(incident.matchInfo)}</p><p><a href="${WEB_ORIGIN}/">Otevřít administraci</a></p>`,
       'ADMIN_NEW_INCIDENT'
     );
@@ -744,7 +744,7 @@ app.patch('/api/admin/incidents/:id', requireAdmin, async (req, res) => {
             title: 'Aktualizace incidentu',
             message: statusChanged
               ? `Stav vašeho incidentu byl změněn z ${current.status} na ${nextStatus}.`
-              : 'ČAFR přidal novou odpověď k vašemu incidentu.',
+              : 'UČFR přidal novou odpověď k vašemu incidentu.',
             link: '/dashboard.html#incidents',
           },
         });
@@ -765,8 +765,8 @@ app.patch('/api/admin/incidents/:id', requireAdmin, async (req, res) => {
     if (statusChanged || noteChanged) {
       await sendMemberEmail(
         fullIncident.user,
-        'Aktualizace incidentu ČAFR',
-        `<p>Dobrý den ${escapeEmailHtml(fullIncident.user.firstName)},</p><p>Váš incident byl aktualizován.</p><p><b>Stav:</b> ${escapeEmailHtml(fullIncident.status)}</p>${fullIncident.adminNote ? `<p><b>Odpověď ČAFR:</b><br>${escapeEmailHtml(fullIncident.adminNote)}</p>` : ''}<p><a href="${WEB_ORIGIN}/dashboard.html#incidents">Otevřít incidenty</a></p>`,
+        'Aktualizace incidentu UČFR',
+        `<p>Dobrý den ${escapeEmailHtml(fullIncident.user.firstName)},</p><p>Váš incident byl aktualizován.</p><p><b>Stav:</b> ${escapeEmailHtml(fullIncident.status)}</p>${fullIncident.adminNote ? `<p><b>Odpověď UČFR:</b><br>${escapeEmailHtml(fullIncident.adminNote)}</p>` : ''}<p><a href="${WEB_ORIGIN}/dashboard.html#incidents">Otevřít incidenty</a></p>`,
         'INCIDENT_UPDATE'
       );
     }
@@ -838,7 +838,7 @@ app.post('/api/seminars/:id/register', requireAuth, async (req, res) => {
     });
     await sendMemberEmail(
       req.user,
-      'Přihlášení na seminář ČAFR',
+      'Přihlášení na seminář UČFR',
       `<p>Dobrý den ${escapeEmailHtml(req.user.firstName)},</p><p>Byli jste přihlášeni na seminář.</p><p><a href="${WEB_ORIGIN}/dashboard.html#seminars">Otevřít semináře</a></p>`,
       'SEMINAR_REGISTRATION'
     );
@@ -951,7 +951,7 @@ app.get('/api/members/verify/:id', async (req, res) => {
       return res.status(404).json({ valid: false, status: 'NOT_FOUND' });
     }
 
-    const cardNumber = `CAFR-${String(user.id).slice(-8).toUpperCase()}`;
+    const cardNumber = `UCFR-${String(user.id).slice(-8).toUpperCase()}`;
     const valid = user.membershipStatus === 'APPROVED';
 
     return res.json({
@@ -1004,7 +1004,7 @@ app.post('/api/legal-requests', requireAuth, async (req, res) => {
       include: { attachments: { orderBy: { createdAt: 'asc' } } },
     });
     await sendAdminEmail(
-      'Nový právní dotaz ČAFR',
+      'Nový právní dotaz UČFR',
       `<p>Člen odeslal nový právní dotaz.</p><p><b>${escapeEmailHtml(req.user.firstName)} ${escapeEmailHtml(req.user.lastName)}</b><br>${escapeEmailHtml(req.user.email)}</p><p><b>${escapeEmailHtml(legalRequest.subject)}</b><br>${escapeEmailHtml(legalRequest.category)}</p><p><a href="${WEB_ORIGIN}/">Otevřít administraci</a></p>`,
       'ADMIN_NEW_LEGAL_REQUEST'
     );
@@ -1078,8 +1078,8 @@ app.patch('/api/admin/legal-requests/:id', requireAdmin, async (req, res) => {
     if (existing.status !== status || existing.adminReply !== adminReply) {
       await sendMemberEmail(
         existing.user,
-        'Aktualizace právního dotazu ČAFR',
-        `<p>Dobrý den ${escapeEmailHtml(existing.user.firstName)},</p><p>Váš právní dotaz byl aktualizován.</p><p><b>Stav:</b> ${escapeEmailHtml(status)}</p>${adminReply ? `<p><b>Odpověď ČAFR:</b><br>${escapeEmailHtml(adminReply)}</p>` : ''}<p><a href="${WEB_ORIGIN}/dashboard.html#legal">Otevřít právní podporu</a></p>`,
+        'Aktualizace právního dotazu UČFR',
+        `<p>Dobrý den ${escapeEmailHtml(existing.user.firstName)},</p><p>Váš právní dotaz byl aktualizován.</p><p><b>Stav:</b> ${escapeEmailHtml(status)}</p>${adminReply ? `<p><b>Odpověď UČFR:</b><br>${escapeEmailHtml(adminReply)}</p>` : ''}<p><a href="${WEB_ORIGIN}/dashboard.html#legal">Otevřít právní podporu</a></p>`,
         'LEGAL_REQUEST_UPDATE'
       );
     }
@@ -1204,7 +1204,7 @@ app.patch('/api/admin/fees/:id', requireAdmin, async (req, res) => {
     if (existing.status !== status) {
       await sendMemberEmail(
         existing.user,
-        'Změna stavu členského příspěvku ČAFR',
+        'Změna stavu členského příspěvku UČFR',
         `<p>Dobrý den ${escapeEmailHtml(existing.user.firstName)},</p><p>Stav vašeho členského příspěvku za rok ${escapeEmailHtml(fee.year)} byl změněn na <b>${escapeEmailHtml(fee.status)}</b>.</p><p><a href="${WEB_ORIGIN}/dashboard.html#fees">Otevřít členské příspěvky</a></p>`,
         'MEMBERSHIP_FEE_UPDATE'
       );
@@ -1636,7 +1636,7 @@ app.patch('/api/admin/users/:id/status', requireAdmin, async (req, res) => {
     });
     await sendMemberEmail(
       user,
-      'Změna stavu členství ČAFR',
+      'Změna stavu členství UČFR',
       `<p>Dobrý den ${escapeEmailHtml(user.firstName)},</p><p>Stav vašeho členství byl změněn na <b>${escapeEmailHtml(user.membershipStatus)}</b>.</p><p><a href="${WEB_ORIGIN}/dashboard.html">Otevřít členský dashboard</a></p>`,
       'MEMBERSHIP_STATUS'
     );
@@ -1699,7 +1699,7 @@ app.use((error, _req, res, _next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-const server = app.listen(PORT, () => console.log(`ČAFR API running on http://localhost:${PORT}`));
+const server = app.listen(PORT, () => console.log(`UČFR API running on http://localhost:${PORT}`));
 const shutdown = async () => { server.close(); await prisma.$disconnect(); process.exit(0); };
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);

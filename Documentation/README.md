@@ -1,4 +1,4 @@
-# ČAFR web – Phase 2
+# UČFR web – Phase 2
 
 Public bilingual website plus a local API for the education/test module.
 
@@ -30,7 +30,7 @@ Data is stored locally in `server/data/*.json`. This is suitable for development
 Development defaults only:
 
 - email: `admin@cafr.local`
-- password: `CAFR-change-me-2026`
+- password: `UCFR-change-me-2026`
 
 Set secure values from `.env.example` before deployment. Node does not automatically load `.env`; export variables in the shell or use your deployment platform's environment settings.
 
@@ -42,7 +42,7 @@ Set secure values from `.env.example` before deployment. Node does not automatic
 - Procvičování kontroluje každou odpověď přes API.
 - „Moje výsledky“ se načítají ze serveru.
 - V sekci Vzdělávání je administrace testů.
-- Přihlášení správce: `admin@cafr.local` / `CAFR-change-me-2026` (pouze vývoj).
+- Přihlášení správce: `admin@cafr.local` / `UCFR-change-me-2026` (pouze vývoj).
 - Před nasazením zkopírujte `.env.example` na `.env` a změňte heslo a tajný klíč.
 
 
@@ -59,7 +59,7 @@ Install dependencies, put your real Resend key in `.env` by replacing `re_xxxxxx
 curl http://localhost:3001/api/test-email
 ```
 
-For the first test, `EMAIL_FROM="ČAFR <onboarding@resend.dev>"` can be used. After domain verification, use `no-reply@cafr.cz`.
+For the first test, `EMAIL_FROM="UČFR <onboarding@resend.dev>"` can be used. After domain verification, use `no-reply@cafr.cz`.
 
 ## Cloud storage for uploads
 
@@ -92,7 +92,7 @@ IČO: bude doplněno
 Po registraci spolku doplňte skutečné údaje v `.env`:
 
 ```env
-ASSOCIATION_NAME="Česká asociace fotbalových rozhodčích, z. s."
+ASSOCIATION_NAME="Unie českých fotbalových rozhodčích, z. s."
 ASSOCIATION_ICO="12345678"
 ASSOCIATION_SEAT="..."
 ```

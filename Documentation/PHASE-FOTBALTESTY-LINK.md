@@ -2,7 +2,7 @@
 
 The previous deep import of FotbalTesty questions was reverted.
 
-The site now keeps the existing ČAFR testing module and adds a simple external link to:
+The site now keeps the existing UČFR testing module and adds a simple external link to:
 
 https://fotbaltesty.22web.org/
 

@@ -18,13 +18,13 @@ const slugify = value => value.toLowerCase().normalize('NFD').replace(/[\u0300-\
 
 async function main() {
   const adminEmail = process.env.ADMIN_EMAIL || 'admin@cafr.local';
-  const adminPassword = process.env.ADMIN_PASSWORD || 'CAFR-change-me-2026';
+  const adminPassword = process.env.ADMIN_PASSWORD || 'UCFR-change-me-2026';
   const passwordHash = await bcrypt.hash(adminPassword, 12);
 
   await prisma.user.upsert({
     where: { email: adminEmail },
     update: { passwordHash, role: 'ADMIN', membershipStatus: 'APPROVED', approvedAt: new Date(), isActive: true },
-    create: { email: adminEmail, passwordHash, firstName: 'ČAFR', lastName: 'Admin', role: 'ADMIN', membershipStatus: 'APPROVED', approvedAt: new Date(), isActive: true },
+    create: { email: adminEmail, passwordHash, firstName: 'UČFR', lastName: 'Admin', role: 'ADMIN', membershipStatus: 'APPROVED', approvedAt: new Date(), isActive: true },
   });
 
   const rawQuestions = JSON.parse(fs.readFileSync(questionsPath, 'utf8'));
@@ -95,8 +95,8 @@ async function main() {
   await prisma.document.upsert({
     where: { id: 'default-stanovy-cafr' },
     update: {
-      titleCs: 'Stanovy ČAFR',
-      titleEn: 'ČAFR Statutes',
+      titleCs: 'Stanovy UČFR',
+      titleEn: 'UČFR Statutes',
       descriptionCs: 'Aktualizovaný návrh stanov asociace.',
       descriptionEn: 'Updated draft statutes of the association.',
       category: 'STATUTES',
@@ -106,8 +106,8 @@ async function main() {
     },
     create: {
       id: 'default-stanovy-cafr',
-      titleCs: 'Stanovy ČAFR',
-      titleEn: 'ČAFR Statutes',
+      titleCs: 'Stanovy UČFR',
+      titleEn: 'UČFR Statutes',
       descriptionCs: 'Aktualizovaný návrh stanov asociace.',
       descriptionEn: 'Updated draft statutes of the association.',
       category: 'STATUTES',
@@ -123,8 +123,8 @@ async function main() {
     update: {
       titleCs: 'Fotbal bez vesnice: tichý rozklad hry',
       titleEn: 'Football without villages: the quiet decay of the game',
-      descriptionCs: 'Externí článek Jana Markese o úbytku vesnického fotbalu, dobrovolníků a důvěry v prostředí grassroots fotbalu. Zařazeno jako tematický podklad k činnosti ČAFR.',
-      descriptionEn: 'External article by Jan Markes on the decline of village football, volunteers and trust in grassroots football. Included as background material relevant to ČAFR activities.',
+      descriptionCs: 'Externí článek Jana Markese o úbytku vesnického fotbalu, dobrovolníků a důvěry v prostředí grassroots fotbalu. Zařazeno jako tematický podklad k činnosti UČFR.',
+      descriptionEn: 'External article by Jan Markes on the decline of village football, volunteers and trust in grassroots football. Included as background material relevant to UČFR activities.',
       category: 'ANALYSIS',
       url: 'https://medium.seznam.cz/clanek/jan-markes-fotbal-bez-vesnice-tichy-rozklad-hry-ktera-drzela-cesko-pohromade-294979',
       visibility: 'PUBLIC',
@@ -134,8 +134,8 @@ async function main() {
       id: 'medium-fotbal-bez-vesnice',
       titleCs: 'Fotbal bez vesnice: tichý rozklad hry',
       titleEn: 'Football without villages: the quiet decay of the game',
-      descriptionCs: 'Externí článek Jana Markese o úbytku vesnického fotbalu, dobrovolníků a důvěry v prostředí grassroots fotbalu. Zařazeno jako tematický podklad k činnosti ČAFR.',
-      descriptionEn: 'External article by Jan Markes on the decline of village football, volunteers and trust in grassroots football. Included as background material relevant to ČAFR activities.',
+      descriptionCs: 'Externí článek Jana Markese o úbytku vesnického fotbalu, dobrovolníků a důvěry v prostředí grassroots fotbalu. Zařazeno jako tematický podklad k činnosti UČFR.',
+      descriptionEn: 'External article by Jan Markes on the decline of village football, volunteers and trust in grassroots football. Included as background material relevant to UČFR activities.',
       category: 'ANALYSIS',
       url: 'https://medium.seznam.cz/clanek/jan-markes-fotbal-bez-vesnice-tichy-rozklad-hry-ktera-drzela-cesko-pohromade-294979',
       visibility: 'PUBLIC',

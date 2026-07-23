@@ -1,4 +1,4 @@
-# ČAFR – ispravljena verzija
+# UČFR – ispravljena verzija
 
 Ispravljeno:
 

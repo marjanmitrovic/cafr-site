@@ -4,7 +4,7 @@
   const CARD_WIDTH = 1011;
   const CARD_HEIGHT = 638;
   const TEMPLATE_URL = '/cards/card-template.svg';
-  const LOGO_URL = '/assets/cafr-logo.png';
+  const LOGO_URL = '/assets/ucfr-logo.svg';
   const QR_ENDPOINT = 'https://api.qrserver.com/v1/create-qr-code/';
   const DIRECTORY_SELECTOR = '.admin-directory-table';
 
@@ -46,7 +46,7 @@
   function cardNumber(member) {
     if (member?.cardNumber) return String(member.cardNumber);
     const suffix = String(member?.id || '').slice(-8).toUpperCase();
-    return `CAFR-${suffix || 'NEVYDANO'}`;
+    return `UCFR-${suffix || 'NEVYDANO'}`;
   }
 
   function verificationUrl(member) {
@@ -273,7 +273,7 @@
     if (!printWindow) throw new Error('Prohlížeč zablokoval tiskové okno.');
     printWindow.document.open();
     printWindow.document.write(`<!doctype html>
-      <html lang="cs"><head><meta charset="utf-8"><title>ČAFR členský průkaz</title>
+      <html lang="cs"><head><meta charset="utf-8"><title>UČFR členský průkaz</title>
       <style>
         @page { size: 85.6mm 53.98mm; margin: 0; }
         html, body { width: 85.6mm; height: 53.98mm; margin: 0; padding: 0; overflow: hidden; background: #fff; }

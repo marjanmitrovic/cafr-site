@@ -1,4 +1,4 @@
-# ČAFR deploy audit + document admin upload
+# UČFR deploy audit + document admin upload
 
 ## Added / confirmed
 

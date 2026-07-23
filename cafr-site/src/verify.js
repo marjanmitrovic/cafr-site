@@ -15,8 +15,8 @@ function shell(content) {
   app.innerHTML = `
     <main class="verify-page">
       <a class="verify-brand" href="/">
-        <img src="/assets/cafr-logo.png" alt="ČAFR">
-        <span>Česká asociace fotbalových rozhodčích</span>
+        <img src="/assets/ucfr-logo.svg" alt="UČFR">
+        <span>Unie českých fotbalových rozhodčích</span>
       </a>
       ${content}
       <a class="secondary dark verify-home" href="/">Zpět na hlavní stránku</a>

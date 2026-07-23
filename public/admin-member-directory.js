@@ -33,7 +33,7 @@
   }
 
   function memberNumber(user) {
-    return `CAFR-${String(user.id || '').slice(-8).toUpperCase()}`;
+    return `UCFR-${String(user.id || '').slice(-8).toUpperCase()}`;
   }
 
   function normalize(value) {
