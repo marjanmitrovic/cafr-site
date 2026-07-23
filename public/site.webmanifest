@@ -10,8 +10,8 @@
   "theme_color": "#0b2a55",
   "icons": [
     {
-      "src": "/assets/ucfr-logo.png?v=6",
-      "sizes": "192x247",
+      "src": "/assets/ucfr-logo.png?v=7",
+      "sizes": "any",
       "type": "image/png",
       "purpose": "any"
     }
