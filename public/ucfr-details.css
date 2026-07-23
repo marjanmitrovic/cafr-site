@@ -1,0 +1,31 @@
+.document-links {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: min(100%, 430px);
+}
+
+.document-links .document-link {
+  justify-content: flex-start;
+  white-space: normal;
+}
+
+.video-analysis-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+  text-decoration: none;
+}
+
+@media (max-width: 720px) {
+  .document-links {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .document-links .document-link {
+    width: 100%;
+    justify-content: center;
+  }
+}
