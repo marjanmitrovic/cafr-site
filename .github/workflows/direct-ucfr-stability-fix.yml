@@ -83,10 +83,7 @@ jobs:
                   raise SystemExit('Could not find video card insertion point')
               main = main.replace(marker, video + marker, 1)
 
-          documents_pattern = re.compile(
-              r'    <section class="documents-section" id="documents">.*?    </section>\n\n    <footer id="contact">',
-              re.S,
-          )
+          documents_pattern = re.compile(r'    <section class="documents-section" id="documents">.*?    </section>\n\n    <footer id="contact">', re.S)
           documents = '''    <section class="documents-section" id="documents">
       <div>
         <span class="section-label">DOCUMENTS</span>
@@ -94,12 +91,8 @@ jobs:
         <p>${lang === 'cs' ? 'Ověřené údaje spolku a veřejné listiny vedené Ministerstvem spravedlnosti České republiky.' : 'Verified association details and public documents maintained by the Ministry of Justice of the Czech Republic.'}</p>
       </div>
       <div class="document-links">
-        <a class="document-link" href="https://or.justice.cz/ias/ui/rejstrik-firma.vysledky?subjektId=1306981&typ=PLATNY" target="_blank" rel="noopener noreferrer">
-          📄 ${lang === 'cs' ? 'Veřejný rejstřík spolku' : 'Public register entry'}
-        </a>
-        <a class="document-link" href="https://or.justice.cz/ias/ui/vypis-sl-detail?dokument=89888399&subjektId=1306981&spis=1476835" target="_blank" rel="noopener noreferrer">
-          📄 ${lang === 'cs' ? 'Sbírka listin – dokument 89888399' : 'Collection of documents – document 89888399'}
-        </a>
+        <a class="document-link" href="https://or.justice.cz/ias/ui/rejstrik-firma.vysledky?subjektId=1306981&typ=PLATNY" target="_blank" rel="noopener noreferrer">📄 ${lang === 'cs' ? 'Veřejný rejstřík spolku' : 'Public register entry'}</a>
+        <a class="document-link" href="https://or.justice.cz/ias/ui/vypis-sl-detail?dokument=89888399&subjektId=1306981&spis=1476835" target="_blank" rel="noopener noreferrer">📄 ${lang === 'cs' ? 'Sbírka listin – dokument 89888399' : 'Collection of documents – document 89888399'}</a>
       </div>
     </section>
 
@@ -107,14 +100,13 @@ jobs:
           main, count = documents_pattern.subn(documents, main, count=1)
           if count != 1:
               raise SystemExit(f'Documents replacement count was {count}')
-
           main_path.write_text(main, encoding='utf-8')
 
           index_path = root / 'index.html'
           index = index_path.read_text(encoding='utf-8')
           index = re.sub(r'/assets/ucfr-logo\.(?:svg|png)(?:\?v=\d+)?', '/assets/ucfr-logo.png?v=7', index)
-          index = index.replace('href="/theme-toggle.css"', 'href="/theme-toggle.css?v=4"')
-          index = index.replace('src="/theme-toggle.js"', 'src="/theme-toggle.js?v=4"')
+          index = re.sub(r'href="/theme-toggle\.css(?:\?v=\d+)?"', 'href="/theme-toggle.css?v=4"', index)
+          index = re.sub(r'src="/theme-toggle\.js(?:\?v=\d+)?"', 'src="/theme-toggle.js?v=4"', index)
           index = re.sub(r'\n\s*<script src="/ucfr-details\.js\?v=\d+" defer></script>', '', index)
           index = re.sub(r'\n\s*<script src="/ucfr-brand\.js\?v=\d+" defer></script>', '', index)
           index_path.write_text(index, encoding='utf-8')
@@ -146,3 +138,5 @@ jobs:
           git add -A
           git commit -m "Remove runtime DOM patching and stabilize UČFR site" || exit 0
           git push
+
+# trigger: 2
