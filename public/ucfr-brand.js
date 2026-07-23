@@ -2,65 +2,20 @@
   'use strict';
 
   const LOGO_PATH = '/assets/ucfr-logo.svg';
-  const replacements = [
-    ['UNIE ČESKÝCH FOTBALOVÝCH ROZHODČÍCH', 'UNIE ČESKÝCH FOTBALOVÝCH ROZHODČÍCH'],
-    ['Unie českých fotbalových rozhodčích', 'Unie českých fotbalových rozhodčích'],
-    ['Union of Czech Football Referees', 'Union of Czech Football Referees'],
-    ['UNIE ČESKÝCH', 'UNIE ČESKÝCH'],
-    ['Unie českých', 'Unie českých'],
-    ['UČFR', 'UČFR'],
-  ];
 
-  function replaceBrand(value) {
-    return replacements.reduce(
-      (result, [from, to]) => String(result ?? '').split(from).join(to),
-      value,
-    );
-  }
+  function updateLogos(root = document) {
+    root.querySelectorAll?.('img[src*="ucfr-logo.svg"]').forEach((image) => {
+      if (image.getAttribute('src') !== LOGO_PATH) {
+        image.setAttribute('src', LOGO_PATH);
+      }
+    });
 
-  function updateElement(element) {
-    if (!(element instanceof Element)) return;
-
-    if (element.matches('img[src$="/assets/ucfr-logo.svg"], img[src="/assets/ucfr-logo.svg"]')) {
-      element.setAttribute('src', LOGO_PATH);
-    }
-
-    if (element.matches('link[rel~="icon"], link[rel="apple-touch-icon"]')) {
-      const href = element.getAttribute('href') || '';
-      if (href.endsWith('/assets/ucfr-logo.svg')) element.setAttribute('href', LOGO_PATH);
-    }
-
-    for (const attribute of ['alt', 'title', 'aria-label', 'placeholder', 'content']) {
-      if (!element.hasAttribute(attribute)) continue;
-      const current = element.getAttribute(attribute) || '';
-      const next = replaceBrand(current);
-      if (next !== current) element.setAttribute(attribute, next);
-    }
-  }
-
-  function updateTree(root = document.documentElement) {
-    if (!root) return;
-
-    if (root.nodeType === Node.TEXT_NODE) {
-      const parent = root.parentElement;
-      if (!parent || parent.closest('script, style, textarea, code, pre')) return;
-      const current = root.nodeValue || '';
-      const next = replaceBrand(current);
-      if (next !== current) root.nodeValue = next;
-      return;
-    }
-
-    if (root.nodeType !== Node.ELEMENT_NODE && root.nodeType !== Node.DOCUMENT_NODE) return;
-
-    if (root.nodeType === Node.ELEMENT_NODE) updateElement(root);
-
-    const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT);
-    let node = walker.nextNode();
-    while (node) {
-      if (node.nodeType === Node.ELEMENT_NODE) updateElement(node);
-      else updateTree(node);
-      node = walker.nextNode();
-    }
+    root.querySelectorAll?.('link[rel~="icon"], link[rel="apple-touch-icon"]').forEach((link) => {
+      const href = link.getAttribute('href') || '';
+      if (href.includes('ucfr-logo.svg') && href !== LOGO_PATH) {
+        link.setAttribute('href', LOGO_PATH);
+      }
+    });
   }
 
   function patchCardEngine() {
@@ -70,7 +25,6 @@
     const patched = Object.freeze({
       ...engine,
       __ucfrBrandPatched: true,
-      renderCardSvg: async (...args) => replaceBrand(await engine.renderCardSvg(...args)),
     });
 
     window.CAFRMemberCards = patched;
@@ -78,29 +32,15 @@
   }
 
   function applyBrand() {
-    document.title = replaceBrand(document.title);
-    updateTree(document.documentElement);
+    updateLogos();
     patchCardEngine();
   }
 
-  const observer = new MutationObserver((mutations) => {
-    for (const mutation of mutations) {
-      mutation.addedNodes.forEach((node) => updateTree(node));
-      if (mutation.type === 'attributes' && mutation.target instanceof Element) {
-        updateElement(mutation.target);
-      }
-    }
-    patchCardEngine();
-  });
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applyBrand, { once: true });
+  } else {
+    applyBrand();
+  }
 
-  observer.observe(document.documentElement, {
-    childList: true,
-    subtree: true,
-    attributes: true,
-    attributeFilter: ['src', 'href', 'alt', 'title', 'aria-label', 'placeholder', 'content'],
-  });
-
-  applyBrand();
-  window.addEventListener('DOMContentLoaded', applyBrand, { once: true });
-  window.setTimeout(applyBrand, 0);
+  window.setTimeout(applyBrand, 250);
 })();
