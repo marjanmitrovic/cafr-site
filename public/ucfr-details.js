@@ -4,9 +4,8 @@
   const VIDEO_URL = 'https://youtube.com/@refacademy?si=nvtPkzVsGe30KaRA';
   const REGISTER_URL = 'https://or.justice.cz/ias/ui/rejstrik-firma.vysledky?subjektId=1306981&typ=PLATNY';
   const DOCUMENT_URL = 'https://or.justice.cz/ias/ui/vypis-sl-detail?dokument=89888399&subjektId=1306981&spis=1476835';
-
-  let observer = null;
-  let scheduled = false;
+  const LOGO_URL = '/assets/ucfr-logo.png?v=6';
+  let refreshTimer = null;
 
   function language() {
     return document.documentElement.lang === 'en' ? 'en' : 'cs';
@@ -16,14 +15,19 @@
     const brand = document.querySelector('.brand');
     if (!brand) return;
 
-    const strong = brand.querySelector('strong');
-    const subtitle = brand.querySelector('span');
+    const logo = brand.querySelector('img');
+    if (logo && logo.getAttribute('src') !== LOGO_URL) logo.setAttribute('src', LOGO_URL);
 
+    const strong = brand.querySelector('strong');
     if (strong) {
-      strong.textContent = 'Unie českých fotbalových rozhodčích';
+      const name = language() === 'en'
+        ? 'Union of Czech Football Referees'
+        : 'Unie českých fotbalových rozhodčích';
+      if (strong.textContent !== name) strong.textContent = name;
       strong.classList.add('ucfr-full-brand-name');
     }
 
+    const subtitle = brand.querySelector('span');
     if (subtitle) subtitle.hidden = true;
   }
 
@@ -101,38 +105,39 @@
   }
 
   function applyUpdates() {
-    observer?.disconnect();
-
     updateBrandHeader();
     updateMemberExample();
     updateIco();
     updateDocuments();
     addVideoAnalysis();
-
-    const app = document.querySelector('#app');
-    if (observer && app) {
-      observer.observe(app, { childList: true, subtree: true });
-    }
   }
 
-  function scheduleUpdates() {
-    if (scheduled) return;
-    scheduled = true;
-
-    window.requestAnimationFrame(() => {
-      scheduled = false;
-      applyUpdates();
-    });
-  }
-
-  function start() {
-    observer = new MutationObserver(scheduleUpdates);
-    applyUpdates();
+  function scheduleUpdates(delay = 0) {
+    window.clearTimeout(refreshTimer);
+    refreshTimer = window.setTimeout(applyUpdates, delay);
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', start, { once: true });
+    document.addEventListener('DOMContentLoaded', () => {
+      applyUpdates();
+      scheduleUpdates(250);
+      scheduleUpdates(1000);
+    }, { once: true });
   } else {
-    start();
+    applyUpdates();
+    scheduleUpdates(250);
   }
+
+  document.addEventListener('click', () => {
+    scheduleUpdates(0);
+    window.setTimeout(applyUpdates, 350);
+    window.setTimeout(applyUpdates, 1200);
+  });
+
+  document.addEventListener('submit', () => {
+    window.setTimeout(applyUpdates, 500);
+    window.setTimeout(applyUpdates, 1500);
+  });
+
+  window.addEventListener('pageshow', applyUpdates);
 })();
