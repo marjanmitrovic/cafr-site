@@ -1,29 +1,36 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
-  <title id="title">UČFR</title>
-  <desc id="desc">Logo Unie českých fotbalových rozhodčích</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" role="img" aria-labelledby="title desc">
+  <title id="title">Znak UČFR</title>
+  <desc id="desc">Znak Unie českých fotbalových rozhodčích se státními barvami, píšťalkou a fotbalovým míčem.</desc>
   <defs>
-    <linearGradient id="navy" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#082f6d"/>
-      <stop offset="1" stop-color="#0b4ea2"/>
-    </linearGradient>
-    <clipPath id="innerClip">
-      <circle cx="256" cy="256" r="184"/>
+    <clipPath id="fieldClip">
+      <path d="M300 82 494 138v240c0 160-71 264-194 326-123-62-194-166-194-326V138Z"/>
     </clipPath>
   </defs>
-  <circle cx="256" cy="256" r="242" fill="url(#navy)"/>
-  <circle cx="256" cy="256" r="214" fill="#ffffff" stroke="#dce5f1" stroke-width="8"/>
-  <g clip-path="url(#innerClip)">
-    <rect x="72" y="72" width="368" height="368" fill="#ffffff"/>
-    <path d="M50 364 L462 196 L462 266 L50 434 Z" fill="#d71920"/>
-    <path d="M50 320 L462 152 L462 202 L50 370 Z" fill="#1c5aa6"/>
-    <path d="M50 290 L462 122 L462 152 L50 320 Z" fill="#ffffff"/>
+
+  <path d="M300 20 550 100v290c0 200-95 325-250 400C145 715 50 590 50 390V100Z" fill="#0a2f5a"/>
+  <path d="M300 45 528 115v270c0 183-85 302-228 373C157 687 72 568 72 385V115Z" fill="#ffffff"/>
+  <path d="M300 64 512 126v256c0 171-78 280-212 348C166 662 88 553 88 382V126Z" fill="#0a2f5a"/>
+  <path d="M300 82 494 138v240c0 160-71 264-194 326-123-62-194-166-194-326V138Z" fill="#ffffff"/>
+
+  <g clip-path="url(#fieldClip)">
+    <path d="M80 130 300 66 520 130 300 330Z" fill="#1859a9"/>
+    <path d="M300 330 520 118v570L300 735Z" fill="#d8202a"/>
   </g>
-  <g transform="translate(256 216)">
-    <circle r="104" fill="#ffffff" stroke="#0b2a55" stroke-width="10"/>
-    <path d="M0-48 46-15 29 39-29 39-46-15Z" fill="#0b2a55"/>
-    <path d="M0-98 0-48M93-30 46-15M58 80 29 39M-58 80-29 39M-93-30-46-15" fill="none" stroke="#0b2a55" stroke-width="10" stroke-linecap="round"/>
-    <path d="M0-98 55-80 93-30 88 31 58 80 0 101-58 80-88 31-93-30-55-80Z" fill="none" stroke="#0b2a55" stroke-width="8" stroke-linejoin="round"/>
+
+  <g stroke="#ffffff" stroke-linejoin="round">
+    <circle cx="423" cy="296" r="27" fill="#0a2f5a" stroke-width="9"/>
+    <circle cx="423" cy="296" r="9" fill="none" stroke-width="6"/>
+    <path d="M151 376 294 286 383 347 238 459Z" fill="#0a2f5a" stroke-width="10"/>
+    <path d="M151 376 196 408v48l-45-34Z" fill="#0a2f5a" stroke-width="9"/>
+    <path d="M218 340 260 313 296 338 252 366Z" fill="#0a2f5a" stroke-width="8"/>
+    <circle cx="387" cy="355" r="78" fill="#0a2f5a" stroke-width="11"/>
+    <path d="M420 302c-33 4-55 31-57 62-2 34 17 64 50 72" fill="none" stroke-width="9" stroke-linecap="round"/>
   </g>
-  <rect x="87" y="354" width="338" height="96" rx="48" fill="#ffffff" stroke="#0b2a55" stroke-width="8"/>
-  <text x="256" y="421" text-anchor="middle" fill="#0b2a55" font-family="Montserrat, Arial, sans-serif" font-size="76" font-weight="800" letter-spacing="3">UČFR</text>
+
+  <g transform="translate(300 588)">
+    <circle r="72" fill="#ffffff" stroke="#0a2f5a" stroke-width="10"/>
+    <path d="m0-29 28 20-11 33h-34L-28-9Z" fill="#0a2f5a"/>
+    <path d="M0-67 0-29M64-21 28-9M40 55 17 24M-40 55-17 24M-64-21-28-9" fill="none" stroke="#0a2f5a" stroke-width="8" stroke-linecap="round"/>
+    <path d="M0-67 40-55 64-21 61 24 40 55 0 68-40 55-61 24-64-21-40-55Z" fill="none" stroke="#0a2f5a" stroke-width="6" stroke-linejoin="round"/>
+  </g>
 </svg>
