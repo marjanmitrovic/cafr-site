@@ -24,6 +24,9 @@ jobs:
           node --check public/member-card-system.js
           node --check public/simple-member-card.js
           node --check public/ucfr-brand.js
-          node --check server/ucfr-email-preload.js
+          node --check public/ucfr-details.js
+          node --check server/ucfr-details-preload.js
+      - name: Validate member card template
+        run: npm run test:cards
       - name: Build
         run: npm run build
