@@ -10,6 +10,23 @@
     return document.documentElement.lang === 'en' ? 'en' : 'cs';
   }
 
+  function ensureThemeButton() {
+    const actions = document.querySelector('.topbar .actions');
+    if (!actions || actions.querySelector('[data-theme-toggle]')) return;
+
+    const button = document.createElement('button');
+    button.id = 'siteThemeToggle';
+    button.type = 'button';
+    button.className = 'theme-toggle-btn site-theme-toggle';
+    button.dataset.themeToggle = 'true';
+    button.setAttribute('aria-label', language() === 'en' ? 'Switch theme' : 'Přepnout motiv');
+    button.innerHTML = '<span class="theme-toggle-icon" aria-hidden="true">☾</span>';
+
+    const languageButton = actions.querySelector('#langBtn');
+    if (languageButton) languageButton.insertAdjacentElement('afterend', button);
+    else actions.prepend(button);
+  }
+
   function updateBrandHeader() {
     const brand = document.querySelector('.brand');
     if (!brand) return;
@@ -106,6 +123,7 @@
   }
 
   function applyUpdates() {
+    ensureThemeButton();
     updateBrandHeader();
     updateMemberExample();
     updateIco();
