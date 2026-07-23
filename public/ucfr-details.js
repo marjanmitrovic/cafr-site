@@ -5,6 +5,7 @@
   const REGISTER_URL = 'https://or.justice.cz/ias/ui/rejstrik-firma.vysledky?subjektId=1306981&typ=PLATNY';
   const DOCUMENT_URL = 'https://or.justice.cz/ias/ui/vypis-sl-detail?dokument=89888399&subjektId=1306981&spis=1476835';
   const LOGO_URL = '/assets/ucfr-logo.png?v=7';
+  const CONTACT_EMAIL = 'unierozhodcich@gmail.com';
 
   function language() {
     return document.documentElement.lang === 'en' ? 'en' : 'cs';
@@ -62,6 +63,18 @@
     document.querySelectorAll('.footer-brand p').forEach((paragraph) => {
       if (paragraph.textContent.includes('IČO: bude doplněno')) {
         paragraph.innerHTML = paragraph.innerHTML.replace('IČO: bude doplněno', 'IČO: 24417513');
+      }
+    });
+  }
+
+  function updateContactEmail() {
+    const footer = document.querySelector('footer#contact');
+    if (!footer) return;
+
+    footer.querySelectorAll('p').forEach((paragraph) => {
+      const text = paragraph.textContent || '';
+      if (text.includes('info@cafr.cz') || text.includes(CONTACT_EMAIL)) {
+        paragraph.innerHTML = `<a class="footer-link" href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a><br>Praha, Česká republika`;
       }
     });
   }
@@ -127,6 +140,7 @@
     updateBrandHeader();
     updateMemberExample();
     updateIco();
+    updateContactEmail();
     updateDocuments();
     updateVideoAnalysis();
   }
