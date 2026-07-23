@@ -114,7 +114,7 @@ function renderDashboard() {
   app.innerHTML = `
     <div class="dashboard-layout">
       <aside class="dashboard-sidebar">
-        <a class="dashboard-brand" href="/"><img src="/assets/ucfr-logo.svg" alt="UČFR"><span>UČFR</span></a>
+        <a class="dashboard-brand" href="/"><img src="/assets/ucfr-logo.png?v=5" alt="UČFR"><span>UČFR</span></a>
         <nav class="dashboard-nav">
           <button class="active" data-view="overview">Přehled</button>
           <button data-view="card">Členský průkaz</button>
@@ -200,7 +200,7 @@ function renderView(view, approved) {
     target.innerHTML = `
       <section class="dashboard-panel digital-card-panel">
         <div class="digital-member-card">
-          <div class="digital-card-head"><img src="/assets/ucfr-logo.svg" alt="UČFR"><span>ČLENSKÝ PRŮKAZ</span></div>
+          <div class="digital-card-head"><img src="/assets/ucfr-logo.png?v=5" alt="UČFR"><span>ČLENSKÝ PRŮKAZ</span></div>
           <h2>${escapeHtml(user.firstName)} ${escapeHtml(user.lastName)}</h2>
           <p>${cardNumber(user)}</p>
           <img class="dashboard-qr" src="${qrUrl(user)}" alt="QR kód členského průkazu">

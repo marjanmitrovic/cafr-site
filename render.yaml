@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: cafr-site
+    name: ucfr
     env: node
     plan: free
     buildCommand: npm install --no-audit --no-fund && npm run render:build
@@ -22,7 +22,7 @@ services:
       - key: ADMIN_PASSWORD
         sync: false
       - key: WEB_ORIGIN
-        sync: false
+        value: https://ucfr.onrender.com
       - key: RESEND_API_KEY
         sync: false
       - key: EMAIL_FROM

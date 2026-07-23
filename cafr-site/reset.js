@@ -13,7 +13,7 @@ function escapeHtml(value) {
 app.innerHTML = `
   <main class="standalone-page">
     <section class="dashboard-panel standalone-card">
-      <a class="dashboard-brand" href="/"><img src="/assets/ucfr-logo.svg" alt="UČFR"><span>UČFR</span></a>
+      <a class="dashboard-brand" href="/"><img src="/assets/ucfr-logo.png?v=5" alt="UČFR"><span>UČFR</span></a>
       <h1>Obnovení hesla</h1>
       ${token ? `
         <form id="resetForm" class="form">

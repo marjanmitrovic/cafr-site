@@ -15,7 +15,7 @@ function shell(content) {
   app.innerHTML = `
     <main class="verify-page">
       <a class="verify-brand" href="/">
-        <img src="/assets/ucfr-logo.svg" alt="UČFR">
+        <img src="/assets/ucfr-logo.png?v=5" alt="UČFR">
         <span>Unie českých fotbalových rozhodčích</span>
       </a>
       <p class="verify-org-meta">IČO: bude doplněno</p>

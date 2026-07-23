@@ -6,14 +6,14 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "background_color": "#f4f7fb",
   "theme_color": "#0b2a55",
   "icons": [
     {
-      "src": "/assets/ucfr-logo.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "src": "/assets/ucfr-logo.png?v=5",
+      "sizes": "192x247",
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }

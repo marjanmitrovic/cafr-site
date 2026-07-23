@@ -4,7 +4,7 @@
   const CARD_WIDTH = 1011;
   const CARD_HEIGHT = 638;
   const TEMPLATE_URL = '/cards/card-template.svg';
-  const LOGO_URL = '/assets/ucfr-logo.svg';
+  const LOGO_URL = '/assets/ucfr-logo.png?v=5';
   const QR_ENDPOINT = 'https://api.qrserver.com/v1/create-qr-code/';
   const DIRECTORY_SELECTOR = '.admin-directory-table';
 

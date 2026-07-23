@@ -110,7 +110,7 @@
     return `
       <article class="cafr-id-card" aria-label="UČFR členský průkaz">
         <div class="cafr-card-top">
-          <img class="cafr-card-logo" src="/assets/ucfr-logo.svg" alt="UČFR">
+          <img class="cafr-card-logo" src="/assets/ucfr-logo.png?v=5" alt="UČFR">
           <div class="cafr-card-brand">
             <strong>UČFR</strong>
             <span>UNIE ČESKÝCH<br>FOTBALOVÝCH ROZHODČÍCH</span>
