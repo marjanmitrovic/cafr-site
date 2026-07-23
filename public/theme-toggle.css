@@ -1,49 +1,68 @@
-:root { color-scheme: light; }
+:root {
+  color-scheme: light;
+}
+
 html.theme-light {
   color-scheme: light;
-  --ucfr-page: #f4f7fb;
+  --ucfr-page: #f5f7fb;
   --ucfr-surface: #ffffff;
-  --ucfr-surface-2: #eef3f8;
+  --ucfr-surface-alt: #edf2f7;
   --ucfr-text: #172033;
   --ucfr-muted: #647084;
   --ucfr-border: #dce4ed;
-  --ucfr-header: rgba(255,255,255,.97);
-  --ucfr-shadow: 0 16px 38px rgba(7,27,49,.10);
-}
-html.theme-dark {
-  color-scheme: dark;
-  --ucfr-page: #07111f;
-  --ucfr-surface: #0f2036;
-  --ucfr-surface-2: #132a45;
-  --ucfr-text: #edf4ff;
-  --ucfr-muted: #b8c6d8;
-  --ucfr-border: rgba(255,255,255,.14);
-  --ucfr-header: rgba(7,17,31,.97);
-  --ucfr-shadow: 0 18px 45px rgba(0,0,0,.30);
+  --ucfr-header: rgba(255, 255, 255, .98);
+  --ucfr-shadow: 0 16px 38px rgba(7, 27, 49, .10);
 }
 
-body, .portal-body {
-  background: var(--ucfr-page) !important;
-  color: var(--ucfr-text) !important;
-  transition: background-color .2s ease, color .2s ease;
+html.theme-dark {
+  color-scheme: dark;
+  --ucfr-page: #08131f;
+  --ucfr-surface: #102235;
+  --ucfr-surface-alt: #152b40;
+  --ucfr-text: #f2f6fb;
+  --ucfr-muted: #b8c5d4;
+  --ucfr-border: #294158;
+  --ucfr-header: rgba(8, 19, 31, .98);
+  --ucfr-shadow: 0 18px 46px rgba(0, 0, 0, .30);
+}
+
+body,
+.portal-body {
+  background: var(--ucfr-page);
+  color: var(--ucfr-text);
+  transition: background-color .18s ease, color .18s ease;
 }
 
 .topbar {
   background: var(--ucfr-header) !important;
   border-color: var(--ucfr-border) !important;
-  box-shadow: 0 6px 22px rgba(7,27,49,.08);
+  box-shadow: 0 6px 22px rgba(7, 27, 49, .08);
 }
-.brand, nav a, .ghost, .lang, .menu { color: var(--ucfr-text) !important; }
+
+.brand,
+.topbar nav a,
+.topbar .ghost,
+.topbar .lang,
+.topbar .menu {
+  color: var(--ucfr-text) !important;
+}
+
 .brand img {
   display: block !important;
+  width: 92px !important;
+  height: 108px !important;
+  object-fit: contain !important;
   opacity: 1 !important;
   visibility: visible !important;
-  object-fit: contain !important;
   background: transparent !important;
+  border: 0 !important;
   border-radius: 0 !important;
-  filter: drop-shadow(0 4px 8px rgba(7,27,49,.18));
+  filter: drop-shadow(0 5px 10px rgba(5, 25, 48, .18));
 }
-html.theme-dark .brand img { filter: drop-shadow(0 4px 10px rgba(255,255,255,.10)); }
+
+html.theme-dark .brand img {
+  filter: drop-shadow(0 5px 12px rgba(255, 255, 255, .12));
+}
 
 .theme-toggle-btn {
   display: inline-flex;
@@ -60,65 +79,139 @@ html.theme-dark .brand img { filter: drop-shadow(0 4px 10px rgba(255,255,255,.10
   font-size: 13px;
   font-weight: 800;
   cursor: pointer;
-  box-shadow: 0 5px 14px rgba(7,27,49,.08);
+  box-shadow: 0 5px 14px rgba(7, 27, 49, .08);
+  transition: transform .16s ease, background-color .16s ease, border-color .16s ease;
 }
-.theme-toggle-btn:hover { transform: translateY(-1px); }
-.theme-toggle-icon { width: 18px; font-size: 18px; line-height: 1; }
 
-.section, .membership, .education-hub, .documents-section, .governance,
-.detail-section, .protection-detail, .dashboard-main {
+.theme-toggle-btn:hover {
+  transform: translateY(-1px);
+}
+
+.theme-toggle-icon {
+  width: 18px;
+  font-size: 18px;
+  line-height: 1;
+}
+
+html.theme-dark .section,
+html.theme-dark .membership,
+html.theme-dark .education-hub,
+html.theme-dark .documents-section,
+html.theme-dark .governance,
+html.theme-dark .detail-section,
+html.theme-dark .protection-detail,
+html.theme-dark .dashboard-main {
   background: var(--ucfr-page) !important;
   color: var(--ucfr-text) !important;
 }
-.detail-section.detail-alt, .governance, .education-hub, .protection-detail {
-  background: var(--ucfr-surface-2) !important;
+
+html.theme-dark .detail-section.detail-alt,
+html.theme-dark .governance,
+html.theme-dark .education-hub,
+html.theme-dark .protection-detail {
+  background: var(--ucfr-surface-alt) !important;
 }
 
-.card, .test-mode-card, .membership-card, .news article, .quiz-preview,
-.detail-grid div, .detail-section ul, .membership-rules article,
-.dashboard-panel, .verify-card, .document-card, .seminar-card, .fee-card,
-.legal-request-card, .notification-item, .incident-history-item,
-.admin-member-card, .admin-question, .admin-create, .admin-stats article,
-.modal-box {
+html.theme-dark .card,
+html.theme-dark .test-mode-card,
+html.theme-dark .membership-card,
+html.theme-dark .news article,
+html.theme-dark .quiz-preview,
+html.theme-dark .detail-grid div,
+html.theme-dark .detail-section ul,
+html.theme-dark .membership-rules article,
+html.theme-dark .dashboard-panel,
+html.theme-dark .verify-card,
+html.theme-dark .document-card,
+html.theme-dark .seminar-card,
+html.theme-dark .fee-card,
+html.theme-dark .legal-request-card,
+html.theme-dark .notification-item,
+html.theme-dark .incident-history-item,
+html.theme-dark .admin-member-card,
+html.theme-dark .admin-question,
+html.theme-dark .admin-create,
+html.theme-dark .admin-stats article,
+html.theme-dark .modal-box {
   background: var(--ucfr-surface) !important;
   color: var(--ucfr-text) !important;
   border-color: var(--ucfr-border) !important;
   box-shadow: var(--ucfr-shadow);
 }
 
-.section-head h2, .card h3, .test-mode-card h3, .membership h2,
-.news h3, .detail-intro h2, .detail-section h2, .dashboard-panel h2,
-.dashboard-panel h3, .documents-section h2 {
+html.theme-dark .section-head h2,
+html.theme-dark .card h3,
+html.theme-dark .test-mode-card h3,
+html.theme-dark .membership h2,
+html.theme-dark .news h3,
+html.theme-dark .detail-intro h2,
+html.theme-dark .detail-section h2,
+html.theme-dark .dashboard-panel h2,
+html.theme-dark .dashboard-panel h3,
+html.theme-dark .documents-section h2 {
   color: var(--ucfr-text) !important;
 }
-p, .muted, .section-head p, .card p, .test-mode-card p,
-.membership p, .news p, .detail-intro p, .detail-section p,
-.documents-section p, .dashboard-panel p {
+
+html.theme-dark .section-head p,
+html.theme-dark .card p,
+html.theme-dark .test-mode-card p,
+html.theme-dark .membership-card > div > p,
+html.theme-dark .news article p,
+html.theme-dark .detail-intro p,
+html.theme-dark .detail-section p,
+html.theme-dark .documents-section p,
+html.theme-dark .dashboard-panel p,
+html.theme-dark .muted {
   color: var(--ucfr-muted) !important;
 }
 
-input, select, textarea, .answers button, .test-answers button {
-  background: var(--ucfr-surface) !important;
+html.theme-dark input,
+html.theme-dark select,
+html.theme-dark textarea,
+html.theme-dark .answers button,
+html.theme-dark .test-answers button {
+  background: #0c1c2c !important;
   color: var(--ucfr-text) !important;
   border-color: var(--ucfr-border) !important;
 }
-input::placeholder, textarea::placeholder { color: var(--ucfr-muted) !important; opacity: .85; }
 
-html.theme-dark nav.open, html.theme-dark .topbar nav { background: #0f2036 !important; }
-html.theme-light nav.open, html.theme-light .topbar nav { background: #ffffff !important; }
-
-html.theme-dark .member-card,
-html.theme-dark .incident,
-html.theme-dark .hero,
-html.theme-dark footer {
-  color: #ffffff !important;
+html.theme-dark input::placeholder,
+html.theme-dark textarea::placeholder {
+  color: #91a3b6 !important;
+  opacity: 1;
 }
-html.theme-dark .member-card h3,
-html.theme-dark .member-card p,
-html.theme-dark .member-card small { color: #ffffff !important; }
+
+html.theme-dark nav.open,
+html.theme-dark .topbar nav {
+  background: #102235 !important;
+}
+
+html.theme-light nav.open,
+html.theme-light .topbar nav {
+  background: #ffffff !important;
+}
+
+/* Hero, incident block, member card and footer keep their deliberate dark design in both themes. */
+.hero p,
+.incident p,
+.member-card p,
+.member-card small,
+footer p {
+  color: inherit;
+}
 
 @media (max-width: 720px) {
-  .theme-toggle-btn { min-width: 42px; padding: 9px 10px; }
-  .theme-toggle-label { display: none; }
-  .brand img { width: 62px !important; height: 76px !important; }
+  .theme-toggle-btn {
+    min-width: 42px;
+    padding: 9px 10px;
+  }
+
+  .theme-toggle-label {
+    display: none;
+  }
+
+  .brand img {
+    width: 58px !important;
+    height: 72px !important;
+  }
 }
