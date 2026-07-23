@@ -4,8 +4,7 @@
   const VIDEO_URL = 'https://youtube.com/@refacademy?si=nvtPkzVsGe30KaRA';
   const REGISTER_URL = 'https://or.justice.cz/ias/ui/rejstrik-firma.vysledky?subjektId=1306981&typ=PLATNY';
   const DOCUMENT_URL = 'https://or.justice.cz/ias/ui/vypis-sl-detail?dokument=89888399&subjektId=1306981&spis=1476835';
-  const LOGO_URL = '/assets/ucfr-logo.png?v=6';
-  let refreshTimer = null;
+  const LOGO_URL = '/assets/ucfr-logo.png?v=7';
 
   function language() {
     return document.documentElement.lang === 'en' ? 'en' : 'cs';
@@ -16,14 +15,17 @@
     if (!brand) return;
 
     const logo = brand.querySelector('img');
-    if (logo && logo.getAttribute('src') !== LOGO_URL) logo.setAttribute('src', LOGO_URL);
+    if (logo && logo.getAttribute('src') !== LOGO_URL) {
+      logo.setAttribute('src', LOGO_URL);
+      logo.hidden = false;
+    }
 
     const strong = brand.querySelector('strong');
     if (strong) {
       const name = language() === 'en'
         ? 'Union of Czech Football Referees'
         : 'Unie českých fotbalových rozhodčích';
-      if (strong.textContent !== name) strong.textContent = name;
+      if (strong.textContent.trim() !== name) strong.textContent = name;
       strong.classList.add('ucfr-full-brand-name');
     }
 
@@ -53,17 +55,15 @@
 
     const lang = language();
     if (section.dataset.ucfrOfficialDocuments === lang) return;
-
     section.dataset.ucfrOfficialDocuments = lang;
+
     section.innerHTML = `
       <div>
         <span class="section-label">DOCUMENTS</span>
         <h2>${lang === 'cs' ? 'Oficiální dokumenty UČFR' : 'Official UČFR documents'}</h2>
-        <p>${
-          lang === 'cs'
-            ? 'Ověřené údaje spolku a veřejné listiny vedené Ministerstvem spravedlnosti České republiky.'
-            : 'Verified association details and public documents maintained by the Ministry of Justice of the Czech Republic.'
-        }</p>
+        <p>${lang === 'cs'
+          ? 'Ověřené údaje spolku a veřejné listiny vedené Ministerstvem spravedlnosti České republiky.'
+          : 'Verified association details and public documents maintained by the Ministry of Justice of the Czech Republic.'}</p>
       </div>
       <div class="document-links">
         <a class="document-link" href="${REGISTER_URL}" target="_blank" rel="noopener noreferrer">
@@ -76,32 +76,33 @@
     `;
   }
 
-  function addVideoAnalysis() {
+  function updateVideoAnalysis() {
     const grid = document.querySelector('#tests .test-mode-grid');
-    if (!grid || grid.querySelector('.ucfr-video-analysis-card')) return;
+    if (!grid) return;
 
     const lang = language();
-    const card = document.createElement('article');
-    card.className = 'test-mode-card ucfr-video-analysis-card';
+    let card = grid.querySelector('.ucfr-video-analysis-card');
+
+    if (!card) {
+      card = document.createElement('article');
+      card.className = 'test-mode-card ucfr-video-analysis-card';
+      const resultsCard = [...grid.children].find((item) =>
+        item.textContent.includes('Moje výsledky') || item.textContent.includes('My results')
+      );
+      if (resultsCard) grid.insertBefore(card, resultsCard);
+      else grid.appendChild(card);
+    }
+
     card.innerHTML = `
       <div class="test-mode-icon">🎥</div>
       <h3>${lang === 'cs' ? 'Video analýzy' : 'Video analysis'}</h3>
-      <p>${
-        lang === 'cs'
-          ? 'Rozbory herních situací a rozhodnutí rozhodčích.'
-          : 'Breakdowns of match situations and refereeing decisions.'
-      }</p>
+      <p>${lang === 'cs'
+        ? 'Rozbory herních situací a rozhodnutí rozhodčích.'
+        : 'Breakdowns of match situations and refereeing decisions.'}</p>
       <a class="secondary dark video-analysis-link" href="${VIDEO_URL}" target="_blank" rel="noopener noreferrer">
         ${lang === 'cs' ? 'Otevřít Ref Academy' : 'Open Ref Academy'}
       </a>
     `;
-
-    const resultsCard = [...grid.children].find((item) =>
-      item.textContent.includes('Moje výsledky') || item.textContent.includes('My results')
-    );
-
-    if (resultsCard) grid.insertBefore(card, resultsCard);
-    else grid.appendChild(card);
   }
 
   function applyUpdates() {
@@ -109,35 +110,23 @@
     updateMemberExample();
     updateIco();
     updateDocuments();
-    addVideoAnalysis();
+    updateVideoAnalysis();
   }
 
-  function scheduleUpdates(delay = 0) {
-    window.clearTimeout(refreshTimer);
-    refreshTimer = window.setTimeout(applyUpdates, delay);
+  function applyAfterRender(delay = 0) {
+    window.setTimeout(applyUpdates, delay);
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      applyUpdates();
-      scheduleUpdates(250);
-      scheduleUpdates(1000);
-    }, { once: true });
+    document.addEventListener('DOMContentLoaded', applyUpdates, { once: true });
   } else {
     applyUpdates();
-    scheduleUpdates(250);
   }
 
-  document.addEventListener('click', () => {
-    scheduleUpdates(0);
-    window.setTimeout(applyUpdates, 350);
-    window.setTimeout(applyUpdates, 1200);
+  document.addEventListener('click', (event) => {
+    if (event.target.closest?.('#langBtn, #logoutBtn')) applyAfterRender(0);
   });
 
-  document.addEventListener('submit', () => {
-    window.setTimeout(applyUpdates, 500);
-    window.setTimeout(applyUpdates, 1500);
-  });
-
+  document.addEventListener('submit', () => applyAfterRender(150));
   window.addEventListener('pageshow', applyUpdates);
 })();
