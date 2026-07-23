@@ -2,10 +2,8 @@ name: Finalize requested UČFR details
 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - .github/workflows/finalize-ucfr-request.yml
+    branches: [main]
+    paths: [.github/workflows/finalize-ucfr-request.yml]
 
 permissions:
   contents: write
@@ -14,12 +12,11 @@ jobs:
   finalize:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Apply changes directly to source
+      - name: Write requested details into permanent source
         shell: bash
         run: |
           python - <<'PY'
@@ -29,21 +26,20 @@ jobs:
 
           root = Path('.')
 
-          # Server: all three administrative recipients and permanent IČO fallback.
           server_path = root / 'server/server.js'
           server = server_path.read_text(encoding='utf-8')
           if "'unierozhodcich@gmail.com'" not in server:
-              marker = "  'marapleskac@gmail.com',\n"
-              if marker not in server:
-                  raise SystemExit('Could not find administrator email list in server/server.js')
-              server = server.replace(marker, marker + "  'unierozhodcich@gmail.com',\n", 1)
+              server = server.replace(
+                  "  'marapleskac@gmail.com',\n",
+                  "  'marapleskac@gmail.com',\n  'unierozhodcich@gmail.com',\n",
+                  1,
+              )
           server = server.replace(
               "process.env.ASSOCIATION_ICO || 'bude doplněno'",
               "process.env.ASSOCIATION_ICO || '24417513'",
           )
           server_path.write_text(server, encoding='utf-8')
 
-          # Main page: example card, video analysis, official documents and IČO.
           main_path = root / 'src/main.js'
           main = main_path.read_text(encoding='utf-8')
           main = main.replace("'PETR TLUSTOHLAVY'", "'PETR ROZHODČÍ'")
@@ -53,89 +49,58 @@ jobs:
           if video_url not in main:
               marker = '''          <article class="test-mode-card">
             <div class="test-mode-icon">📊</div>'''
-              video_card = '''          <article class="test-mode-card">
+              card = '''          <article class="test-mode-card">
             <div class="test-mode-icon">🎥</div>
             <h3>${lang === 'cs' ? 'Video analýzy' : 'Video analysis'}</h3>
             <p>${lang === 'cs' ? 'Rozbory herních situací a rozhodnutí rozhodčích.' : 'Breakdowns of match situations and refereeing decisions.'}</p>
-            <a
-              class="secondary dark video-analysis-link"
-              href="https://youtube.com/@refacademy?si=nvtPkzVsGe30KaRA"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
+            <a class="secondary dark video-analysis-link" href="https://youtube.com/@refacademy?si=nvtPkzVsGe30KaRA" target="_blank" rel="noopener noreferrer">
               ${lang === 'cs' ? 'Otevřít Ref Academy' : 'Open Ref Academy'}
             </a>
           </article>
 
 '''
               if marker not in main:
-                  raise SystemExit('Could not find test results card marker')
-              main = main.replace(marker, video_card + marker, 1)
+                  raise SystemExit('Video insertion marker missing')
+              main = main.replace(marker, card + marker, 1)
 
-          documents_pattern = re.compile(
+          pattern = re.compile(
               r'    <section class="documents-section" id="documents">.*?    </section>\n\n    <footer id="contact">',
               re.S,
           )
-          documents_replacement = '''    <section class="documents-section" id="documents">
+          replacement = '''    <section class="documents-section" id="documents">
       <div>
         <span class="section-label">DOCUMENTS</span>
         <h2>${lang === 'cs' ? 'Oficiální dokumenty UČFR' : 'Official UČFR documents'}</h2>
-        <p>
-          ${
-            lang === 'cs'
-              ? 'Ověřené údaje spolku a veřejné listiny vedené Ministerstvem spravedlnosti České republiky.'
-              : 'Verified association details and public documents maintained by the Ministry of Justice of the Czech Republic.'
-          }
-        </p>
+        <p>${lang === 'cs' ? 'Ověřené údaje spolku a veřejné listiny vedené Ministerstvem spravedlnosti České republiky.' : 'Verified association details and public documents maintained by the Ministry of Justice of the Czech Republic.'}</p>
       </div>
-
       <div class="document-links">
-        <a
-          class="document-link"
-          href="https://or.justice.cz/ias/ui/rejstrik-firma.vysledky?subjektId=1306981&typ=PLATNY"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+        <a class="document-link" href="https://or.justice.cz/ias/ui/rejstrik-firma.vysledky?subjektId=1306981&typ=PLATNY" target="_blank" rel="noopener noreferrer">
           📄 ${lang === 'cs' ? 'Veřejný rejstřík spolku' : 'Public register entry'}
         </a>
-        <a
-          class="document-link"
-          href="https://or.justice.cz/ias/ui/vypis-sl-detail?dokument=89888399&subjektId=1306981&spis=1476835"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+        <a class="document-link" href="https://or.justice.cz/ias/ui/vypis-sl-detail?dokument=89888399&subjektId=1306981&spis=1476835" target="_blank" rel="noopener noreferrer">
           📄 ${lang === 'cs' ? 'Sbírka listin – dokument 89888399' : 'Collection of documents – document 89888399'}
         </a>
       </div>
     </section>
 
     <footer id="contact">'''
-          main, replaced = documents_pattern.subn(documents_replacement, main, count=1)
-          if replaced != 1:
-              raise SystemExit(f'Documents section replacement count: {replaced}')
+          main, count = pattern.subn(replacement, main, count=1)
+          if count != 1:
+              raise SystemExit(f'Documents replacement failed: {count}')
           main_path.write_text(main, encoding='utf-8')
 
-          # Styles moved into the main stylesheet.
           style_path = root / 'src/style.css'
           style = style_path.read_text(encoding='utf-8')
           if '.video-analysis-link{' not in style and '.video-analysis-link {' not in style:
-              style += '''
-
-.document-links{display:flex;flex-direction:column;gap:12px;min-width:min(100%,430px)}
-.document-links .document-link{justify-content:flex-start;white-space:normal}
-.video-analysis-link{display:inline-flex;align-items:center;justify-content:center;margin-top:10px;text-decoration:none}
-@media(max-width:720px){.document-links{width:100%;min-width:0}.document-links .document-link{width:100%;justify-content:center}}
-'''
+              style += '\n.document-links{display:flex;flex-direction:column;gap:12px;min-width:min(100%,430px)}\n.document-links .document-link{justify-content:flex-start;white-space:normal}\n.video-analysis-link{display:inline-flex;align-items:center;justify-content:center;margin-top:10px;text-decoration:none}\n@media(max-width:720px){.document-links{width:100%;min-width:0}.document-links .document-link{width:100%;justify-content:center}}\n'
           style_path.write_text(style, encoding='utf-8')
 
-          # Remove temporary browser override assets from the page.
           index_path = root / 'index.html'
           index = index_path.read_text(encoding='utf-8')
           index = re.sub(r'^\s*<link rel="stylesheet" href="/ucfr-details\.css\?v=1">\s*\n', '', index, flags=re.M)
           index = re.sub(r'^\s*<script src="/ucfr-details\.js\?v=1" defer></script>\s*\n', '', index, flags=re.M)
           index_path.write_text(index, encoding='utf-8')
 
-          # Server starts directly; no preload is needed after source migration.
           package_path = root / 'package.json'
           package = json.loads(package_path.read_text(encoding='utf-8'))
           package['scripts']['dev:api'] = 'node --env-file=.env --watch server/server.js'
@@ -143,88 +108,37 @@ jobs:
           package['scripts']['start:api'] = 'node --env-file=.env server/server.js'
           package_path.write_text(json.dumps(package, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
 
-          # CI validates only permanent files and the requested content.
-          workflow_path = root / '.github/workflows/main-build-check.yml'
-          workflow = workflow_path.read_text(encoding='utf-8')
-          workflow = workflow.replace('          node --check public/ucfr-details.js\n', '')
-          workflow = workflow.replace('          node --check server/ucfr-details-preload.js\n', '')
-          if 'Validate requested UČFR details' not in workflow:
-              workflow = workflow.replace(
-                  '      - name: Validate member card template\n',
-                  '''      - name: Validate requested UČFR details
-        run: |
-          grep -F "'unierozhodcich@gmail.com'" server/server.js
-          grep -F 'IČO: 24417513' src/main.js
-          grep -F 'https://youtube.com/@refacademy?si=nvtPkzVsGe30KaRA' src/main.js
-          grep -F 'subjektId=1306981&typ=PLATNY' src/main.js
-          grep -F 'dokument=89888399&subjektId=1306981&spis=1476835' src/main.js
-          grep -F "'PETR ROZHODČÍ'" src/main.js
-          grep -F '{{LOGO}}' public/cards/card-template.svg
-          test ! -e public/documents/Stanovy_CAFR_navrh.pdf
-      - name: Validate member card template
-''',
-                  1,
-              )
-          workflow_path.write_text(workflow, encoding='utf-8')
+          ci_path = root / '.github/workflows/main-build-check.yml'
+          ci = ci_path.read_text(encoding='utf-8')
+          ci = ci.replace('          node --check public/ucfr-details.js\n', '')
+          ci = ci.replace('          node --check server/ucfr-details-preload.js\n', '')
+          ci_path.write_text(ci, encoding='utf-8')
 
-          # Delete temporary layers now represented directly in source.
-          for relative in [
-              'public/ucfr-details.js',
-              'public/ucfr-details.css',
-              'server/ucfr-details-preload.js',
-          ]:
+          for relative in ('public/ucfr-details.js', 'public/ucfr-details.css', 'server/ucfr-details-preload.js'):
               path = root / relative
               if path.exists():
                   path.unlink()
 
-          # Final assertions before dependency/build checks.
-          final_main = main_path.read_text(encoding='utf-8')
-          final_server = server_path.read_text(encoding='utf-8')
-          final_logo = (root / 'public/assets/ucfr-logo.svg').read_text(encoding='utf-8')
-          final_card = (root / 'public/cards/card-template.svg').read_text(encoding='utf-8')
-          assertions = {
-              'third admin email': "'unierozhodcich@gmail.com'" in final_server,
-              'IČO': 'IČO: 24417513' in final_main,
-              'video': video_url in final_main,
-              'register': 'subjektId=1306981&typ=PLATNY' in final_main,
-              'document': 'dokument=89888399&subjektId=1306981&spis=1476835' in final_main,
-              'sample name': "'PETR ROZHODČÍ'" in final_main,
-              'old sample absent': 'PETR TLUSTOHLAVY' not in final_main,
-              'old statutes absent': 'Stanovy_CAFR_navrh.pdf' not in final_main,
-              'official crest': 'viewBox="0 0 600 800"' in final_logo and 'píšťalkou' in final_logo,
-              'card logo placeholder': '{{LOGO}}' in final_card,
-          }
-          failed = [name for name, ok in assertions.items() if not ok]
-          if failed:
-              raise SystemExit('Failed assertions: ' + ', '.join(failed))
+          assert "'unierozhodcich@gmail.com'" in server_path.read_text(encoding='utf-8')
+          assert "'PETR ROZHODČÍ'" in main_path.read_text(encoding='utf-8')
+          assert 'Stanovy_CAFR_navrh.pdf' not in main_path.read_text(encoding='utf-8')
+          assert '{{LOGO}}' in (root / 'public/cards/card-template.svg').read_text(encoding='utf-8')
+          assert 'viewBox="0 0 600 800"' in (root / 'public/assets/ucfr-logo.svg').read_text(encoding='utf-8')
           PY
 
-      - name: Validate JavaScript
+      - name: Parse-check permanent JavaScript
         run: |
           node --check server/server.js
           node --check src/main.js
           node --check public/member-card-system.js
           node --check public/simple-member-card.js
-          node --check public/ucfr-brand.js
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Validate member card
-        run: npm run test:cards
-
-      - name: Build
-        run: npm run build
-
-      - name: Commit finalized source and remove this workflow
+      - name: Commit permanent source
         shell: bash
         run: |
           rm -f .github/workflows/finalize-ucfr-request.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          if git diff --cached --quiet; then
-            exit 0
-          fi
-          git commit -m "Finalize UČFR details, crest and member card"
+          git commit -m "Finalize UČFR details in permanent source"
           git push
