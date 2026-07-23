@@ -3,6 +3,7 @@ services:
     name: ucfr
     env: node
     plan: free
+    autoDeployTrigger: commit
     buildCommand: npm install --no-audit --no-fund && npm run render:build
     startCommand: npm run start:production
     # Check the static homepage instead of /api/health, because that API route
