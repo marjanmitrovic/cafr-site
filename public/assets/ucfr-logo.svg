@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">UČFR</title>
+  <desc id="desc">Logo Unie českých fotbalových rozhodčích</desc>
+  <defs>
+    <linearGradient id="navy" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#082f6d"/>
+      <stop offset="1" stop-color="#0b4ea2"/>
+    </linearGradient>
+    <clipPath id="innerClip">
+      <circle cx="256" cy="256" r="184"/>
+    </clipPath>
+  </defs>
+  <circle cx="256" cy="256" r="242" fill="url(#navy)"/>
+  <circle cx="256" cy="256" r="214" fill="#ffffff" stroke="#dce5f1" stroke-width="8"/>
+  <g clip-path="url(#innerClip)">
+    <rect x="72" y="72" width="368" height="368" fill="#ffffff"/>
+    <path d="M50 364 L462 196 L462 266 L50 434 Z" fill="#d71920"/>
+    <path d="M50 320 L462 152 L462 202 L50 370 Z" fill="#1c5aa6"/>
+    <path d="M50 290 L462 122 L462 152 L50 320 Z" fill="#ffffff"/>
+  </g>
+  <g transform="translate(256 216)">
+    <circle r="104" fill="#ffffff" stroke="#0b2a55" stroke-width="10"/>
+    <path d="M0-48 46-15 29 39-29 39-46-15Z" fill="#0b2a55"/>
+    <path d="M0-98 0-48M93-30 46-15M58 80 29 39M-58 80-29 39M-93-30-46-15" fill="none" stroke="#0b2a55" stroke-width="10" stroke-linecap="round"/>
+    <path d="M0-98 55-80 93-30 88 31 58 80 0 101-58 80-88 31-93-30-55-80Z" fill="none" stroke="#0b2a55" stroke-width="8" stroke-linejoin="round"/>
+  </g>
+  <rect x="87" y="354" width="338" height="96" rx="48" fill="#ffffff" stroke="#0b2a55" stroke-width="8"/>
+  <text x="256" y="421" text-anchor="middle" fill="#0b2a55" font-family="Montserrat, Arial, sans-serif" font-size="76" font-weight="800" letter-spacing="3">UČFR</text>
+</svg>
