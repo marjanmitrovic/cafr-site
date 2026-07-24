@@ -2,6 +2,7 @@
   'use strict';
 
   const VIDEO_URL = 'https://youtube.com/@refacademy?si=nvtPkzVsGe30KaRA';
+  const REFFGUARD_URL = 'https://reff-guardpro.vercel.app/demo';
   const REGISTER_URL = 'https://or.justice.cz/ias/ui/rejstrik-firma.vysledky?subjektId=1306981&typ=PLATNY';
   const DOCUMENT_URL = 'https://or.justice.cz/ias/ui/vypis-sl-detail?dokument=89888399&subjektId=1306981&spis=1476835';
   const LOGO_URL = '/assets/ucfr-logo.png?v=7';
@@ -106,6 +107,12 @@
     `;
   }
 
+  function resultsCardIn(grid) {
+    return [...grid.children].find((item) =>
+      item.textContent.includes('Moje výsledky') || item.textContent.includes('My results')
+    );
+  }
+
   function updateVideoAnalysis() {
     const grid = document.querySelector('#tests .test-mode-grid');
     if (!grid) return;
@@ -116,9 +123,7 @@
     if (!card) {
       card = document.createElement('article');
       card.className = 'test-mode-card ucfr-video-analysis-card';
-      const resultsCard = [...grid.children].find((item) =>
-        item.textContent.includes('Moje výsledky') || item.textContent.includes('My results')
-      );
+      const resultsCard = resultsCardIn(grid);
       if (resultsCard) grid.insertBefore(card, resultsCard);
       else grid.appendChild(card);
     }
@@ -135,6 +140,33 @@
     `;
   }
 
+  function updateReffGuard() {
+    const grid = document.querySelector('#tests .test-mode-grid');
+    if (!grid) return;
+
+    const lang = language();
+    let card = grid.querySelector('.ucfr-reffguard-card');
+
+    if (!card) {
+      card = document.createElement('article');
+      card.className = 'test-mode-card ucfr-reffguard-card';
+      const resultsCard = resultsCardIn(grid);
+      if (resultsCard) grid.insertBefore(card, resultsCard);
+      else grid.appendChild(card);
+    }
+
+    card.innerHTML = `
+      <div class="test-mode-icon">🛡️</div>
+      <h3>ReffGuard</h3>
+      <p>${lang === 'cs'
+        ? 'Digitální tréninková a podpůrná aplikace pro fotbalové rozhodčí.'
+        : 'A digital training and support application for football referees.'}</p>
+      <a class="secondary dark video-analysis-link" href="${REFFGUARD_URL}" target="_blank" rel="noopener noreferrer">
+        ${lang === 'cs' ? 'Otevřít ReffGuard' : 'Open ReffGuard'}
+      </a>
+    `;
+  }
+
   function applyUpdates() {
     ensureThemeButton();
     updateBrandHeader();
@@ -143,6 +175,7 @@
     updateContactEmail();
     updateDocuments();
     updateVideoAnalysis();
+    updateReffGuard();
   }
 
   function applyAfterRender(delay = 0) {
