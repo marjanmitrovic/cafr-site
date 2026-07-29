@@ -68,3 +68,52 @@
     top: 96px;
   }
 }
+
+/* uploaded-horizontal-logo */
+.brand {
+  min-width: 290px;
+}
+
+.brand img[src*="ucfr-logo"] {
+  width: 340px !important;
+  height: auto !important;
+  max-height: 104px;
+  object-fit: contain;
+  filter: none !important;
+  background: #fff;
+}
+
+.brand > div {
+  display: none !important;
+}
+
+.footer-brand img[src*="ucfr-logo"] {
+  width: 300px !important;
+  height: auto !important;
+  max-width: 100%;
+  background: #fff;
+  border-radius: 0;
+}
+
+.member-card > img[src*="ucfr-logo"]:first-child {
+  width: 240px !important;
+  height: auto !important;
+  max-width: 88%;
+  border-radius: 8px;
+}
+
+@media (max-width: 720px) {
+  .brand {
+    min-width: 0;
+    max-width: 230px;
+  }
+
+  .brand img[src*="ucfr-logo"] {
+    width: 220px !important;
+    max-height: 78px;
+  }
+
+  .footer-brand img[src*="ucfr-logo"] {
+    width: 250px !important;
+  }
+}

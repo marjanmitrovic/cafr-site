@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const LOGO_PATH = '/assets/ucfr-logo.png?v=5';
+  const LOGO_PATH = '/assets/ucfr-logo.svg?v=10?v=10';
 
   function updateLogos(root = document) {
     root.querySelectorAll?.('img[src*="ucfr-logo."]').forEach((image) => {
