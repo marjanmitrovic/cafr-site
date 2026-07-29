@@ -1,5 +1,5 @@
 (() => {
-  const FOTBALTESTY_URL = 'https://fotbaltesty.22web.org';
+  const FOTBALTESTY_URL = 'https://fotbaltesty.alwaysdata.net';
 
   function buildLink(className = '') {
     const link = document.createElement('a');
