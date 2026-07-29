@@ -5,7 +5,7 @@
   const REFFGUARD_URL = 'https://reff-guardpro.vercel.app/demo';
   const REGISTER_URL = 'https://or.justice.cz/ias/ui/rejstrik-firma.vysledky?subjektId=1306981&typ=PLATNY';
   const DOCUMENT_URL = 'https://or.justice.cz/ias/ui/vypis-sl-detail?dokument=89888399&subjektId=1306981&spis=1476835';
-  const LOGO_URL = '/assets/ucfr-logo.svg?v=10?v=10';
+  const LOGO_URL = '/assets/ucfr-logo.svg?v=10';
   const CONTACT_EMAIL = 'unierozhodcich@gmail.com';
 
   function language() {
