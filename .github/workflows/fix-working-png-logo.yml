@@ -1,0 +1,82 @@
+name: Fix working PNG logo
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/fix-working-png-logo.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix-logo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Replace all logo references with real PNG
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          allowed = {'.html', '.js', '.mjs', '.json', '.css', '.svg', '.md'}
+          replacements = {
+              '/assets/ucfr-logo.svg?v=10?v=10': '/assets/ucfr-logo.png?v=11',
+              '/assets/ucfr-logo.svg?v=10': '/assets/ucfr-logo.png?v=11',
+              '/assets/ucfr-logo.svg': '/assets/ucfr-logo.png?v=11',
+              '/assets/ucfr-logo.png?v=5': '/assets/ucfr-logo.png?v=11',
+              '/assets/ucfr-logo.png?v=7': '/assets/ucfr-logo.png?v=11',
+          }
+
+          for root in ('index.html', 'src', 'public', 'tests'):
+              path = Path(root)
+              files = [path] if path.is_file() else path.rglob('*')
+              for file in files:
+                  if not file.is_file() or file.suffix.lower() not in allowed:
+                      continue
+                  try:
+                      text = file.read_text(encoding='utf-8')
+                  except UnicodeDecodeError:
+                      continue
+                  updated = text
+                  for old, new in replacements.items():
+                      updated = updated.replace(old, new)
+                  if file.name == 'site.webmanifest':
+                      updated = updated.replace('"type": "image/svg+xml"', '"type": "image/png"')
+                  if updated != text:
+                      file.write_text(updated, encoding='utf-8')
+          PY
+
+      - name: Verify PNG file and references
+        run: |
+          test -s public/assets/ucfr-logo.png
+          ! grep -R "ucfr-logo.svg" index.html src public tests --include='*.html' --include='*.js' --include='*.mjs' --include='*.json' --include='*.css' || exit 1
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run card tests
+        run: npm run test:cards
+
+      - name: Build site
+        run: npm run build
+
+      - name: Commit verified PNG logo fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html src public tests
+          if git diff --cached --quiet; then
+            echo "No logo references needed changing."
+            exit 0
+          fi
+          git commit -m "Use working PNG logo across UČFR site"
+          git push
