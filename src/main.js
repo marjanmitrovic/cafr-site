@@ -184,7 +184,7 @@ function render() {
   document.querySelector('#app').innerHTML = `
     <header class="topbar">
       <a class="brand" href="#home">
-        <img src="/assets/ucfr-logo.svg?v=10" alt="UČFR logo">
+        <img src="/assets/ucfr-logo.png?v=11" alt="UČFR logo">
         <div>
           <strong class="ucfr-full-brand-name">Unie českých fotbalových rozhodčích</strong>
         </div>
@@ -434,7 +434,7 @@ function render() {
           </div>
 
           <div class="member-card">
-            <img src="/assets/ucfr-logo.svg?v=10" alt="UČFR">
+            <img src="/assets/ucfr-logo.png?v=11" alt="UČFR">
             <small>ČLENSKÝ PRŮKAZ</small>
             <h3>
               ${
@@ -549,7 +549,7 @@ function render() {
 
     <footer id="contact">
       <div class="footer-brand">
-        <img src="/assets/ucfr-logo.svg?v=10" alt="UČFR">
+        <img src="/assets/ucfr-logo.png?v=11" alt="UČFR">
         <div>
           <b>Unie českých fotbalových rozhodčích, z. s.</b>
           <p>IČO: bude doplněno<br>Ochrana • Vzdělávání • Komunita • Reprezentace</p>
