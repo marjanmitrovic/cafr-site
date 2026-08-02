@@ -72,6 +72,10 @@
         height: 18px;
         margin: 3px 0 0;
       }
+      #joinForm .required-marker {
+        color: #c5162e;
+        font-weight: 800;
+      }
     `;
     document.head.appendChild(style);
   }
@@ -123,6 +127,25 @@
     originalConsent.replaceWith(statutesConsent, privacyConsent);
   }
 
+  function configureFacrValidation(input, isCzech) {
+    const requiredMessage = isCzech
+      ? 'ID FAČR je povinné. Vyplňte prosím své ID FAČR.'
+      : 'FAČR ID is required. Please enter your FAČR ID.';
+    const numericMessage = isCzech
+      ? 'ID FAČR může obsahovat pouze číslice.'
+      : 'FAČR ID may contain digits only.';
+
+    input.addEventListener('invalid', () => {
+      if (input.validity.valueMissing) input.setCustomValidity(requiredMessage);
+      else if (input.validity.patternMismatch) input.setCustomValidity(numericMessage);
+      else input.setCustomValidity('');
+    });
+
+    input.addEventListener('input', () => {
+      input.setCustomValidity('');
+    });
+  }
+
   function enhanceRegistrationForm(form) {
     if (!form || form.dataset.facrFieldsEnhanced === 'true') return;
 
@@ -143,6 +166,7 @@
     const facrLabel = document.createElement('label');
     facrLabel.innerHTML = `
       ${isCzech ? 'ID FAČR' : 'FAČR ID'}
+      <span class="required-marker">(${isCzech ? 'povinné' : 'required'})</span>
       <input
         name="facrId"
         type="text"
@@ -150,10 +174,14 @@
         pattern="[0-9]+"
         maxlength="20"
         autocomplete="off"
+        aria-required="true"
         placeholder="${isCzech ? 'Zadejte své ID FAČR' : 'Enter your FAČR ID'}"
         required
       >
     `;
+
+    const facrInput = facrLabel.querySelector('input[name="facrId"]');
+    configureFacrValidation(facrInput, isCzech);
 
     const competitionLabel = document.createElement('label');
     competitionLabel.innerHTML = `
@@ -177,15 +205,28 @@
 
     form.addEventListener(
       'submit',
-      () => {
+      (event) => {
         const facrId = String(form.elements.facrId?.value || '').trim();
+
+        if (!facrId) {
+          event.preventDefault();
+          facrInput.setCustomValidity(
+            isCzech
+              ? 'ID FAČR je povinné. Vyplňte prosím své ID FAČR.'
+              : 'FAČR ID is required. Please enter your FAČR ID.'
+          );
+          facrInput.reportValidity();
+          facrInput.focus();
+          return;
+        }
+
         const role = String(form.elements.refereeRole?.value || '').trim();
         const competitionSelect = form.elements.competitionLevel;
         const competition = competitionSelect?.selectedOptions?.[0]?.textContent?.trim() || '';
 
         storedStatus.value = [
           role,
-          facrId ? `ID FAČR: ${facrId}` : '',
+          `ID FAČR: ${facrId}`,
           competition ? `${isCzech ? 'Listina' : 'Referee list'}: ${competition}` : ''
         ]
           .filter(Boolean)
