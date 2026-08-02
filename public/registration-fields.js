@@ -18,6 +18,111 @@
     ]
   };
 
+  const regionOptions = {
+    cs: [
+      'Hlavní město Praha',
+      'Středočeský kraj',
+      'Jihočeský kraj',
+      'Plzeňský kraj',
+      'Karlovarský kraj',
+      'Ústecký kraj',
+      'Liberecký kraj',
+      'Královéhradecký kraj',
+      'Pardubický kraj',
+      'Kraj Vysočina',
+      'Jihomoravský kraj',
+      'Olomoucký kraj',
+      'Zlínský kraj',
+      'Moravskoslezský kraj'
+    ],
+    en: [
+      'Prague',
+      'Central Bohemian Region',
+      'South Bohemian Region',
+      'Plzeň Region',
+      'Karlovy Vary Region',
+      'Ústí nad Labem Region',
+      'Liberec Region',
+      'Hradec Králové Region',
+      'Pardubice Region',
+      'Vysočina Region',
+      'South Moravian Region',
+      'Olomouc Region',
+      'Zlín Region',
+      'Moravian-Silesian Region'
+    ]
+  };
+
+  function ensureStyles() {
+    if (document.getElementById('ucfr-registration-fields-style')) return;
+
+    const style = document.createElement('style');
+    style.id = 'ucfr-registration-fields-style';
+    style.textContent = `
+      #joinForm .registration-consent {
+        display: grid !important;
+        grid-template-columns: 22px minmax(0, 1fr) !important;
+        align-items: start !important;
+        gap: 10px !important;
+        line-height: 1.55;
+        font-weight: 500;
+      }
+      #joinForm .registration-consent input {
+        width: 18px;
+        height: 18px;
+        margin: 3px 0 0;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function replaceRegionField(form, language) {
+    const regionInput = form.querySelector('input[name="region"]');
+    if (!regionInput) return;
+
+    const regionSelect = document.createElement('select');
+    regionSelect.name = 'region';
+    regionSelect.required = true;
+    regionSelect.innerHTML = `
+      <option value="" selected disabled>
+        ${language === 'cs' ? 'Vyberte kraj' : 'Select a region'}
+      </option>
+      ${regionOptions[language]
+        .map((label) => `<option value="${label}">${label}</option>`)
+        .join('')}
+    `;
+
+    regionInput.replaceWith(regionSelect);
+  }
+
+  function replaceConsentField(form, language) {
+    const originalConsent = form
+      .querySelector('label.check input[type="checkbox"]')
+      ?.closest('label');
+
+    if (!originalConsent) return;
+
+    const statutesConsent = document.createElement('label');
+    statutesConsent.className = 'check registration-consent';
+    statutesConsent.innerHTML = `
+      <input type="checkbox" name="statutesConsent" value="yes" required>
+      <span>${language === 'cs'
+        ? 'Prohlašuji, že jsem se seznámil/a se stanovami Unie českých fotbalových rozhodčích, souhlasím s nimi a zavazuji se je dodržovat.'
+        : 'I declare that I have read the statutes of the Union of Czech Football Referees, agree with them and undertake to comply with them.'}</span>
+    `;
+
+    const privacyConsent = document.createElement('label');
+    privacyConsent.className = 'check registration-consent';
+    privacyConsent.innerHTML = `
+      <input type="checkbox" name="privacyNoticeAcknowledged" value="yes" required>
+      <span>${language === 'cs'
+        ? 'Beru na vědomí informace o zpracování osobních údajů Unií českých fotbalových rozhodčích, z. s., pro účely vedení členské evidence, ověření podmínek členství a komunikace související s členstvím.'
+        : 'I acknowledge the information on the processing of personal data by the Union of Czech Football Referees for maintaining membership records, verifying membership requirements and membership-related communication.'}</span>
+    `;
+
+    originalConsent.replaceWith(statutesConsent, privacyConsent);
+  }
+
   function enhanceRegistrationForm(form) {
     if (!form || form.dataset.facrFieldsEnhanced === 'true') return;
 
@@ -27,6 +132,10 @@
 
     const language = document.documentElement.lang === 'en' ? 'en' : 'cs';
     const isCzech = language === 'cs';
+
+    ensureStyles();
+    replaceRegionField(form, language);
+    replaceConsentField(form, language);
 
     form.dataset.facrFieldsEnhanced = 'true';
     refereeSelect.name = 'refereeRole';
