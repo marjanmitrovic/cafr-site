@@ -1,8 +1,8 @@
 (() => {
   'use strict';
 
-  const LOGO_URL = '/assets/ucfr-logo.jpg?v=12';
-  const LOGO_PATTERN = /\/assets\/ucfr-logo\.(?:svg|png|jpe?g)(?:\?[^"'\s]*)?/i;
+  const LOGO_URL = '/assets/ucfr-logo.svg?v=13';
+  const LOGO_PATTERN = /\/assets\/ucfr-logo\.(?:svg|png|jpe?g|webp)(?:\?[^"'\s]*)?/i;
 
   function normalizedLogoUrl(value) {
     const text = String(value || '');
