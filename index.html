@@ -62,7 +62,7 @@
               url: logoUrl
             },
             description: 'Nezávislá profesní unie poskytující fotbalovým rozhodčím ochranu, vzdělávání, právní podporu a společné zastupování.',
-            email: 'unierozhodcich@gmail.com',
+            email: 'info@ucfr.cz',
             sameAs: [
               'https://youtube.com/@refacademy?si=nvtPkzVsGe30KaRA',
               'https://or.justice.cz/ias/ui/rejstrik-firma.vysledky?subjektId=1306981&typ=PLATNY'
@@ -76,12 +76,20 @@
               addressLocality: 'Praha',
               addressCountry: 'CZ'
             },
-            contactPoint: {
-              '@type': 'ContactPoint',
-              contactType: 'členská a veřejná podpora',
-              email: 'unierozhodcich@gmail.com',
-              availableLanguage: ['cs', 'en']
-            }
+            contactPoint: [
+              {
+                '@type': 'ContactPoint',
+                contactType: 'členská a veřejná podpora',
+                email: 'info@ucfr.cz',
+                availableLanguage: ['cs', 'en']
+              },
+              {
+                '@type': 'ContactPoint',
+                contactType: 'média',
+                email: 'media@ucfr.cz',
+                availableLanguage: ['cs', 'en']
+              }
+            ]
           },
           {
             '@type': 'WebSite',
@@ -132,7 +140,7 @@
       <p>UČFR propojuje aktivní i bývalé fotbalové rozhodčí, asistenty, videorozhodčí, delegáty a pozorovatele rozhodčích v celé České republice.</p>
       <p>Unie nabízí ochranu při incidentech, vzdělávání, mentoring, právní podporu, profesní komunitu a společné zastupování.</p>
       <p>IČO: 24417513</p>
-      <p>Kontakt: <a href="mailto:unierozhodcich@gmail.com">unierozhodcich@gmail.com</a></p>
+      <p>Obecný kontakt: <a href="mailto:info@ucfr.cz">info@ucfr.cz</a><br>Média: <a href="mailto:media@ucfr.cz">media@ucfr.cz</a></p>
     </main>
   </noscript>
   <div id="app"></div>
@@ -146,6 +154,6 @@
   <script src="/admin-membership-export-top.js?v=1" defer></script>
   <script src="/member-card-system.js?v=12" defer></script>
   <script src="/simple-member-card.js?v=3" defer></script>
-  <script src="/ucfr-details.js?v=12" defer></script>
+  <script src="/ucfr-details.js?v=13" defer></script>
 </body>
 </html>
