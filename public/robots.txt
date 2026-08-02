@@ -1,6 +1,9 @@
 User-agent: *
 Allow: /
 Disallow: /api/
-Disallow: /uploads/evidence/
+Disallow: /uploads/
+Disallow: /dashboard.html
+Disallow: /verify.html
+Disallow: /reset-password.html
 
-Sitemap: https://cafr.cz/sitemap.xml
+Sitemap: https://ucfr.cz/sitemap.xml
