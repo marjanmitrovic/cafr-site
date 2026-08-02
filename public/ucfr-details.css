@@ -351,3 +351,41 @@ canvas {
     overflow-x: hidden;
   }
 }
+
+/* Prague AI Growth Agency credit beside the UČFR copyright. */
+footer#contact .copy {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+footer#contact .copy::after {
+  content: "";
+  display: block;
+  width: 154px;
+  height: 36px;
+  flex: 0 0 154px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 170 40'%3E%3Cg fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 29h38M7 29V18l7-6 7 6v11M21 29V14l7-6 7 6v15M35 29V19' stroke='%23f5a623' stroke-width='2'/%3E%3Cpath d='M5 32c8-7 23-7 36 0M9 34c9-5 18-5 28 0' stroke='%234bb5ff' stroke-width='1.6'/%3E%3Cpath d='M8 25l8-5 7 3 7-8 9 3' stroke='%234bb5ff' stroke-width='2'/%3E%3Cpath d='M35 14l5 4-6 1' stroke='%234bb5ff' stroke-width='2'/%3E%3C/g%3E%3Ctext x='49' y='18' fill='%23ffffff' font-family='Arial,sans-serif' font-size='14' font-weight='700'%3EPrague AI%3C/text%3E%3Ctext x='49' y='30' fill='%238ecbff' font-family='Arial,sans-serif' font-size='7' font-weight='700' letter-spacing='1.35'%3EGROWTH AGENCY%3C/text%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
+
+@media (max-width: 720px) {
+  footer#contact .copy {
+    width: 100%;
+    margin-left: 0;
+    justify-content: center;
+    gap: 9px;
+    white-space: normal;
+  }
+
+  footer#contact .copy::after {
+    width: 132px;
+    height: 32px;
+    flex-basis: 132px;
+  }
+}
