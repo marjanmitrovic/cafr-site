@@ -33,7 +33,7 @@
 
     const facrLabel = document.createElement('label');
     facrLabel.innerHTML = `
-      ${isCzech ? 'Číslo FAČR' : 'FAČR ID'}
+      ${isCzech ? 'ID FAČR' : 'FAČR ID'}
       <input
         name="facrId"
         type="text"
@@ -41,16 +41,17 @@
         pattern="[0-9]+"
         maxlength="20"
         autocomplete="off"
+        placeholder="${isCzech ? 'Zadejte své ID FAČR' : 'Enter your FAČR ID'}"
         required
       >
     `;
 
     const competitionLabel = document.createElement('label');
     competitionLabel.innerHTML = `
-      ${isCzech ? 'Úroveň soutěže' : 'Competition level'}
+      ${isCzech ? 'Na jaké listině rozhodčích jste?' : 'Which referee list are you on?'}
       <select name="competitionLevel" required>
         <option value="" selected disabled>
-          ${isCzech ? 'Vyberte soutěž' : 'Select competition'}
+          ${isCzech ? 'Vyberte úroveň soutěže' : 'Select competition level'}
         </option>
         ${competitionOptions[language]
           .map(([value, label]) => `<option value="${value}">${label}</option>`)
@@ -75,8 +76,8 @@
 
         storedStatus.value = [
           role,
-          facrId ? `FAČR: ${facrId}` : '',
-          competition ? `Soutěž: ${competition}` : ''
+          facrId ? `ID FAČR: ${facrId}` : '',
+          competition ? `${isCzech ? 'Listina' : 'Referee list'}: ${competition}` : ''
         ]
           .filter(Boolean)
           .join(' | ');
