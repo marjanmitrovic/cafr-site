@@ -4,15 +4,20 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>UČFR – Unie českých fotbalových rozhodčích</title>
-  <meta name="description" content="Unie českých fotbalových rozhodčích (UČFR) poskytuje rozhodčím ochranu, vzdělávání, právní podporu, komunitu a profesní zastupování." />
+  <title>UČFR – Ochrana a podpora českých fotbalových rozhodčích</title>
+  <meta name="description" content="UČFR sdružuje české fotbalové rozhodčí a nabízí ochranu při incidentech, právní podporu, vzdělávání, mentoring a profesní zastupování." />
   <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
   <meta name="googlebot" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
   <meta name="author" content="Unie českých fotbalových rozhodčích, z. s." />
-  <meta name="theme-color" content="#ffffff" />
+  <meta name="application-name" content="UČFR" />
+  <meta name="apple-mobile-web-app-title" content="UČFR" />
+  <meta name="theme-color" content="#0b2a55" />
+  <meta name="msapplication-TileColor" content="#0b2a55" />
   <meta name="format-detection" content="telephone=no" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
 
-  <link id="canonical-url" rel="canonical" href="https://ucfr.onrender.com/" />
+  <link rel="canonical" href="https://ucfr.cz/" />
+  <link rel="sitemap" type="application/xml" href="https://ucfr.cz/sitemap.xml" />
   <link rel="icon" href="/assets/ucfr-logo.jpg?v=16" type="image/jpeg" />
   <link rel="apple-touch-icon" href="/assets/ucfr-logo.jpg?v=16" />
   <link rel="manifest" href="/site.webmanifest?v=16" />
@@ -21,104 +26,123 @@
   <meta property="og:site_name" content="UČFR" />
   <meta property="og:locale" content="cs_CZ" />
   <meta property="og:locale:alternate" content="en_GB" />
-  <meta property="og:title" content="UČFR – Unie českých fotbalových rozhodčích" />
-  <meta property="og:description" content="Ochrana, vzdělávání, právní podpora a profesní zastupování fotbalových rozhodčích v České republice." />
-  <meta property="og:url" content="https://ucfr.onrender.com/" />
-  <meta property="og:image" content="/assets/ucfr-logo.jpg?v=16" />
+  <meta property="og:title" content="UČFR – Ochrana a podpora českých fotbalových rozhodčích" />
+  <meta property="og:description" content="Ochrana při incidentech, právní podpora, vzdělávání, mentoring a profesní zastupování fotbalových rozhodčích v České republice." />
+  <meta property="og:url" content="https://ucfr.cz/" />
+  <meta property="og:image" content="https://ucfr.cz/assets/ucfr-logo.jpg?v=16" />
+  <meta property="og:image:secure_url" content="https://ucfr.cz/assets/ucfr-logo.jpg?v=16" />
+  <meta property="og:image:type" content="image/jpeg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="624" />
   <meta property="og:image:alt" content="Logo Unie českých fotbalových rozhodčích" />
 
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="UČFR – Unie českých fotbalových rozhodčích" />
-  <meta name="twitter:description" content="Ochrana, vzdělávání, právní podpora a profesní zastupování fotbalových rozhodčích v České republice." />
-  <meta name="twitter:image" content="/assets/ucfr-logo.jpg?v=16" />
+  <meta name="twitter:title" content="UČFR – Ochrana a podpora českých fotbalových rozhodčích" />
+  <meta name="twitter:description" content="Ochrana, právní podpora, vzdělávání a profesní zastupování českých fotbalových rozhodčích." />
+  <meta name="twitter:image" content="https://ucfr.cz/assets/ucfr-logo.jpg?v=16" />
+  <meta name="twitter:image:alt" content="Logo Unie českých fotbalových rozhodčích" />
 
-  <script id="structured-data" type="application/ld+json"></script>
-  <script>
-    (() => {
-      const siteUrl = `${window.location.origin}/`;
-      const logoUrl = `${window.location.origin}/assets/ucfr-logo.jpg?v=16`;
-
-      document.querySelector('#canonical-url').href = siteUrl;
-      document.querySelector('meta[property="og:url"]').content = siteUrl;
-      document.querySelector('meta[property="og:image"]').content = logoUrl;
-      document.querySelector('meta[name="twitter:image"]').content = logoUrl;
-
-      document.querySelector('#structured-data').textContent = JSON.stringify({
-        '@context': 'https://schema.org',
-        '@graph': [
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SportsOrganization",
+        "@id": "https://ucfr.cz/#organization",
+        "name": "Unie českých fotbalových rozhodčích",
+        "legalName": "Unie českých fotbalových rozhodčích, z. s.",
+        "alternateName": [
+          "UČFR",
+          "UCFR",
+          "Union of Czech Football Referees"
+        ],
+        "url": "https://ucfr.cz/",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://ucfr.cz/assets/ucfr-logo.jpg?v=16",
+          "width": 1200,
+          "height": 624,
+          "caption": "Logo Unie českých fotbalových rozhodčích"
+        },
+        "image": "https://ucfr.cz/assets/ucfr-logo.jpg?v=16",
+        "description": "Nezávislá profesní unie poskytující fotbalovým rozhodčím ochranu při incidentech, právní podporu, vzdělávání, mentoring a společné zastupování.",
+        "identifier": {
+          "@type": "PropertyValue",
+          "propertyID": "IČO",
+          "value": "24417513"
+        },
+        "email": "info@ucfr.cz",
+        "contactPoint": [
           {
-            '@type': 'SportsOrganization',
-            '@id': `${siteUrl}#organization`,
-            name: 'Unie českých fotbalových rozhodčích, z. s.',
-            alternateName: ['UČFR', 'UCFR', 'Union of Czech Football Referees'],
-            identifier: {
-              '@type': 'PropertyValue',
-              propertyID: 'IČO',
-              value: '24417513'
-            },
-            url: siteUrl,
-            logo: {
-              '@type': 'ImageObject',
-              url: logoUrl
-            },
-            description: 'Nezávislá profesní unie poskytující fotbalovým rozhodčím ochranu, vzdělávání, právní podporu a společné zastupování.',
-            email: 'info@ucfr.cz',
-            sameAs: [
-              'https://youtube.com/@refacademy?si=nvtPkzVsGe30KaRA',
-              'https://or.justice.cz/ias/ui/rejstrik-firma.vysledky?subjektId=1306981&typ=PLATNY'
-            ],
-            areaServed: {
-              '@type': 'Country',
-              name: 'Česká republika'
-            },
-            address: {
-              '@type': 'PostalAddress',
-              addressLocality: 'Praha',
-              addressCountry: 'CZ'
-            },
-            contactPoint: [
-              {
-                '@type': 'ContactPoint',
-                contactType: 'členská a veřejná podpora',
-                email: 'info@ucfr.cz',
-                availableLanguage: ['cs', 'en']
-              },
-              {
-                '@type': 'ContactPoint',
-                contactType: 'média',
-                email: 'media@ucfr.cz',
-                availableLanguage: ['cs', 'en']
-              }
-            ]
+            "@type": "ContactPoint",
+            "contactType": "členská a veřejná podpora",
+            "email": "info@ucfr.cz",
+            "availableLanguage": ["cs", "en"]
           },
           {
-            '@type': 'WebSite',
-            '@id': `${siteUrl}#website`,
-            url: siteUrl,
-            name: 'UČFR',
-            alternateName: 'Unie českých fotbalových rozhodčích',
-            inLanguage: ['cs-CZ', 'en'],
-            publisher: {
-              '@id': `${siteUrl}#organization`
-            }
-          },
-          {
-            '@type': 'WebPage',
-            '@id': `${siteUrl}#webpage`,
-            url: siteUrl,
-            name: 'UČFR – Unie českých fotbalových rozhodčích',
-            description: 'Ochrana, vzdělávání, právní podpora a profesní zastupování fotbalových rozhodčích v České republice.',
-            inLanguage: 'cs-CZ',
-            isPartOf: {
-              '@id': `${siteUrl}#website`
-            },
-            about: {
-              '@id': `${siteUrl}#organization`
-            }
+            "@type": "ContactPoint",
+            "contactType": "média",
+            "email": "media@ucfr.cz",
+            "availableLanguage": ["cs", "en"]
           }
+        ],
+        "areaServed": {
+          "@type": "Country",
+          "name": "Česká republika"
+        },
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Praha",
+          "addressCountry": "CZ"
+        },
+        "sameAs": [
+          "https://youtube.com/@refacademy?si=nvtPkzVsGe30KaRA",
+          "https://or.justice.cz/ias/ui/rejstrik-firma.vysledky?subjektId=1306981&typ=PLATNY"
         ]
-      });
-    })();
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://ucfr.cz/#website",
+        "url": "https://ucfr.cz/",
+        "name": "UČFR",
+        "alternateName": "Unie českých fotbalových rozhodčích",
+        "description": "Oficiální web Unie českých fotbalových rozhodčích.",
+        "inLanguage": ["cs-CZ", "en"],
+        "publisher": {
+          "@id": "https://ucfr.cz/#organization"
+        }
+      },
+      {
+        "@type": "WebPage",
+        "@id": "https://ucfr.cz/#webpage",
+        "url": "https://ucfr.cz/",
+        "name": "UČFR – Ochrana a podpora českých fotbalových rozhodčích",
+        "description": "UČFR sdružuje české fotbalové rozhodčí a nabízí ochranu při incidentech, právní podporu, vzdělávání, mentoring a profesní zastupování.",
+        "dateModified": "2026-08-02",
+        "inLanguage": "cs-CZ",
+        "isAccessibleForFree": true,
+        "isPartOf": {
+          "@id": "https://ucfr.cz/#website"
+        },
+        "about": {
+          "@id": "https://ucfr.cz/#organization"
+        },
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "url": "https://ucfr.cz/assets/ucfr-logo.jpg?v=16",
+          "width": 1200,
+          "height": 624
+        },
+        "keywords": [
+          "fotbaloví rozhodčí",
+          "ochrana rozhodčích",
+          "vzdělávání rozhodčích",
+          "právní podpora rozhodčích",
+          "UČFR"
+        ]
+      }
+    ]
+  }
   </script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -139,7 +163,7 @@
     <main>
       <h1>Unie českých fotbalových rozhodčích</h1>
       <p>UČFR propojuje aktivní i bývalé fotbalové rozhodčí, asistenty, videorozhodčí, delegáty a pozorovatele rozhodčích v celé České republice.</p>
-      <p>Unie nabízí ochranu při incidentech, vzdělávání, mentoring, právní podporu, profesní komunitu a společné zastupování.</p>
+      <p>Unie nabízí ochranu při incidentech, právní podporu, vzdělávání, mentoring, profesní komunitu a společné zastupování.</p>
       <p>IČO: 24417513</p>
       <p>Obecný kontakt: <a href="mailto:info@ucfr.cz">info@ucfr.cz</a><br>Média: <a href="mailto:media@ucfr.cz">media@ucfr.cz</a></p>
     </main>
@@ -147,7 +171,7 @@
   <div id="app"></div>
   <script src="/ucfr-logo-runtime.js?v=16" defer></script>
   <script type="module" src="/src/main.js"></script>
-  <script src="/registration-fields.js?v=2" defer></script>
+  <script src="/registration-fields.js?v=3" defer></script>
   <script src="/fotbaltesty-bridge.js?v=2" defer></script>
   <script src="/theme-toggle.js?v=7" defer></script>
   <script src="/public-mobile-nav.js" defer></script>
