@@ -1,5 +1,4 @@
-const REQUIRED_ADMIN_EMAILS = Object.freeze([
-  'marjan.posao@gmail.com',
+const REQUIRED_REGISTRATION_ADMIN_EMAILS = Object.freeze([
   'marapleskac@gmail.com',
   'unierozhodcich@gmail.com',
 ]);
@@ -11,12 +10,11 @@ function normalizedEmails(value) {
     .filter(Boolean);
 }
 
-const adminEmails = [...new Set([
+const notificationEmails = [...new Set([
   ...normalizedEmails(process.env.ADMIN_NOTIFY_EMAIL),
   ...normalizedEmails(process.env.ADMIN_EMAIL),
-  ...REQUIRED_ADMIN_EMAILS,
+  ...REQUIRED_REGISTRATION_ADMIN_EMAILS,
 ])];
 
-process.env.ADMIN_NOTIFY_EMAIL = adminEmails.join(',');
-process.env.ADMIN_EMAIL = adminEmails.join(',');
+process.env.ADMIN_NOTIFY_EMAIL = notificationEmails.join(',');
 process.env.ASSOCIATION_ICO = '24417513';
