@@ -69,51 +69,96 @@
   }
 }
 
-/* uploaded-horizontal-logo */
 .brand {
-  min-width: 290px;
+  min-width: 350px;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
 }
 
-.brand img[src*="ucfr-logo"] {
+.brand img {
+  display: block;
   width: 340px !important;
-  height: auto !important;
-  max-height: 104px;
-  object-fit: contain;
+  height: 116px !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: contain !important;
+  object-position: left center !important;
   filter: none !important;
-  background: #fff;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
 }
 
 .brand > div {
   display: none !important;
 }
 
-.footer-brand img[src*="ucfr-logo"] {
+.footer-brand img {
   width: 300px !important;
   height: auto !important;
   max-width: 100%;
-  background: #fff;
-  border-radius: 0;
+  background: transparent !important;
+  border-radius: 0 !important;
 }
 
-.member-card > img[src*="ucfr-logo"]:first-child {
+.member-card > img:first-child {
   width: 240px !important;
   height: auto !important;
   max-width: 88%;
   border-radius: 8px;
 }
 
+@media (max-width: 1350px) {
+  .brand {
+    min-width: 290px;
+  }
+
+  .brand img {
+    width: 280px !important;
+    height: 108px !important;
+  }
+
+  nav {
+    gap: 16px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .brand {
+    min-width: 340px;
+  }
+
+  .brand img {
+    width: 330px !important;
+    height: 112px !important;
+  }
+}
+
 @media (max-width: 720px) {
+  .topbar {
+    height: 102px;
+    min-height: 102px;
+  }
+
   .brand {
     min-width: 0;
-    max-width: 230px;
+    max-width: 238px;
   }
 
-  .brand img[src*="ucfr-logo"] {
-    width: 220px !important;
-    max-height: 78px;
+  .brand img {
+    width: 232px !important;
+    height: 84px !important;
   }
 
-  .footer-brand img[src*="ucfr-logo"] {
+  nav {
+    top: 102px;
+  }
+
+  .footer-brand img {
     width: 250px !important;
   }
 }
