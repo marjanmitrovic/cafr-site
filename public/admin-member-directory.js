@@ -20,14 +20,6 @@
     })[char]);
   }
 
-  function getStoredUser() {
-    try {
-      return JSON.parse(localStorage.getItem('cafr-user') || 'null');
-    } catch {
-      return null;
-    }
-  }
-
   function adminToken() {
     return sessionStorage.getItem('cafr-admin-token') || localStorage.getItem('cafr-token') || '';
   }
@@ -40,35 +32,101 @@
     return String(value ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   }
 
+  function parseRefereeStatus(value) {
+    const raw = String(value || '').trim();
+    const parts = raw.split('|').map((part) => part.trim()).filter(Boolean);
+
+    const facrPart = parts.find((part) => /^(?:ID\s*)?FAČR\s*:/i.test(part));
+    const listPart = parts.find((part) => /^(?:Listina|Soutěž|Referee list)\s*:/i.test(part));
+    const roleParts = parts.filter((part) => part !== facrPart && part !== listPart);
+
+    return {
+      role: roleParts.join(' | ') || (!facrPart && !listPart ? raw : ''),
+      facrId: facrPart ? facrPart.replace(/^(?:ID\s*)?FAČR\s*:\s*/i, '') : '',
+      refereeList: listPart ? listPart.replace(/^(?:Listina|Soutěž|Referee list)\s*:\s*/i, '') : '',
+    };
+  }
+
+  function membershipLabel(value) {
+    return ({
+      PENDING: 'Čeká na schválení',
+      APPROVED: 'Schválené členství',
+      REJECTED: 'Zamítnutá přihláška',
+      SUSPENDED: 'Pozastavené členství',
+    })[value] || String(value || '');
+  }
+
+  function formatDate(value) {
+    if (!value) return '';
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString('cs-CZ');
+  }
+
+  function protectSpreadsheetFormula(value) {
+    const text = String(value ?? '').replace(/\r?\n/g, ' ').trim();
+    return /^[=+\-@\t\r]/.test(text) ? `'${text}` : text;
+  }
+
   function toCsvValue(value) {
-    return `"${String(value ?? '').replace(/"/g, '""')}"`;
+    return `"${protectSpreadsheetFormula(value).replace(/"/g, '""')}"`;
   }
 
   function exportCsv(users) {
-    const header = ['Číslo člena', 'Jméno', 'Příjmení', 'Email', 'Telefon', 'Region', 'Status rozhodčího', 'Členství', 'Role', 'Registrován'];
-    const rows = users.map((user) => [
-      memberNumber(user),
-      user.firstName,
-      user.lastName,
-      user.email,
-      user.phone || '',
-      user.region || '',
-      user.refereeStatus || '',
-      user.membershipStatus || '',
-      user.role || '',
-      user.createdAt ? new Date(user.createdAt).toLocaleDateString('cs-CZ') : '',
-    ]);
+    const header = [
+      'Členské číslo',
+      'Interní ID',
+      'Jméno',
+      'Příjmení',
+      'E-mail',
+      'Telefon',
+      'Kraj / okres',
+      'Status / funkce rozhodčího',
+      'ID FAČR',
+      'Listina rozhodčích',
+      'Stav členství',
+      'Systémová role',
+      'Aktivní účet',
+      'Jazyk',
+      'Datum registrace',
+      'Datum schválení',
+    ];
 
-    const csv = [header, ...rows].map((row) => row.map(toCsvValue).join(',')).join('\n');
+    const rows = users.map((user) => {
+      const referee = parseRefereeStatus(user.refereeStatus);
+
+      return [
+        memberNumber(user),
+        user.id,
+        user.firstName,
+        user.lastName,
+        user.email,
+        user.phone || '',
+        user.region || '',
+        referee.role,
+        referee.facrId,
+        referee.refereeList,
+        membershipLabel(user.membershipStatus),
+        user.role || '',
+        user.isActive ? 'Ano' : 'Ne',
+        user.language || '',
+        formatDate(user.createdAt),
+        formatDate(user.approvedAt),
+      ];
+    });
+
+    const csv = [header, ...rows]
+      .map((row) => row.map(toCsvValue).join(';'))
+      .join('\r\n');
+
     const blob = new Blob([`\ufeff${csv}`], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `cafr-clensky-imenik-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.download = `ucfr-databaze-clenstvi-${new Date().toISOString().slice(0, 10)}.csv`;
     document.body.appendChild(link);
     link.click();
     link.remove();
-    URL.revokeObjectURL(url);
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
   function renderRows(users) {
@@ -111,20 +169,17 @@
       ? renderRows(filtered)
       : '<tr><td colspan="9">Žádný člen neodpovídá filtru.</td></tr>';
     count.textContent = String(filtered.length);
-
-    const exportButton = section.querySelector('#adminDirectoryExport');
-    exportButton.onclick = () => exportCsv(filtered);
   }
 
   async function fetchUsers() {
     const token = adminToken();
-    if (!token) throw new Error('Admin token missing');
+    if (!token) throw new Error('Chybí administrátorský token. Přihlaste se znovu.');
 
     const response = await fetch(`${API_BASE}/api/admin/users`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.error || 'Members could not be loaded');
+    if (!response.ok) throw new Error(data.error || 'Databázi členů nelze načíst.');
     return Array.isArray(data) ? data : [];
   }
 
@@ -134,25 +189,24 @@
     const shell = document.querySelector('.admin-shell');
     if (!shell) return false;
 
-    const currentUser = getStoredUser();
-    if (currentUser?.role !== 'ADMIN') return true;
-
     const section = document.createElement('section');
     section.id = DIRECTORY_ID;
     section.className = 'admin-panel-section admin-directory-section';
     section.innerHTML = `
       <div class="admin-section-head">
         <div>
-          <span class="section-label">ADMIN ONLY</span>
-          <h3>Členský imenik</h3>
-          <p class="admin-directory-note">Dostupné pouze administrátorům. Obsahuje všechny registrované členy.</p>
+          <span class="section-label">DATABÁZE ČLENSTVÍ</span>
+          <h3>Členský adresář</h3>
+          <p class="admin-directory-note">Úplný přehled všech registrovaných osob a členských údajů.</p>
         </div>
         <span class="admin-count" id="adminDirectoryCount">0</span>
       </div>
 
       <div class="admin-directory-toolbar">
-        <input id="adminDirectorySearch" class="admin-directory-search" type="search" placeholder="Hledat podle jména, e-mailu, telefonu, regionu, role…">
-        <button id="adminDirectoryExport" class="admin-directory-export" type="button">Export CSV</button>
+        <input id="adminDirectorySearch" class="admin-directory-search" type="search" placeholder="Hledat podle jména, e-mailu, telefonu, regionu, ID FAČR…">
+        <button id="adminDirectoryExport" class="admin-directory-export" type="button">
+          Export databáze členství (.CSV)
+        </button>
       </div>
 
       <div class="admin-directory-table-wrap">
@@ -161,7 +215,7 @@
             <tr>
               <th>Číslo</th>
               <th>Jméno</th>
-              <th>Email</th>
+              <th>E-mail</th>
               <th>Telefon</th>
               <th>Region</th>
               <th>Status rozhodčího</th>
@@ -184,10 +238,35 @@
     try {
       const users = await fetchUsers();
       users.sort((a, b) => `${a.lastName || ''} ${a.firstName || ''}`.localeCompare(`${b.lastName || ''} ${b.firstName || ''}`, 'cs'));
+
       section.querySelector('#adminDirectorySearch').addEventListener('input', () => applyFilter(section, users));
+
+      const exportButton = section.querySelector('#adminDirectoryExport');
+      exportButton.addEventListener('click', () => {
+        const originalText = exportButton.textContent;
+        exportButton.disabled = true;
+        exportButton.textContent = 'Připravuji CSV…';
+
+        try {
+          exportCsv(users);
+          exportButton.textContent = `Exportováno: ${users.length} záznamů`;
+        } catch (error) {
+          console.error('Membership CSV export error:', error);
+          exportButton.textContent = 'Export se nezdařil';
+        }
+
+        window.setTimeout(() => {
+          exportButton.disabled = false;
+          exportButton.textContent = originalText;
+        }, 1800);
+      });
+
       applyFilter(section, users);
     } catch (error) {
       section.querySelector('#adminDirectoryRows').innerHTML = `<tr><td colspan="9">${escapeHtml(error.message)}</td></tr>`;
+      const exportButton = section.querySelector('#adminDirectoryExport');
+      exportButton.disabled = true;
+      exportButton.title = error.message;
     }
 
     return true;
