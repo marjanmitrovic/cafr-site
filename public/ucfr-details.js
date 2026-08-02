@@ -6,7 +6,8 @@
   const REGISTER_URL = 'https://or.justice.cz/ias/ui/rejstrik-firma.vysledky?subjektId=1306981&typ=PLATNY';
   const DOCUMENT_URL = 'https://or.justice.cz/ias/ui/vypis-sl-detail?dokument=89888399&subjektId=1306981&spis=1476835';
   const LOGO_URL = '/assets/ucfr-logo.png?v=11';
-  const CONTACT_EMAIL = 'unierozhodcich@gmail.com';
+  const INFO_EMAIL = 'info@ucfr.cz';
+  const MEDIA_EMAIL = 'media@ucfr.cz';
 
   function language() {
     return document.documentElement.lang === 'en' ? 'en' : 'cs';
@@ -72,12 +73,23 @@
     const footer = document.querySelector('footer#contact');
     if (!footer) return;
 
-    footer.querySelectorAll('p').forEach((paragraph) => {
-      const text = paragraph.textContent || '';
-      if (text.includes('info@cafr.cz') || text.includes(CONTACT_EMAIL)) {
-        paragraph.innerHTML = `<a class="footer-link" href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a><br>Praha, Česká republika`;
-      }
-    });
+    const lang = language();
+    const contactBlock = [...footer.children].find((element) =>
+      element.querySelector?.('b')?.textContent.trim() === 'Kontakt'
+    );
+
+    if (!contactBlock) return;
+
+    const paragraph = contactBlock.querySelector('p') || document.createElement('p');
+    paragraph.innerHTML = `
+      <strong>${lang === 'en' ? 'General enquiries' : 'Obecný kontakt'}:</strong><br>
+      <a class="footer-link" href="mailto:${INFO_EMAIL}">${INFO_EMAIL}</a><br><br>
+      <strong>${lang === 'en' ? 'Media' : 'Média'}:</strong><br>
+      <a class="footer-link" href="mailto:${MEDIA_EMAIL}">${MEDIA_EMAIL}</a><br><br>
+      Praha, Česká republika
+    `;
+
+    if (!paragraph.parentElement) contactBlock.appendChild(paragraph);
   }
 
   function updateDocuments() {
