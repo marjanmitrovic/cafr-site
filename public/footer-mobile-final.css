@@ -1,0 +1,134 @@
+/* Final mobile footer layout. Loaded last to override legacy footer rules. */
+@media (max-width: 720px) {
+  footer#contact {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 30px !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    padding: 42px 22px 24px !important;
+    overflow: hidden !important;
+  }
+
+  footer#contact > * {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  footer#contact .footer-brand {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    justify-items: center !important;
+    align-items: start !important;
+    gap: 18px !important;
+    width: 100% !important;
+    margin: 0 !important;
+    text-align: center !important;
+  }
+
+  footer#contact .footer-brand img {
+    display: block !important;
+    width: min(100%, 310px) !important;
+    height: auto !important;
+    max-width: 310px !important;
+    margin: 0 auto !important;
+    object-fit: contain !important;
+    border-radius: 0 !important;
+  }
+
+  footer#contact .footer-brand > div {
+    display: block !important;
+    width: 100% !important;
+    max-width: 360px !important;
+    margin: 0 auto !important;
+  }
+
+  footer#contact .footer-brand b {
+    display: block !important;
+    font-size: 18px !important;
+    line-height: 1.4 !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  footer#contact .footer-brand p {
+    margin: 12px 0 0 !important;
+    font-size: 14px !important;
+    line-height: 1.65 !important;
+  }
+
+  footer#contact > div:not(.footer-brand):not(.copy) {
+    width: 100% !important;
+    max-width: 390px !important;
+    margin: 0 auto !important;
+    padding: 24px 22px !important;
+    text-align: left !important;
+    background: rgba(255, 255, 255, 0.045) !important;
+    border: 1px solid rgba(216, 227, 239, 0.12) !important;
+    border-radius: 16px !important;
+  }
+
+  footer#contact > div:not(.footer-brand):not(.copy) > b {
+    display: block !important;
+    margin: 0 0 20px !important;
+    font-size: 21px !important;
+    line-height: 1.2 !important;
+    color: #f3f7fb !important;
+  }
+
+  footer#contact > div:not(.footer-brand):not(.copy) p {
+    margin: 0 !important;
+    font-size: 16px !important;
+    line-height: 1.65 !important;
+  }
+
+  footer#contact > div:not(.footer-brand):not(.copy) strong {
+    display: inline-block !important;
+    margin-bottom: 3px !important;
+    color: #a9bad0 !important;
+    font-size: 14px !important;
+  }
+
+  footer#contact .footer-link {
+    display: inline-block !important;
+    max-width: 100% !important;
+    font-size: 17px !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  footer#contact .copy {
+    grid-column: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 14px !important;
+    width: 100% !important;
+    margin: 2px 0 0 !important;
+    padding-top: 20px !important;
+    white-space: nowrap !important;
+    text-align: left !important;
+  }
+
+  footer#contact .copy::after {
+    width: 44px !important;
+    height: 44px !important;
+    flex: 0 0 44px !important;
+  }
+}
+
+@media (max-width: 390px) {
+  footer#contact {
+    padding-inline: 16px !important;
+  }
+
+  footer#contact .footer-brand img {
+    width: min(100%, 280px) !important;
+  }
+
+  footer#contact > div:not(.footer-brand):not(.copy) {
+    padding: 22px 18px !important;
+  }
+
+  footer#contact .copy {
+    font-size: 12px !important;
+  }
+}
