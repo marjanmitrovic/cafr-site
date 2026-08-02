@@ -1,0 +1,216 @@
+/* Final mobile header layout. Loaded last to override legacy mobile rules. */
+@media (max-width: 720px) {
+  html,
+  body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden !important;
+  }
+
+  #app,
+  main,
+  section,
+  footer {
+    max-width: 100%;
+  }
+
+  .topbar {
+    position: sticky !important;
+    top: 0;
+    z-index: 40;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 44px 44px 44px;
+    grid-template-areas:
+      "brand language theme menu"
+      "login login join join";
+    align-items: center !important;
+    column-gap: 8px !important;
+    row-gap: 10px !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    height: auto !important;
+    min-height: 0 !important;
+    padding: 10px 12px 12px !important;
+    flex-wrap: nowrap !important;
+    overflow: visible !important;
+  }
+
+  .topbar .brand {
+    grid-area: brand;
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: 60px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .topbar .brand img {
+    display: block !important;
+    width: 100% !important;
+    max-width: 176px !important;
+    height: 60px !important;
+    max-height: 60px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    object-fit: contain !important;
+    object-position: left center !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    filter: none !important;
+  }
+
+  .topbar .brand > div {
+    display: none !important;
+  }
+
+  .topbar .actions {
+    display: contents !important;
+  }
+
+  .topbar #langBtn {
+    grid-area: language;
+  }
+
+  .topbar .theme-toggle-btn {
+    grid-area: theme;
+  }
+
+  .topbar #menuBtn {
+    grid-area: menu;
+  }
+
+  .topbar #langBtn,
+  .topbar .theme-toggle-btn,
+  .topbar #menuBtn {
+    display: inline-grid !important;
+    place-items: center !important;
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+  }
+
+  .topbar #menuBtn {
+    color: #ffffff !important;
+    background: #0c2848 !important;
+    border: 0 !important;
+    font-size: 24px !important;
+    line-height: 1 !important;
+  }
+
+  .topbar .actions > .ghost[data-modal="login"] {
+    grid-area: login;
+  }
+
+  .topbar .actions > .primary[data-modal="join"] {
+    grid-area: join;
+  }
+
+  .topbar .actions > .ghost[data-modal="login"],
+  .topbar .actions > .primary[data-modal="join"] {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 44px !important;
+    margin: 0 !important;
+    padding: 10px 12px !important;
+    border-radius: 12px !important;
+    white-space: nowrap !important;
+    font-size: 14px !important;
+    line-height: 1.1 !important;
+  }
+
+  .topbar .actions > .ghost[data-modal="profile"] {
+    grid-column: 1 / 3;
+    grid-row: 2;
+    display: inline-flex !important;
+    justify-content: center !important;
+  }
+
+  .topbar #adminPanelBtn {
+    grid-column: 3;
+    grid-row: 2;
+    display: inline-flex !important;
+    justify-content: center !important;
+  }
+
+  .topbar #logoutBtn {
+    grid-column: 4;
+    grid-row: 2;
+    display: inline-flex !important;
+    justify-content: center !important;
+  }
+
+  .topbar nav {
+    position: absolute !important;
+    top: 100% !important;
+    right: 0 !important;
+    left: 0 !important;
+    z-index: 60 !important;
+    display: none !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    max-height: calc(100vh - 130px) !important;
+    margin: 0 !important;
+    padding: 12px !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    white-space: normal !important;
+    background: var(--ucfr-surface, #ffffff) !important;
+    border-bottom: 1px solid var(--ucfr-border, #dce4ed) !important;
+    box-shadow: 0 14px 28px rgba(7, 27, 49, .16) !important;
+  }
+
+  .topbar nav.open {
+    display: flex !important;
+  }
+
+  .topbar nav a {
+    display: flex !important;
+    width: 100% !important;
+    min-height: 42px !important;
+    justify-content: flex-start !important;
+    padding: 10px 14px !important;
+    border-radius: 10px !important;
+    white-space: normal !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .topbar {
+    grid-template-columns: minmax(0, 1fr) 40px 40px 40px;
+    column-gap: 6px !important;
+    padding-inline: 9px !important;
+  }
+
+  .topbar #langBtn,
+  .topbar .theme-toggle-btn,
+  .topbar #menuBtn {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+  }
+
+  .topbar .brand img {
+    max-width: 160px !important;
+  }
+
+  .topbar .actions > .ghost[data-modal="login"],
+  .topbar .actions > .primary[data-modal="join"] {
+    font-size: 13px !important;
+  }
+}
