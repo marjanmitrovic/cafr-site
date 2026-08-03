@@ -294,4 +294,102 @@ html.theme-dark .admin-member-editor-cancel {
   .admin-member-editor-cancel {
     width: 100%;
   }
+
+  /* Mobile member cards: no horizontal scrolling is required. */
+  .admin-directory-table-wrap {
+    overflow: visible;
+    border: 0;
+    background: transparent;
+  }
+
+  .admin-directory-table {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .admin-directory-table thead {
+    display: none;
+  }
+
+  .admin-directory-table tbody {
+    display: grid;
+    gap: 14px;
+  }
+
+  .admin-directory-table tr {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    border: 1px solid #e1e8f0;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 8px 22px rgba(7, 27, 49, 0.06);
+  }
+
+  .admin-directory-table td {
+    display: grid;
+    grid-template-columns: 108px minmax(0, 1fr);
+    gap: 10px;
+    width: 100%;
+    padding: 8px 0;
+    border: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .admin-directory-table td::before {
+    color: #647084;
+    font-size: 11px;
+    font-weight: 850;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .admin-directory-table td:nth-child(1)::before { content: 'Číslo'; }
+  .admin-directory-table td:nth-child(2)::before { content: 'Jméno'; }
+  .admin-directory-table td:nth-child(3)::before { content: 'E-mail'; }
+  .admin-directory-table td:nth-child(4)::before { content: 'Telefon'; }
+  .admin-directory-table td:nth-child(5)::before { content: 'Region'; }
+  .admin-directory-table td:nth-child(6)::before { content: 'Status'; }
+  .admin-directory-table td:nth-child(7)::before { content: 'Členství'; }
+  .admin-directory-table td:nth-child(8)::before { content: 'Role'; }
+  .admin-directory-table td:nth-child(9)::before { content: 'Registrace'; }
+
+  .admin-directory-table td:nth-child(10) {
+    display: block;
+    padding-top: 12px;
+    border-top: 1px solid #edf1f6;
+  }
+
+  .admin-directory-table td:nth-child(10)::before {
+    content: none;
+  }
+
+  .admin-directory-edit {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 46px;
+    padding: 12px 14px;
+    font-size: 14px;
+  }
+
+  .admin-directory-locked {
+    display: none;
+  }
+
+  html.theme-dark .admin-directory-table tr {
+    background: #071527;
+    color: #edf4ff;
+    border-color: rgba(255,255,255,.16);
+  }
+
+  html.theme-dark .admin-directory-table td:nth-child(10) {
+    border-color: rgba(255,255,255,.12);
+  }
+
+  html.theme-dark .admin-directory-table td::before {
+    color: #b8c6d8;
+  }
 }
