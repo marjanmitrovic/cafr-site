@@ -72,6 +72,9 @@
         height: 18px;
         margin: 3px 0 0;
       }
+      #joinForm .registration-consent .required-marker {
+        display: none !important;
+      }
       #joinForm .required-marker {
         color: #c5162e;
         font-weight: 800;
@@ -202,7 +205,7 @@
     control.dataset.ucfrValidationConfigured = 'true';
     control.required = true;
     control.setAttribute('aria-required', 'true');
-    addRequiredMarker(control, language);
+    if (control.type !== 'checkbox') addRequiredMarker(control, language);
 
     control.addEventListener('invalid', () => {
       control.setCustomValidity('');
@@ -321,7 +324,7 @@
     const validationMessage = ensureValidationMessage(form, language);
 
     const refreshMessage = () => {
-      if (requiredControls.every((control) => control.checkValidity())) {
+      if (requiredControls.every((control) => control.validity.valid)) {
         validationMessage.classList.remove('show');
       }
     };
