@@ -1,0 +1,225 @@
+.admin-primary-member-edit {
+  width: 100%;
+  min-height: 46px;
+  margin-top: 4px;
+  border: 0;
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: #1768b0;
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 850;
+  line-height: 1.25;
+  cursor: pointer;
+  white-space: normal;
+}
+
+.admin-primary-member-edit[hidden] {
+  display: none !important;
+}
+
+.admin-primary-member-edit:disabled {
+  cursor: wait;
+  opacity: 0.68;
+}
+
+.admin-primary-editor-backdrop[hidden] {
+  display: none !important;
+}
+
+.admin-primary-editor-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(3, 15, 28, 0.78);
+}
+
+html.admin-primary-editor-open,
+html.admin-primary-editor-open body {
+  overflow: hidden !important;
+}
+
+.admin-primary-editor {
+  position: relative;
+  width: min(780px, 100%);
+  max-height: 92vh;
+  overflow-y: auto;
+  border-radius: 22px;
+  padding: 30px;
+  background: #fff;
+  color: #172033;
+  box-shadow: 0 28px 80px rgba(3, 15, 28, 0.38);
+}
+
+.admin-primary-editor h3 {
+  margin: 8px 44px 8px 0;
+  font-size: 25px;
+  line-height: 1.2;
+}
+
+.admin-primary-editor > p {
+  margin: 0 0 22px;
+  color: #647084;
+  line-height: 1.55;
+}
+
+.admin-primary-editor-close {
+  position: absolute;
+  top: 14px;
+  right: 15px;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: #eef3f8;
+  color: #0c2848;
+  font-size: 27px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.admin-primary-editor-form {
+  display: grid;
+  gap: 18px;
+}
+
+.admin-primary-editor-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.admin-primary-editor-grid label {
+  display: grid;
+  gap: 7px;
+  color: #263650;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.admin-primary-editor-grid input,
+.admin-primary-editor-grid select {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #d9e1ea;
+  border-radius: 11px;
+  padding: 12px;
+  background: #fff;
+  color: #172033;
+  font: inherit;
+}
+
+.admin-primary-editor-message {
+  min-height: 22px;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.admin-primary-editor-message.error {
+  color: #b42318;
+}
+
+.admin-primary-editor-message.success {
+  color: #166b34;
+}
+
+.admin-primary-editor-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.admin-primary-editor-cancel,
+.admin-primary-editor-save {
+  min-height: 46px;
+  border-radius: 12px;
+  padding: 12px 17px;
+  font: inherit;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.admin-primary-editor-cancel {
+  border: 1px solid #d5dee9;
+  background: #fff;
+  color: #0c2848;
+}
+
+.admin-primary-editor-save {
+  border: 0;
+  background: #0c2848;
+  color: #fff;
+}
+
+html.theme-dark .admin-primary-editor,
+html.theme-dark .admin-primary-editor-grid input,
+html.theme-dark .admin-primary-editor-grid select {
+  background: #071527 !important;
+  color: #edf4ff !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+html.theme-dark .admin-primary-editor > p {
+  color: #b8c6d8 !important;
+}
+
+html.theme-dark .admin-primary-editor-grid label {
+  color: #edf4ff !important;
+}
+
+html.theme-dark .admin-primary-editor-close,
+html.theme-dark .admin-primary-editor-cancel {
+  background: #132b49 !important;
+  color: #fff !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+@media (max-width: 720px) {
+  .admin-member-card .admin-member-controls {
+    width: 100%;
+  }
+
+  .admin-primary-member-edit {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin-top: 10px;
+    font-size: 15px;
+  }
+
+  .admin-primary-editor-backdrop {
+    align-items: end;
+    padding: 8px;
+  }
+
+  .admin-primary-editor {
+    width: 100%;
+    max-height: 95vh;
+    border-radius: 22px 22px 0 0;
+    padding: 25px 18px 20px;
+  }
+
+  .admin-primary-editor h3 {
+    font-size: 22px;
+  }
+
+  .admin-primary-editor-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-primary-editor-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .admin-primary-editor-cancel,
+  .admin-primary-editor-save {
+    width: 100%;
+  }
+}
