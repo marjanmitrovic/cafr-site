@@ -1,4 +1,10 @@
 /* Final mobile header layout. Loaded last to override legacy mobile rules. */
+
+/* Keep only the verified public figures in the hero statistics. */
+.stats > div:nth-child(n + 3) {
+  display: none !important;
+}
+
 @media (max-width: 720px) {
   html,
   body {
