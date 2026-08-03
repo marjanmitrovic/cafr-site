@@ -1,4 +1,6 @@
 (() => {
+  'use strict';
+
   const API_BASE =
     localStorage.getItem('cafr-api-base') ||
     (
@@ -9,6 +11,39 @@
     );
 
   const DIRECTORY_ID = 'adminMemberDirectory';
+
+  const REGION_OPTIONS = [
+    'Hlavní město Praha',
+    'Středočeský kraj',
+    'Jihočeský kraj',
+    'Plzeňský kraj',
+    'Karlovarský kraj',
+    'Ústecký kraj',
+    'Liberecký kraj',
+    'Královéhradecký kraj',
+    'Pardubický kraj',
+    'Kraj Vysočina',
+    'Jihomoravský kraj',
+    'Olomoucký kraj',
+    'Zlínský kraj',
+    'Moravskoslezský kraj',
+  ];
+
+  const REFEREE_ROLES = [
+    'Aktivní rozhodčí',
+    'Asistent rozhodčího',
+    'Bývalý rozhodčí',
+    'Delegát',
+    'Pozorovatel rozhodčích',
+  ];
+
+  const REFEREE_LISTS = [
+    'Profesionální soutěže',
+    'Divize / ČFL / MSFL',
+    'Krajské soutěže',
+    'Okresní soutěže',
+    'Bývalý rozhodčí / Ostatní',
+  ];
 
   function escapeHtml(value) {
     return String(value ?? '').replace(/[&<>"']/g, (char) => ({
@@ -69,6 +104,13 @@
 
   function toCsvValue(value) {
     return `"${protectSpreadsheetFormula(value).replace(/"/g, '""')}"`;
+  }
+
+  function optionList(values, placeholder) {
+    return [
+      `<option value="">${escapeHtml(placeholder)}</option>`,
+      ...values.map((value) => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`),
+    ].join('');
   }
 
   function exportCsv(users) {
@@ -138,9 +180,14 @@
         <td>${escapeHtml(user.phone || '—')}</td>
         <td>${escapeHtml(user.region || '—')}</td>
         <td>${escapeHtml(user.refereeStatus || '—')}</td>
-        <td><span class="admin-directory-status ${escapeHtml(user.membershipStatus || '')}">${escapeHtml(user.membershipStatus || '—')}</span></td>
+        <td><span class="admin-directory-status ${escapeHtml(user.membershipStatus || '')}">${escapeHtml(membershipLabel(user.membershipStatus) || '—')}</span></td>
         <td>${escapeHtml(user.role || '—')}</td>
         <td>${user.createdAt ? new Date(user.createdAt).toLocaleDateString('cs-CZ') : '—'}</td>
+        <td>
+          ${user.membershipStatus === 'PENDING'
+            ? `<button class="admin-directory-edit" type="button" data-edit-member="${escapeHtml(user.id)}">Upravit před schválením</button>`
+            : '<span class="admin-directory-locked">—</span>'}
+        </td>
       </tr>
     `).join('');
   }
@@ -167,8 +214,121 @@
 
     tbody.innerHTML = filtered.length
       ? renderRows(filtered)
-      : '<tr><td colspan="9">Žádný člen neodpovídá filtru.</td></tr>';
+      : '<tr><td colspan="10">Žádný člen neodpovídá filtru.</td></tr>';
     count.textContent = String(filtered.length);
+  }
+
+  function closeEditor(section) {
+    const editor = section.querySelector('#adminMemberEditor');
+    if (!editor) return;
+    editor.hidden = true;
+    editor.querySelector('form')?.reset();
+    const message = editor.querySelector('#adminMemberEditorMessage');
+    if (message) {
+      message.textContent = '';
+      message.className = 'admin-member-editor-message';
+    }
+  }
+
+  function setSelectValue(select, value) {
+    if (!select) return;
+    const normalizedValue = String(value || '').trim();
+    if (normalizedValue && ![...select.options].some((option) => option.value === normalizedValue)) {
+      select.add(new Option(normalizedValue, normalizedValue));
+    }
+    select.value = normalizedValue;
+  }
+
+  function openEditor(section, user) {
+    if (!user || user.membershipStatus !== 'PENDING') return;
+
+    const editor = section.querySelector('#adminMemberEditor');
+    const form = editor?.querySelector('#adminMemberEditorForm');
+    if (!editor || !form) return;
+
+    const referee = parseRefereeStatus(user.refereeStatus);
+    form.elements.memberId.value = user.id;
+    form.elements.firstName.value = user.firstName || '';
+    form.elements.lastName.value = user.lastName || '';
+    form.elements.email.value = user.email || '';
+    form.elements.phone.value = user.phone || '';
+    setSelectValue(form.elements.region, user.region || '');
+    setSelectValue(form.elements.refereeRole, referee.role || '');
+    form.elements.facrId.value = referee.facrId || '';
+    setSelectValue(form.elements.refereeList, referee.refereeList || '');
+
+    editor.querySelector('#adminMemberEditorTitle').textContent =
+      `Upravit přihlášku: ${user.firstName || ''} ${user.lastName || ''}`.trim();
+    editor.hidden = false;
+    form.elements.firstName.focus();
+  }
+
+  async function saveMember(section, users, form) {
+    const message = section.querySelector('#adminMemberEditorMessage');
+    const submitButton = form.querySelector('button[type="submit"]');
+
+    if (!form.checkValidity()) {
+      message.textContent = 'Vyplňte prosím všechna povinná pole.';
+      message.className = 'admin-member-editor-message error';
+      form.reportValidity();
+      return;
+    }
+
+    const facrId = String(form.elements.facrId.value || '').trim();
+    if (!/^\d+$/.test(facrId)) {
+      form.elements.facrId.setCustomValidity('ID FAČR může obsahovat pouze číslice.');
+      message.textContent = 'ID FAČR je povinné a může obsahovat pouze číslice.';
+      message.className = 'admin-member-editor-message error';
+      form.elements.facrId.reportValidity();
+      form.elements.facrId.focus();
+      return;
+    }
+
+    form.elements.facrId.setCustomValidity('');
+    const payload = {
+      firstName: String(form.elements.firstName.value || '').trim(),
+      lastName: String(form.elements.lastName.value || '').trim(),
+      email: String(form.elements.email.value || '').trim(),
+      phone: String(form.elements.phone.value || '').trim(),
+      region: String(form.elements.region.value || '').trim(),
+      refereeStatus: [
+        String(form.elements.refereeRole.value || '').trim(),
+        `ID FAČR: ${facrId}`,
+        `Listina: ${String(form.elements.refereeList.value || '').trim()}`,
+      ].join(' | '),
+    };
+
+    submitButton.disabled = true;
+    submitButton.textContent = 'Ukládám…';
+    message.textContent = '';
+
+    try {
+      const response = await fetch(`${API_BASE}/api/admin/users/${encodeURIComponent(form.elements.memberId.value)}/profile`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${adminToken()}`,
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || 'Údaje přihlášky se nepodařilo uložit.');
+
+      const index = users.findIndex((user) => user.id === data.user?.id);
+      if (index >= 0) users[index] = { ...users[index], ...data.user };
+      users.sort((a, b) => `${a.lastName || ''} ${a.firstName || ''}`.localeCompare(`${b.lastName || ''} ${b.firstName || ''}`, 'cs'));
+      applyFilter(section, users);
+
+      message.textContent = 'Údaje byly uloženy. Přihlášku nyní můžete schválit.';
+      message.className = 'admin-member-editor-message success';
+      window.setTimeout(() => closeEditor(section), 900);
+    } catch (error) {
+      message.textContent = error.message;
+      message.className = 'admin-member-editor-message error';
+    } finally {
+      submitButton.disabled = false;
+      submitButton.textContent = 'Uložit změny';
+    }
   }
 
   async function fetchUsers() {
@@ -197,7 +357,7 @@
         <div>
           <span class="section-label">DATABÁZE ČLENSTVÍ</span>
           <h3>Členský adresář</h3>
-          <p class="admin-directory-note">Úplný přehled všech registrovaných osob a členských údajů.</p>
+          <p class="admin-directory-note">Úplný přehled všech registrovaných osob. Žádosti ve stavu „Čeká na schválení“ lze před potvrzením upravit.</p>
         </div>
         <span class="admin-count" id="adminDirectoryCount">0</span>
       </div>
@@ -222,12 +382,41 @@
               <th>Členství</th>
               <th>Role</th>
               <th>Registrace</th>
+              <th>Akce</th>
             </tr>
           </thead>
           <tbody id="adminDirectoryRows">
-            <tr><td colspan="9">Načítám členy…</td></tr>
+            <tr><td colspan="10">Načítám členy…</td></tr>
           </tbody>
         </table>
+      </div>
+
+      <div class="admin-member-editor-backdrop" id="adminMemberEditor" hidden>
+        <div class="admin-member-editor" role="dialog" aria-modal="true" aria-labelledby="adminMemberEditorTitle">
+          <button class="admin-member-editor-close" type="button" data-close-member-editor aria-label="Zavřít">×</button>
+          <span class="section-label">KONTROLA PŘIHLÁŠKY</span>
+          <h3 id="adminMemberEditorTitle">Upravit přihlášku před schválením</h3>
+          <p>Opravte údaje a teprve potom přihlášku schvalte. Po schválení je tento editor uzamčen.</p>
+
+          <form id="adminMemberEditorForm" class="admin-member-editor-form">
+            <input type="hidden" name="memberId">
+            <div class="admin-member-editor-grid">
+              <label>Jméno <input name="firstName" required></label>
+              <label>Příjmení <input name="lastName" required></label>
+              <label>E-mail <input name="email" type="email" required></label>
+              <label>Telefon <input name="phone" required></label>
+              <label>Kraj / okres <select name="region" required>${optionList(REGION_OPTIONS, 'Vyberte kraj')}</select></label>
+              <label>Status rozhodčího <select name="refereeRole" required>${optionList(REFEREE_ROLES, 'Vyberte status')}</select></label>
+              <label>ID FAČR <input name="facrId" inputmode="numeric" pattern="[0-9]+" required></label>
+              <label>Listina rozhodčích <select name="refereeList" required>${optionList(REFEREE_LISTS, 'Vyberte listinu')}</select></label>
+            </div>
+            <p id="adminMemberEditorMessage" class="admin-member-editor-message" aria-live="polite"></p>
+            <div class="admin-member-editor-actions">
+              <button class="admin-member-editor-cancel" type="button" data-close-member-editor>Zrušit</button>
+              <button class="admin-directory-export" type="submit">Uložit změny</button>
+            </div>
+          </form>
+        </div>
       </div>
     `;
 
@@ -240,6 +429,26 @@
       users.sort((a, b) => `${a.lastName || ''} ${a.firstName || ''}`.localeCompare(`${b.lastName || ''} ${b.firstName || ''}`, 'cs'));
 
       section.querySelector('#adminDirectorySearch').addEventListener('input', () => applyFilter(section, users));
+      section.addEventListener('click', (event) => {
+        const editButton = event.target.closest('[data-edit-member]');
+        if (editButton) {
+          openEditor(section, users.find((user) => user.id === editButton.dataset.editMember));
+          return;
+        }
+
+        if (event.target.closest('[data-close-member-editor]') || event.target.id === 'adminMemberEditor') {
+          closeEditor(section);
+        }
+      });
+
+      section.querySelector('#adminMemberEditorForm').addEventListener('submit', (event) => {
+        event.preventDefault();
+        saveMember(section, users, event.currentTarget);
+      });
+
+      section.querySelector('#adminMemberEditorForm').addEventListener('input', (event) => {
+        event.target.setCustomValidity?.('');
+      });
 
       const exportButton = section.querySelector('#adminDirectoryExport');
       exportButton.addEventListener('click', () => {
@@ -263,7 +472,7 @@
 
       applyFilter(section, users);
     } catch (error) {
-      section.querySelector('#adminDirectoryRows').innerHTML = `<tr><td colspan="9">${escapeHtml(error.message)}</td></tr>`;
+      section.querySelector('#adminDirectoryRows').innerHTML = `<tr><td colspan="10">${escapeHtml(error.message)}</td></tr>`;
       const exportButton = section.querySelector('#adminDirectoryExport');
       exportButton.disabled = true;
       exportButton.title = error.message;
