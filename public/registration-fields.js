@@ -76,13 +76,32 @@
         color: #c5162e;
         font-weight: 800;
       }
+      #joinForm .registration-validation-message {
+        display: none;
+        margin: 0;
+        padding: 12px 14px;
+        border: 1px solid #efb8bd;
+        border-radius: 10px;
+        background: #fff0f1;
+        color: #a8121e;
+        font-size: 14px;
+        font-weight: 750;
+        line-height: 1.5;
+      }
+      #joinForm .registration-validation-message.show {
+        display: block;
+      }
+      #joinForm [aria-invalid="true"] {
+        border-color: #c5162e !important;
+        box-shadow: 0 0 0 3px rgba(197, 22, 46, 0.1);
+      }
     `;
     document.head.appendChild(style);
   }
 
   function replaceRegionField(form, language) {
     const regionInput = form.querySelector('input[name="region"]');
-    if (!regionInput) return;
+    if (!regionInput) return form.querySelector('select[name="region"]');
 
     const regionSelect = document.createElement('select');
     regionSelect.name = 'region';
@@ -97,6 +116,7 @@
     `;
 
     regionInput.replaceWith(regionSelect);
+    return regionSelect;
   }
 
   function replaceConsentField(form, language) {
@@ -127,23 +147,105 @@
     originalConsent.replaceWith(statutesConsent, privacyConsent);
   }
 
-  function configureFacrValidation(input, isCzech) {
-    const requiredMessage = isCzech
-      ? 'ID FAČR je povinné. Vyplňte prosím své ID FAČR.'
-      : 'FAČR ID is required. Please enter your FAČR ID.';
-    const numericMessage = isCzech
-      ? 'ID FAČR může obsahovat pouze číslice.'
-      : 'FAČR ID may contain digits only.';
+  function addRequiredMarker(control, language) {
+    const label = control?.closest('label');
+    if (!label || label.querySelector('.required-marker')) return;
 
-    input.addEventListener('invalid', () => {
-      if (input.validity.valueMissing) input.setCustomValidity(requiredMessage);
-      else if (input.validity.patternMismatch) input.setCustomValidity(numericMessage);
-      else input.setCustomValidity('');
+    const marker = document.createElement('span');
+    marker.className = 'required-marker';
+    marker.textContent = `(${language === 'cs' ? 'povinné' : 'required'})`;
+    label.insertBefore(marker, control);
+  }
+
+  function customMessage(control, language) {
+    const cs = language === 'cs';
+    const name = control.name;
+
+    if (control.type === 'checkbox') {
+      return cs
+        ? 'Pro odeslání přihlášky je nutné potvrdit tento souhlas.'
+        : 'This consent must be confirmed before submitting the application.';
+    }
+
+    if (control.validity.typeMismatch) {
+      return cs ? 'Zadejte platnou e-mailovou adresu.' : 'Enter a valid email address.';
+    }
+
+    if (control.validity.tooShort) {
+      return cs
+        ? `Heslo musí obsahovat alespoň ${control.minLength} znaků.`
+        : `The password must contain at least ${control.minLength} characters.`;
+    }
+
+    if (control.validity.patternMismatch && name === 'facrId') {
+      return cs ? 'ID FAČR může obsahovat pouze číslice.' : 'FAČR ID may contain digits only.';
+    }
+
+    const labels = {
+      name: cs ? 'Jméno a příjmení' : 'Full name',
+      email: 'E-mail',
+      password: cs ? 'Heslo' : 'Password',
+      phone: cs ? 'Telefon' : 'Phone',
+      region: cs ? 'Kraj / okres' : 'Region / district',
+      refereeRole: cs ? 'Status rozhodčího' : 'Referee status',
+      facrId: cs ? 'ID FAČR' : 'FAČR ID',
+      competitionLevel: cs ? 'Listina rozhodčích' : 'Referee list',
+    };
+
+    return cs
+      ? `Pole „${labels[name] || 'Toto pole'}“ je povinné.`
+      : `The field “${labels[name] || 'This field'}” is required.`;
+  }
+
+  function configureControlValidation(control, language) {
+    if (!control || control.dataset.ucfrValidationConfigured === 'true') return;
+    control.dataset.ucfrValidationConfigured = 'true';
+    control.required = true;
+    control.setAttribute('aria-required', 'true');
+    addRequiredMarker(control, language);
+
+    control.addEventListener('invalid', () => {
+      control.setCustomValidity('');
+      control.setCustomValidity(customMessage(control, language));
+      control.setAttribute('aria-invalid', 'true');
     });
 
-    input.addEventListener('input', () => {
-      input.setCustomValidity('');
-    });
+    const clear = () => {
+      control.setCustomValidity('');
+      control.removeAttribute('aria-invalid');
+    };
+    control.addEventListener('input', clear);
+    control.addEventListener('change', clear);
+  }
+
+  function ensureStatusPlaceholder(select, language) {
+    if (!select || select.querySelector('option[value=""]')) return;
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.disabled = true;
+    placeholder.selected = true;
+    placeholder.textContent = language === 'cs' ? 'Vyberte status rozhodčího' : 'Select referee status';
+    select.prepend(placeholder);
+    select.selectedIndex = 0;
+  }
+
+  function ensureValidationMessage(form, language) {
+    let message = form.querySelector('#registrationValidationMessage');
+    if (message) return message;
+
+    message = document.createElement('p');
+    message.id = 'registrationValidationMessage';
+    message.className = 'registration-validation-message';
+    message.setAttribute('role', 'alert');
+    message.setAttribute('aria-live', 'assertive');
+    message.textContent = language === 'cs'
+      ? 'Přihlášku nelze odeslat. Vyplňte prosím všechna povinná pole a potvrďte oba souhlasy.'
+      : 'The application cannot be submitted. Complete all required fields and confirm both consents.';
+
+    const submitButton = form.querySelector('button[type="submit"]');
+    if (submitButton) form.insertBefore(message, submitButton);
+    else form.appendChild(message);
+    return message;
   }
 
   function enhanceRegistrationForm(form) {
@@ -162,6 +264,7 @@
 
     form.dataset.facrFieldsEnhanced = 'true';
     refereeSelect.name = 'refereeRole';
+    ensureStatusPlaceholder(refereeSelect, language);
 
     const facrLabel = document.createElement('label');
     facrLabel.innerHTML = `
@@ -180,13 +283,11 @@
       >
     `;
 
-    const facrInput = facrLabel.querySelector('input[name="facrId"]');
-    configureFacrValidation(facrInput, isCzech);
-
     const competitionLabel = document.createElement('label');
     competitionLabel.innerHTML = `
       ${isCzech ? 'Na jaké listině rozhodčích jste?' : 'Which referee list are you on?'}
-      <select name="competitionLevel" required>
+      <span class="required-marker">(${isCzech ? 'povinné' : 'required'})</span>
+      <select name="competitionLevel" required aria-required="true">
         <option value="" selected disabled>
           ${isCzech ? 'Vyberte úroveň soutěže' : 'Select competition level'}
         </option>
@@ -203,34 +304,67 @@
     refereeLabel.before(facrLabel, competitionLabel);
     refereeLabel.after(storedStatus);
 
+    const requiredControls = [
+      form.elements.name,
+      form.elements.email,
+      form.elements.password,
+      form.elements.phone,
+      form.elements.region,
+      form.elements.refereeRole,
+      form.elements.facrId,
+      form.elements.competitionLevel,
+      form.elements.statutesConsent,
+      form.elements.privacyNoticeAcknowledged,
+    ].filter(Boolean);
+
+    requiredControls.forEach((control) => configureControlValidation(control, language));
+    const validationMessage = ensureValidationMessage(form, language);
+
+    const refreshMessage = () => {
+      if (requiredControls.every((control) => control.checkValidity())) {
+        validationMessage.classList.remove('show');
+      }
+    };
+    form.addEventListener('input', refreshMessage);
+    form.addEventListener('change', refreshMessage);
+
     form.addEventListener(
       'submit',
       (event) => {
-        const facrId = String(form.elements.facrId?.value || '').trim();
+        requiredControls.forEach((control) => {
+          if (control.matches('input[type="text"], input[type="email"], input[type="password"], input[type="tel"], input:not([type])')) {
+            if (!String(control.value || '').trim()) {
+              control.setCustomValidity(customMessage(control, language));
+              control.setAttribute('aria-invalid', 'true');
+            }
+          }
+        });
 
-        if (!facrId) {
+        if (!form.checkValidity()) {
           event.preventDefault();
-          facrInput.setCustomValidity(
-            isCzech
-              ? 'ID FAČR je povinné. Vyplňte prosím své ID FAČR.'
-              : 'FAČR ID is required. Please enter your FAČR ID.'
-          );
-          facrInput.reportValidity();
-          facrInput.focus();
+          event.stopImmediatePropagation();
+          validationMessage.classList.add('show');
+          validationMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+          const firstInvalid = form.querySelector(':invalid');
+          if (firstInvalid) {
+            firstInvalid.focus({ preventScroll: true });
+            firstInvalid.reportValidity();
+          }
           return;
         }
 
-        const role = String(form.elements.refereeRole?.value || '').trim();
+        const facrId = String(form.elements.facrId.value || '').trim();
+        const role = String(form.elements.refereeRole.value || '').trim();
         const competitionSelect = form.elements.competitionLevel;
-        const competition = competitionSelect?.selectedOptions?.[0]?.textContent?.trim() || '';
+        const competition = competitionSelect.selectedOptions?.[0]?.textContent?.trim() || '';
 
         storedStatus.value = [
           role,
           `ID FAČR: ${facrId}`,
-          competition ? `${isCzech ? 'Listina' : 'Referee list'}: ${competition}` : ''
-        ]
-          .filter(Boolean)
-          .join(' | ');
+          `${isCzech ? 'Listina' : 'Referee list'}: ${competition}`
+        ].join(' | ');
+        validationMessage.classList.remove('show');
       },
       true
     );
