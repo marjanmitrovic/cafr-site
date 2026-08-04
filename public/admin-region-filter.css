@@ -1,0 +1,73 @@
+/* Region filtering for the primary administration member list. */
+.admin-member-filterbar {
+  grid-template-columns: minmax(250px, 1fr) minmax(180px, 220px) minmax(180px, 220px) auto;
+}
+
+.admin-member-region-field {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  color: #344760;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.admin-member-region-select {
+  width: 100%;
+  min-width: 0;
+  min-height: 45px;
+  border: 1px solid #cfd9e5;
+  border-radius: 11px;
+  padding: 10px 12px;
+  background: #fff;
+  color: #172033;
+  font: inherit;
+  font-size: 14px;
+}
+
+.admin-member-region-select:focus {
+  outline: 3px solid rgba(23, 104, 176, 0.18);
+  border-color: #1768b0;
+}
+
+.admin-member-card.admin-region-filtered-out {
+  display: none !important;
+}
+
+html.theme-dark .admin-member-region-field {
+  color: #bdcadb;
+}
+
+html.theme-dark .admin-member-region-select {
+  border-color: rgba(255, 255, 255, 0.15);
+  background: #071527;
+  color: #edf4ff;
+}
+
+@media (max-width: 980px) {
+  .admin-member-filterbar {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .admin-member-search-field {
+    grid-column: 1 / -1;
+  }
+
+  .admin-member-filter-result {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+
+@media (max-width: 720px) {
+  .admin-member-filterbar {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-member-search-field,
+  .admin-member-region-field,
+  .admin-member-sort-field,
+  .admin-member-filter-result {
+    grid-column: auto;
+  }
+}
