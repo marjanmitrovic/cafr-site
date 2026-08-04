@@ -1,4 +1,10 @@
 /* Tabbed UČFR administration and searchable member list. */
+
+/* The primary member cards now provide search, sorting, editing and export access. */
+#adminMemberDirectory {
+  display: none !important;
+}
+
 .admin-tab-navigation {
   position: sticky;
   top: 0;
