@@ -54,6 +54,10 @@
       card.querySelector('[data-user-role]')?.dataset.userRole || '';
   }
 
+  function memberStatus(card) {
+    return String(card.querySelector('[data-user-status]')?.value || '').toUpperCase();
+  }
+
   function memberNumber(id) {
     return id ? `UCFR-${String(id).slice(-8).toUpperCase()}` : '';
   }
@@ -141,11 +145,18 @@
       const cards = [...list.querySelectorAll(':scope > .admin-member-card')]
         .filter((card) => card.querySelector('[data-user-status], [data-user-role]'));
 
-      cards.sort((a, b) => direction * memberSortValue(a, mode).localeCompare(
-        memberSortValue(b, mode),
-        'cs',
-        { sensitivity: 'base', numeric: true }
-      ));
+      cards.sort((a, b) => {
+        const aPending = memberStatus(a) === 'PENDING';
+        const bPending = memberStatus(b) === 'PENDING';
+
+        if (aPending !== bPending) return aPending ? -1 : 1;
+
+        return direction * memberSortValue(a, mode).localeCompare(
+          memberSortValue(b, mode),
+          'cs',
+          { sensitivity: 'base', numeric: true }
+        );
+      });
       cards.forEach((card) => list.appendChild(card));
 
       let visible = 0;
@@ -157,8 +168,8 @@
 
       if (result) {
         result.textContent = isCzech()
-          ? `Zobrazeno ${visible} z ${cards.length} členů`
-          : `Showing ${visible} of ${cards.length} members`;
+          ? `Zobrazeno ${visible} z ${cards.length} členů · čekající vždy první`
+          : `Showing ${visible} of ${cards.length} members · pending always first`;
       }
 
       let empty = list.querySelector(':scope > .admin-member-filter-empty');
@@ -177,6 +188,11 @@
       toolbar.dataset.bound = 'true';
       input?.addEventListener('input', apply);
       sort?.addEventListener('change', apply);
+      list.addEventListener('change', (event) => {
+        if (event.target.matches('[data-user-status]')) {
+          window.setTimeout(apply, 0);
+        }
+      });
     }
 
     apply();
