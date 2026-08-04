@@ -30,6 +30,14 @@
     return 'other';
   }
 
+  function syncMemberCount(shell) {
+    const primaryMembersSection = [...shell.querySelectorAll(':scope > .admin-panel-section')]
+      .find((section) => section.id !== 'adminMemberDirectory' && tabFor(section) === 'members');
+    const count = primaryMembersSection?.querySelector('.admin-count')?.textContent?.trim();
+    const badge = shell.querySelector('[data-admin-tab-target="members"] b');
+    if (badge && count) badge.textContent = count;
+  }
+
   function sync(shell) {
     if (!shell) return;
     const active = sessionStorage.getItem(ACTIVE_TAB_KEY) || 'members';
@@ -37,6 +45,7 @@
       if (!section.dataset.adminTab) section.dataset.adminTab = tabFor(section);
       section.hidden = section.dataset.adminTab !== active;
     });
+    syncMemberCount(shell);
   }
 
   document.addEventListener('click', (event) => {
