@@ -1,0 +1,195 @@
+/* Tabbed UČFR administration and searchable member list. */
+.admin-tab-navigation {
+  position: sticky;
+  top: 0;
+  z-index: 25;
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  margin: 20px 0 24px;
+  padding: 10px;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
+  border: 1px solid #dfe7f0;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 8px 22px rgba(7, 27, 49, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-overflow-scrolling: touch;
+}
+
+.admin-tab-button {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: #f1f5f9;
+  color: #24364f;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 850;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+
+.admin-tab-button b {
+  display: inline-grid;
+  place-items: center;
+  min-width: 25px;
+  height: 25px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: rgba(12, 40, 72, 0.09);
+  font-size: 11px;
+}
+
+.admin-tab-button:hover {
+  border-color: #bfcddd;
+  background: #e9f0f7;
+}
+
+.admin-tab-button.active {
+  border-color: #0c2848;
+  background: #0c2848;
+  color: #fff;
+}
+
+.admin-tab-button.active b {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.admin-panel-section[data-admin-tab][hidden] {
+  display: none !important;
+}
+
+.admin-member-filterbar {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(190px, 240px) auto;
+  gap: 12px;
+  align-items: end;
+  margin: 16px 0 18px;
+  padding: 16px;
+  border: 1px solid #dfe7f0;
+  border-radius: 16px;
+  background: #f7f9fc;
+}
+
+.admin-member-search-field,
+.admin-member-sort-field {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  color: #344760;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.admin-member-search-input,
+.admin-member-sort-select {
+  width: 100%;
+  min-width: 0;
+  min-height: 45px;
+  border: 1px solid #cfd9e5;
+  border-radius: 11px;
+  padding: 10px 12px;
+  background: #fff;
+  color: #172033;
+  font: inherit;
+  font-size: 14px;
+}
+
+.admin-member-search-input:focus,
+.admin-member-sort-select:focus {
+  outline: 3px solid rgba(23, 104, 176, 0.18);
+  border-color: #1768b0;
+}
+
+.admin-member-filter-result {
+  align-self: center;
+  justify-self: end;
+  color: #607086;
+  font-size: 13px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.admin-member-filter-empty {
+  padding: 28px 18px;
+  border: 1px dashed #cbd6e2;
+  border-radius: 14px;
+  color: #607086;
+  text-align: center;
+  font-weight: 750;
+}
+
+html.theme-dark .admin-tab-navigation {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(7, 21, 39, 0.96);
+}
+
+html.theme-dark .admin-tab-button {
+  background: #132b49;
+  color: #eaf2fc;
+}
+
+html.theme-dark .admin-tab-button:hover {
+  border-color: rgba(255, 255, 255, 0.26);
+  background: #193858;
+}
+
+html.theme-dark .admin-tab-button.active {
+  border-color: #fff;
+  background: #fff;
+  color: #0c2848;
+}
+
+html.theme-dark .admin-member-filterbar,
+html.theme-dark .admin-member-search-input,
+html.theme-dark .admin-member-sort-select {
+  border-color: rgba(255, 255, 255, 0.15);
+  background: #071527;
+  color: #edf4ff;
+}
+
+html.theme-dark .admin-member-search-field,
+html.theme-dark .admin-member-sort-field,
+html.theme-dark .admin-member-filter-result {
+  color: #bdcadb;
+}
+
+@media (max-width: 720px) {
+  .admin-tab-navigation {
+    top: -1px;
+    gap: 7px;
+    margin: 14px 0 18px;
+    padding: 8px;
+    border-radius: 13px;
+  }
+
+  .admin-tab-button {
+    min-height: 42px;
+    padding: 9px 12px;
+    font-size: 12px;
+  }
+
+  .admin-member-filterbar {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .admin-member-filter-result {
+    justify-self: start;
+  }
+
+  .admin-shell > .admin-panel-section[data-admin-tab] {
+    margin-top: 0;
+  }
+}
