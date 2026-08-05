@@ -109,3 +109,67 @@
     new ResizeObserver(updateHeight).observe(notice);
   }
 })();
+
+(() => {
+  'use strict';
+
+  const PUBLIC_BASELINE = 450;
+  const LIVE_COUNTER_THRESHOLD = 500;
+  const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
+  let liveMemberCount = null;
+
+  function displayedMemberCount() {
+    if (Number.isInteger(liveMemberCount) && liveMemberCount > LIVE_COUNTER_THRESHOLD) {
+      const locale = document.documentElement.lang === 'en' ? 'en-GB' : 'cs-CZ';
+      return new Intl.NumberFormat(locale).format(liveMemberCount);
+    }
+
+    return `${PUBLIC_BASELINE}+`;
+  }
+
+  function applyPublicCopy() {
+    const isCzech = document.documentElement.lang !== 'en';
+    const aboutLink = document.querySelector('.topbar nav a[href="#about"]');
+
+    if (aboutLink && isCzech && aboutLink.textContent.trim() !== 'O Unii') {
+      aboutLink.textContent = 'O Unii';
+    }
+
+    const memberCounter = document.querySelector('.stats > div:first-child b');
+    if (memberCounter) {
+      memberCounter.textContent = displayedMemberCount();
+      memberCounter.dataset.counterMode =
+        Number.isInteger(liveMemberCount) && liveMemberCount > LIVE_COUNTER_THRESHOLD
+          ? 'live'
+          : 'baseline';
+    }
+  }
+
+  async function refreshMemberCount() {
+    try {
+      const response = await fetch('/api/public/member-count', {
+        headers: { Accept: 'application/json' },
+        cache: 'no-store',
+      });
+
+      if (!response.ok) return;
+
+      const data = await response.json();
+      const count = Number(data?.count);
+      liveMemberCount = Number.isInteger(count) && count >= 0 ? count : null;
+      applyPublicCopy();
+    } catch {
+      // Keep the public baseline when the live endpoint is unavailable.
+    }
+  }
+
+  const observer = new MutationObserver(applyPublicCopy);
+  observer.observe(document.documentElement, {
+    childList: true,
+    subtree: true,
+  });
+
+  applyPublicCopy();
+  refreshMemberCount();
+  window.setInterval(refreshMemberCount, REFRESH_INTERVAL_MS);
+})();
