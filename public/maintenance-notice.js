@@ -137,7 +137,11 @@
 
     const memberCounter = document.querySelector('.stats > div:first-child b');
     if (memberCounter) {
-      memberCounter.textContent = displayedMemberCount();
+      const nextValue = displayedMemberCount();
+      if (memberCounter.textContent.trim() !== nextValue) {
+        memberCounter.textContent = nextValue;
+      }
+
       memberCounter.dataset.counterMode =
         Number.isInteger(liveMemberCount) && liveMemberCount > LIVE_COUNTER_THRESHOLD
           ? 'live'
