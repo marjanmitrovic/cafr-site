@@ -29,7 +29,7 @@
     }
 
     body.ucfr-maintenance-active .topbar {
-      top: var(--ucfr-maintenance-height) !important;
+      top: 0 !important;
     }
 
     #ucfrMaintenanceNotice {
