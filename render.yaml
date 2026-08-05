@@ -24,10 +24,20 @@ services:
         sync: false
       - key: WEB_ORIGIN
         value: https://ucfr.cz
-      - key: RESEND_API_KEY
+      - key: SMTP_HOST
+        value: mail.endora.cz
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_SECURE
+        value: "false"
+      - key: SMTP_USER
+        value: info@ucfr.cz
+      - key: SMTP_PASS
         sync: false
       - key: EMAIL_FROM
-        value: UČFR <info@ucfr.cz>
+        value: "UČFR <info@ucfr.cz>"
+      - key: RESEND_API_KEY
+        sync: false
       - key: ADMIN_NOTIFY_EMAIL
         value: marjan.posao@gmail.com,marapleskac@gmail.com,unierozhodcich@gmail.com
       - key: ASSOCIATION_ICO
