@@ -1,4 +1,4 @@
-const DEFAULT_BACKEND_ORIGIN = 'https://ucfr.onrender.com';
+const DEFAULT_BACKEND_ORIGIN = 'https://cafr-site.onrender.com';
 
 function backendOrigin(env) {
   return String(env?.UCFR_BACKEND_ORIGIN || DEFAULT_BACKEND_ORIGIN).replace(/\/$/, '');
