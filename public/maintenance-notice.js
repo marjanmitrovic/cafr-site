@@ -177,3 +177,23 @@
   refreshMemberCount();
   window.setInterval(refreshMemberCount, REFRESH_INTERVAL_MS);
 })();
+
+(() => {
+  'use strict';
+
+  if (!document.querySelector('link[data-ucfr-social-links]')) {
+    const stylesheet = document.createElement('link');
+    stylesheet.rel = 'stylesheet';
+    stylesheet.href = '/social-links.css?v=1';
+    stylesheet.dataset.ucfrSocialLinks = 'true';
+    document.head.appendChild(stylesheet);
+  }
+
+  if (!document.querySelector('script[data-ucfr-social-links]')) {
+    const script = document.createElement('script');
+    script.src = '/social-links.js?v=1';
+    script.defer = true;
+    script.dataset.ucfrSocialLinks = 'true';
+    document.body.appendChild(script);
+  }
+})();
