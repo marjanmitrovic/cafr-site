@@ -19,15 +19,15 @@ services:
       - key: TOKEN_SECRET
         sync: false
       - key: ADMIN_EMAIL
-        value: admin@cafr.cz
+        value: admin@ucfr.cz
       - key: ADMIN_PASSWORD
         sync: false
       - key: WEB_ORIGIN
-        value: https://ucfr.onrender.com
+        value: https://ucfr.cz
       - key: RESEND_API_KEY
         sync: false
       - key: EMAIL_FROM
-        sync: false
+        value: UČFR <info@ucfr.cz>
       - key: ADMIN_NOTIFY_EMAIL
         value: marjan.posao@gmail.com,marapleskac@gmail.com,unierozhodcich@gmail.com
       - key: ASSOCIATION_ICO
