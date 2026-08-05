@@ -9,7 +9,7 @@
     "run_worker_first": true
   },
   "vars": {
-    "UCFR_BACKEND_ORIGIN": "https://ucfr.onrender.com"
+    "UCFR_BACKEND_ORIGIN": "https://ucfr.cz"
   },
   "observability": {
     "enabled": true
