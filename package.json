@@ -8,16 +8,16 @@
   },
   "scripts": {
     "dev:web": "vite --host 0.0.0.0",
-    "dev:api": "node --env-file=.env --import ./server/ucfr-details-preload.js --watch server/server.js",
+    "dev:api": "node --env-file=.env --import ./server/ucfr-details-preload.js --import ./server/smtp-password-reset-preload.js --watch server/server.js",
     "dev": "concurrently -k \"npm:dev:web\" \"npm:dev:api\"",
     "build": "vite build",
     "test:cards": "node --check public/member-card-system.js && node --check public/simple-member-card.js && node --test tests/member-card-template.test.mjs",
     "db:generate": "prisma generate --config ./prisma.config.ts",
     "db:push": "prisma db push --config ./prisma.config.ts",
     "db:seed": "node --env-file=.env prisma/seed.js",
-    "start:production": "node --import ./server/ucfr-details-preload.js server/server.js",
+    "start:production": "node --import ./server/ucfr-details-preload.js --import ./server/smtp-password-reset-preload.js server/server.js",
     "preview": "vite preview --host 0.0.0.0",
-    "start:api": "node --env-file=.env --import ./server/ucfr-details-preload.js server/server.js",
+    "start:api": "node --env-file=.env --import ./server/ucfr-details-preload.js --import ./server/smtp-password-reset-preload.js server/server.js",
     "db:studio": "node --env-file=.env ./node_modules/prisma/build/index.js studio --config ./prisma.config.ts",
     "render:build": "npm run db:generate && npm run build"
   },
@@ -33,6 +33,7 @@
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^9.0.3",
     "pg": "^8.16.3",
     "resend": "^6.0.0"
   }
