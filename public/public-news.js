@@ -7,6 +7,7 @@
       ? 'http://localhost:3001'
       : window.location.origin);
 
+  const fallbackByGrid = new WeakMap();
   let articles = null;
   let loading = null;
 
@@ -47,15 +48,11 @@
   }
 
   function articleTitle(article) {
-    return isCzech()
-      ? article.titleCs
-      : (article.titleEn || article.titleCs);
+    return isCzech() ? article.titleCs : (article.titleEn || article.titleCs);
   }
 
   function articleText(article) {
-    return isCzech()
-      ? article.textCs
-      : (article.textEn || article.textCs);
+    return isCzech() ? article.textCs : (article.textEn || article.textCs);
   }
 
   function excerpt(text, length = 190) {
@@ -236,9 +233,13 @@
 
   async function loadArticles(force = false) {
     if (articles && !force) return articles;
-    if (loading && !force) return loading;
+    if (loading) return loading;
 
-    loading = fetch(`${API_BASE}/api/news`, { headers: { Accept: 'application/json' } })
+    const query = force ? `?refresh=${Date.now()}` : '';
+    loading = fetch(`${API_BASE}/api/news${query}`, {
+      headers: { Accept: 'application/json' },
+      cache: 'no-store',
+    })
       .then(async (response) => {
         const data = await response.json().catch(() => []);
         if (!response.ok) throw new Error(data.error || 'News could not be loaded');
@@ -247,7 +248,7 @@
       })
       .catch((error) => {
         console.warn('UČFR news:', error);
-        articles = [];
+        if (!Array.isArray(articles)) articles = [];
         return articles;
       })
       .finally(() => {
@@ -257,8 +258,28 @@
     return loading;
   }
 
+  function rememberFallback(grid) {
+    if (!fallbackByGrid.has(grid) && !grid.classList.contains('ucfr-live-news')) {
+      fallbackByGrid.set(grid, grid.innerHTML);
+    }
+  }
+
+  function restoreFallback(grid) {
+    if (!grid.classList.contains('ucfr-live-news')) return;
+    grid.classList.remove('ucfr-live-news');
+    delete grid.dataset.ucfrNewsSignature;
+    const fallback = fallbackByGrid.get(grid);
+    if (typeof fallback === 'string') grid.innerHTML = fallback;
+  }
+
   function renderInto(grid) {
-    if (!grid || !Array.isArray(articles) || articles.length === 0) return;
+    if (!grid || !Array.isArray(articles)) return;
+    rememberFallback(grid);
+
+    if (articles.length === 0) {
+      restoreFallback(grid);
+      return;
+    }
 
     const language = isCzech() ? 'cs' : 'en';
     const signature = `${language}:${articles.map((article) => `${article.id}:${article.updatedAt || article.publishedAt}`).join('|')}`;
@@ -290,27 +311,24 @@
     });
   }
 
-  async function scan() {
+  async function refreshAndRender(force = false) {
     const grid = document.querySelector('.grid.news');
     if (!grid) return;
-    await loadArticles();
+    await loadArticles(force);
     renderInto(grid);
   }
 
   ensureStyles();
-  scan();
+  refreshAndRender();
 
   const observer = new MutationObserver(() => {
-    window.requestAnimationFrame(scan);
+    window.requestAnimationFrame(() => refreshAndRender(false));
   });
   observer.observe(document.documentElement, { childList: true, subtree: true });
 
-  window.addEventListener('ucfr-news-updated', async () => {
-    await loadArticles(true);
-    const grid = document.querySelector('.grid.news');
-    if (grid) {
-      delete grid.dataset.ucfrNewsSignature;
-      renderInto(grid);
-    }
+  window.addEventListener('ucfr-news-updated', () => refreshAndRender(true));
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') refreshAndRender(true);
   });
+  window.setInterval(() => refreshAndRender(true), 60 * 1000);
 })();
