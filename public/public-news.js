@@ -324,6 +324,7 @@
 
     const close = () => {
       modal.hidden = true;
+      delete modal.dataset.articleId;
       document.body.style.removeProperty('overflow');
       if (articleIdFromHash()) {
         const restoredHash = previousArticleHash || '#education';
@@ -348,6 +349,7 @@
     if (!article) return;
 
     const modal = ensureModal();
+    if (!modal.hidden && modal.dataset.articleId === String(id)) return;
     const title = articleTitle(article);
     const text = articleText(article);
     const image = safeImageUrl(article.imageUrl);
@@ -374,6 +376,7 @@
       history.pushState({ ucfrArticleId: article.id }, '', articleUrl(article));
     }
 
+    modal.dataset.articleId = String(article.id);
     modal.hidden = false;
     document.body.style.overflow = 'hidden';
   }
@@ -499,6 +502,7 @@
       openArticleFromHash();
     } else if (modal && !modal.hidden) {
       modal.hidden = true;
+      delete modal.dataset.articleId;
       document.body.style.removeProperty('overflow');
     }
   });
