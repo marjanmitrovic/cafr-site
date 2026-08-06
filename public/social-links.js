@@ -3,6 +3,7 @@
 
   const FACEBOOK_URL = 'https://www.facebook.com/share/1Bi9WVrVAx/?mibextid=wwXIfr';
   const INSTAGRAM_URL = 'https://www.instagram.com/ucfr_official?igsh=MW9hOWl6cDVuZW91cw==';
+  const YOUTUBE_URL = 'https://www.youtube.com/@UnieCFR';
 
   function socialMarkup() {
     const isCzech = document.documentElement.lang !== 'en';
@@ -36,6 +37,19 @@
           </svg>
           <span>Instagram</span>
         </a>
+
+        <a
+          class="ucfr-social-link ucfr-social-youtube"
+          href="${YOUTUBE_URL}"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="YouTube UČFR"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8ZM9.6 15.6V8.4L15.8 12l-6.2 3.6Z"/>
+          </svg>
+          <span>YouTube</span>
+        </a>
       </div>
     `;
   }
@@ -64,7 +78,11 @@
     });
   };
 
-  document.addEventListener('DOMContentLoaded', scheduleInstall, { once: true });
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', scheduleInstall, { once: true });
+  } else {
+    scheduleInstall();
+  }
 
   const observer = new MutationObserver(scheduleInstall);
   observer.observe(document.documentElement, {
