@@ -10,6 +10,7 @@
   const fallbackByGrid = new WeakMap();
   let articles = null;
   let loading = null;
+  let previousArticleHash = '';
 
   function isCzech() {
     return (localStorage.getItem('cafr-lang') || document.documentElement.lang || 'cs') !== 'en';
@@ -58,6 +59,43 @@
   function excerpt(text, length = 190) {
     const normalized = String(text || '').replace(/\s+/g, ' ').trim();
     return normalized.length > length ? `${normalized.slice(0, length).trim()}…` : normalized;
+  }
+
+  function articleHash(id) {
+    return `#clanek-${encodeURIComponent(String(id || ''))}`;
+  }
+
+  function articleIdFromHash() {
+    const match = window.location.hash.match(/^#clanek-(.+)$/);
+    if (!match) return '';
+    try {
+      return decodeURIComponent(match[1]);
+    } catch {
+      return match[1];
+    }
+  }
+
+  function articleUrl(article) {
+    const url = new URL(window.location.href);
+    url.hash = articleHash(article.id);
+    return url.href;
+  }
+
+  function ensureSocialAssets() {
+    if (!document.querySelector('link[data-ucfr-social-styles], link[href*="social-links.css"]')) {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = '/social-links.css?v=2';
+      link.dataset.ucfrSocialStyles = 'true';
+      document.head.appendChild(link);
+    }
+
+    if (!document.querySelector('script[data-ucfr-social-script], script[src*="social-links.js"]')) {
+      const script = document.createElement('script');
+      script.src = '/social-links.js?v=2';
+      script.dataset.ucfrSocialScript = 'true';
+      document.body.appendChild(script);
+    }
   }
 
   function ensureStyles() {
@@ -109,9 +147,16 @@
         margin: 0;
         white-space: pre-line;
       }
-      .ucfr-news-open {
-        align-self: flex-start;
+      .ucfr-news-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
         margin-top: auto;
+        padding-top: 5px;
+      }
+      .ucfr-news-open,
+      .ucfr-news-share {
         border: 0;
         padding: 0;
         color: #0b5aa5;
@@ -119,6 +164,18 @@
         font: inherit;
         font-weight: 800;
         cursor: pointer;
+      }
+      .ucfr-news-share {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #334155;
+      }
+      .ucfr-news-open:hover,
+      .ucfr-news-open:focus-visible,
+      .ucfr-news-share:hover,
+      .ucfr-news-share:focus-visible {
+        text-decoration: underline;
       }
       .ucfr-news-modal {
         position: fixed;
@@ -158,6 +215,20 @@
         line-height: 1.75;
         white-space: pre-wrap;
       }
+      .ucfr-news-modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 24px;
+        padding-top: 18px;
+        border-top: 1px solid #e2e8f0;
+      }
+      .ucfr-news-share-modal {
+        min-height: 42px;
+        padding: 10px 16px;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        background: #f8fafc;
+      }
       .ucfr-news-modal-close {
         position: absolute;
         top: 12px;
@@ -179,9 +250,65 @@
         .ucfr-news-modal-body {
           padding: 21px;
         }
+        .ucfr-news-actions {
+          justify-content: space-between;
+        }
       }
     `;
     document.head.appendChild(style);
+  }
+
+  async function copyToClipboard(value) {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(value);
+      return;
+    }
+
+    const textarea = document.createElement('textarea');
+    textarea.value = value;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    const copied = document.execCommand('copy');
+    textarea.remove();
+    if (!copied) throw new Error('Copy failed');
+  }
+
+  function showShareFeedback(button) {
+    if (!button) return;
+    const original = button.dataset.originalLabel || button.textContent;
+    button.dataset.originalLabel = original;
+    button.textContent = isCzech() ? 'Odkaz zkopírován' : 'Link copied';
+    window.setTimeout(() => {
+      if (button.isConnected) button.textContent = original;
+    }, 1800);
+  }
+
+  async function shareArticle(id, button) {
+    const article = (articles || []).find((item) => item.id === id);
+    if (!article) return;
+
+    const title = articleTitle(article);
+    const text = excerpt(articleText(article), 120);
+    const url = articleUrl(article);
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title, text, url });
+        return;
+      } catch (error) {
+        if (error?.name === 'AbortError') return;
+      }
+    }
+
+    try {
+      await copyToClipboard(url);
+      showShareFeedback(button);
+    } catch {
+      window.prompt(isCzech() ? 'Zkopírujte odkaz na článek:' : 'Copy the article link:', url);
+    }
   }
 
   function ensureModal() {
@@ -198,6 +325,11 @@
     const close = () => {
       modal.hidden = true;
       document.body.style.removeProperty('overflow');
+      if (articleIdFromHash()) {
+        const restoredHash = previousArticleHash || '#education';
+        history.replaceState(null, '', `${window.location.pathname}${window.location.search}${restoredHash}`);
+      }
+      previousArticleHash = '';
     };
 
     modal.querySelector('.ucfr-news-modal-close').addEventListener('click', close);
@@ -211,7 +343,7 @@
     return modal;
   }
 
-  function openArticle(id) {
+  function openArticle(id, updateUrl = true) {
     const article = (articles || []).find((item) => item.id === id);
     if (!article) return;
 
@@ -225,10 +357,32 @@
         <small>${escapeHtml(formatDate(article.publishedAt))}</small>
         <h2>${escapeHtml(title)}</h2>
         <p>${escapeHtml(text)}</p>
+        <div class="ucfr-news-modal-actions">
+          <button class="ucfr-news-share ucfr-news-share-modal" type="button" data-news-share="${escapeHtml(article.id)}">
+            ↗ ${isCzech() ? 'Sdílet článek' : 'Share article'}
+          </button>
+        </div>
       </div>
     `;
+
+    modal.querySelector('[data-news-share]')?.addEventListener('click', (event) => {
+      shareArticle(event.currentTarget.dataset.newsShare, event.currentTarget);
+    });
+
+    if (updateUrl && window.location.hash !== articleHash(article.id)) {
+      previousArticleHash = window.location.hash;
+      history.pushState({ ucfrArticleId: article.id }, '', articleUrl(article));
+    }
+
     modal.hidden = false;
     document.body.style.overflow = 'hidden';
+  }
+
+  function openArticleFromHash() {
+    const id = articleIdFromHash();
+    if (!id || !Array.isArray(articles)) return;
+    if (!articles.some((article) => article.id === id)) return;
+    openArticle(id, false);
   }
 
   async function loadArticles(force = false) {
@@ -298,9 +452,14 @@
             <small>${escapeHtml(formatDate(article.publishedAt))}</small>
             <h3>${escapeHtml(title)}</h3>
             <p>${escapeHtml(excerpt(text))}</p>
-            <button class="ucfr-news-open" type="button" data-news-id="${escapeHtml(article.id)}">
-              ${isCzech() ? 'Číst celý článek' : 'Read full article'} →
-            </button>
+            <div class="ucfr-news-actions">
+              <button class="ucfr-news-open" type="button" data-news-id="${escapeHtml(article.id)}">
+                ${isCzech() ? 'Číst celý článek' : 'Read full article'} →
+              </button>
+              <button class="ucfr-news-share" type="button" data-news-share="${escapeHtml(article.id)}">
+                ↗ ${isCzech() ? 'Sdílet' : 'Share'}
+              </button>
+            </div>
           </div>
         </article>
       `;
@@ -309,6 +468,10 @@
     grid.querySelectorAll('[data-news-id]').forEach((button) => {
       button.addEventListener('click', () => openArticle(button.dataset.newsId));
     });
+
+    grid.querySelectorAll('[data-news-share]').forEach((button) => {
+      button.addEventListener('click', () => shareArticle(button.dataset.newsShare, button));
+    });
   }
 
   async function refreshAndRender(force = false) {
@@ -316,8 +479,10 @@
     if (!grid) return;
     await loadArticles(force);
     renderInto(grid);
+    openArticleFromHash();
   }
 
+  ensureSocialAssets();
   ensureStyles();
   refreshAndRender();
 
@@ -327,6 +492,16 @@
   observer.observe(document.documentElement, { childList: true, subtree: true });
 
   window.addEventListener('ucfr-news-updated', () => refreshAndRender(true));
+  window.addEventListener('hashchange', openArticleFromHash);
+  window.addEventListener('popstate', () => {
+    const modal = document.querySelector('#ucfrNewsModal');
+    if (articleIdFromHash()) {
+      openArticleFromHash();
+    } else if (modal && !modal.hidden) {
+      modal.hidden = true;
+      document.body.style.removeProperty('overflow');
+    }
+  });
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') refreshAndRender(true);
   });
