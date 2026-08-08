@@ -73,7 +73,10 @@
       <p>Externí aplikace pro procvičování pravidel fotbalu.</p>
     `;
     card.appendChild(buildLink('primary fotbaltesty-button'));
-    grid.appendChild(card);
+
+    const examCard = grid.querySelector('[data-test-mode="exam"]')?.closest('.test-mode-card');
+    if (examCard) examCard.insertAdjacentElement('afterend', card);
+    else grid.prepend(card);
     return true;
   }
 
