@@ -24,6 +24,7 @@
 #tests .test-mode-card,
 #tests .test-mode-card.featured,
 #tests #fotbaltesty-homepage-card {
+  position: relative;
   box-sizing: border-box;
   min-width: 0;
   min-height: 390px;
@@ -88,6 +89,24 @@
   color: #647084 !important;
   font-size: 16px !important;
   line-height: 1.7 !important;
+}
+
+#tests .ucfr-question-count-badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 2;
+  padding: 7px 10px;
+  border: 1px solid #cfe0f2;
+  border-radius: 999px;
+  background: #eef6ff;
+  color: #0b5aa5;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: .01em;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(11, 90, 165, .08);
 }
 
 #tests .test-mode-card > .primary,
@@ -258,6 +277,12 @@
   #tests #fotbaltesty-homepage-card {
     min-height: 330px;
     padding: 26px 22px !important;
+  }
+
+  #tests .ucfr-question-count-badge {
+    top: 14px;
+    right: 14px;
+    font-size: 11px;
   }
 
   #ucfrEducationQuickLinks.ucfr-education-extras {
