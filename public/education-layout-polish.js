@@ -2,9 +2,20 @@
   'use strict';
 
   const REFFGUARD_URL = 'https://reff-guardpro.vercel.app/demo';
+  const QUESTION_BANK_COUNT = 1219;
+  const ACTIVE_ADMIN_TAB_KEY = 'ucfr-admin-active-tab';
 
   function language() {
     return document.documentElement.lang === 'en' ? 'en' : 'cs';
+  }
+
+  function normalize(value) {
+    return String(value || '')
+      .toLocaleLowerCase('cs-CZ')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 
   function currentUser() {
@@ -108,6 +119,22 @@
     });
   }
 
+  function ensureQuestionCountBadge(exam) {
+    if (!exam) return;
+    let badge = exam.querySelector('.ucfr-question-count-badge');
+    if (!badge) {
+      badge = document.createElement('span');
+      badge.className = 'ucfr-question-count-badge';
+      exam.appendChild(badge);
+    }
+    badge.textContent = language() === 'cs'
+      ? `${QUESTION_BANK_COUNT} otázek`
+      : `${QUESTION_BANK_COUNT} questions`;
+    badge.title = language() === 'cs'
+      ? `Celkem ${QUESTION_BANK_COUNT} aktivních otázek v databázi`
+      : `${QUESTION_BANK_COUNT} active questions in the question bank`;
+  }
+
   function polishEducationCards() {
     const grid = document.querySelector('#tests .test-mode-grid');
     if (!grid) return;
@@ -125,6 +152,43 @@
     setCardIcon(football, icons.football);
     setCardIcon(results, icons.results);
     setCardIcon(video, icons.video);
+    ensureQuestionCountBadge(exam);
+  }
+
+  function removeQuestionManagement() {
+    document.querySelectorAll('.admin-shell').forEach((shell) => {
+      let removedTests = false;
+
+      [...shell.querySelectorAll(':scope > .admin-panel-section')].forEach((section) => {
+        const label = normalize(section.querySelector('.section-label')?.textContent);
+        const heading = normalize(section.querySelector('h3')?.textContent);
+        const isQuestionManagement = label === 'testy'
+          || label === 'tests'
+          || /sprava testovych otazek|test question management/.test(heading);
+
+        if (isQuestionManagement) {
+          section.remove();
+          removedTests = true;
+        }
+      });
+
+      const testsTab = shell.querySelector('[data-admin-tab-target="tests"]');
+      const testsWasActive = testsTab?.classList.contains('active')
+        || sessionStorage.getItem(ACTIVE_ADMIN_TAB_KEY) === 'tests';
+
+      if (testsTab) testsTab.remove();
+
+      if ((removedTests || testsTab) && testsWasActive) {
+        sessionStorage.setItem(ACTIVE_ADMIN_TAB_KEY, 'members');
+        const membersTab = shell.querySelector('[data-admin-tab-target="members"]');
+        if (membersTab) membersTab.click();
+        else {
+          shell.querySelectorAll(':scope > .admin-panel-section').forEach((section) => {
+            section.hidden = section.dataset.adminTab !== 'members';
+          });
+        }
+      }
+    });
   }
 
   function buildExtras() {
@@ -162,6 +226,7 @@
   function apply() {
     polishPillarIcons();
     polishEducationCards();
+    removeQuestionManagement();
     buildExtras();
   }
 
@@ -183,8 +248,19 @@
   observer.observe(document.documentElement, { childList: true, subtree: true });
 
   document.addEventListener('click', (event) => {
+    const resultButton = event.target.closest?.('.test-result [data-modal="results"]');
+    if (resultButton) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      const boundResultsButton = document.querySelector('#tests [data-modal="results"]');
+      if (boundResultsButton && boundResultsButton !== resultButton) {
+        boundResultsButton.click();
+      }
+      return;
+    }
+
     if (event.target.closest?.('#langBtn, #logoutBtn')) {
       window.setTimeout(apply, 100);
     }
-  });
+  }, true);
 })();
