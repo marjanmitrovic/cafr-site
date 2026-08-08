@@ -1,0 +1,140 @@
+(() => {
+  'use strict';
+
+  const REFFGUARD_URL = 'https://reff-guardpro.vercel.app/demo';
+
+  function language() {
+    return document.documentElement.lang === 'en' ? 'en' : 'cs';
+  }
+
+  function currentUser() {
+    try {
+      return JSON.parse(localStorage.getItem('cafr-user') || 'null');
+    } catch {
+      return null;
+    }
+  }
+
+  function canAccessAdmin() {
+    return ['ADMIN', 'BOARD', 'QUESTION_EDITOR'].includes(currentUser()?.role);
+  }
+
+  const icons = {
+    exam: `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="13" r="7"></circle>
+        <path d="M12 13V9m0 4 3 2M9 2h6M12 6V3m5.2 3.8 1.4-1.4"></path>
+      </svg>
+    `,
+    football: `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="8"></circle>
+        <path d="m12 7 3 2-1 3h-4L9 9l3-2Zm-3 2-3 1-1 3 2 3 3-1m5-6 3 1 1 3-2 3-3-1m-4 0 2 3h4l2-3"></path>
+      </svg>
+    `,
+    results: `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M5 19V10m5 9V5m5 14v-7m4 7H3"></path>
+      </svg>
+    `,
+    video: `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="4" y="6" width="16" height="12" rx="3"></rect>
+        <path d="m10 9 5 3-5 3V9Z"></path>
+      </svg>
+    `,
+    shield: `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 3 19 6v5c0 4.7-2.8 8.2-7 10-4.2-1.8-7-5.3-7-10V6l7-3Z"></path>
+        <circle cx="12" cy="10" r="2"></circle>
+        <path d="M8.8 16c.8-1.8 2-2.7 3.2-2.7s2.4.9 3.2 2.7"></path>
+      </svg>
+    `,
+  };
+
+  function setCardIcon(card, markup) {
+    const icon = card?.querySelector('.test-mode-icon');
+    if (!icon || icon.dataset.ucfrPolishedIcon === '1') return;
+    icon.dataset.ucfrPolishedIcon = '1';
+    icon.innerHTML = markup;
+  }
+
+  function polishEducationCards() {
+    const grid = document.querySelector('#tests .test-mode-grid');
+    if (!grid) return;
+
+    const exam = grid.querySelector('[data-test-mode="exam"]')?.closest('.test-mode-card');
+    const football = grid.querySelector('#fotbaltesty-homepage-card');
+    const results = grid.querySelector('[data-modal="results"]')?.closest('.test-mode-card');
+    const video = grid.querySelector('.ucfr-video-analysis-card');
+
+    [exam, football, results, video].filter(Boolean).forEach((card) => {
+      card.classList.add('ucfr-polished-education-card');
+    });
+
+    setCardIcon(exam, icons.exam);
+    setCardIcon(football, icons.football);
+    setCardIcon(results, icons.results);
+    setCardIcon(video, icons.video);
+  }
+
+  function buildExtras() {
+    const quick = document.querySelector('#ucfrEducationQuickLinks');
+    if (!quick) return;
+
+    const lang = language();
+    const admin = canAccessAdmin();
+    const signature = `${lang}:${admin}`;
+    if (quick.dataset.ucfrPolishSignature === signature && quick.querySelector('.ucfr-reffguard-card-final')) return;
+
+    quick.dataset.ucfrPolishSignature = signature;
+    quick.classList.add('ucfr-education-extras');
+    quick.setAttribute('aria-label', lang === 'cs' ? 'Další nástroje' : 'Additional tools');
+
+    quick.innerHTML = `
+      ${admin ? `
+        <button class="ucfr-education-admin-link" data-modal="admin" type="button">
+          ⚙️ ${lang === 'cs' ? 'Administrace' : 'Administration'}
+        </button>
+      ` : ''}
+      <article class="ucfr-reffguard-card-final">
+        <div class="ucfr-reffguard-icon">${icons.shield}</div>
+        <div class="ucfr-reffguard-copy">
+          <h3>ReffGuard</h3>
+          <p>${lang === 'cs' ? 'Aplikace pro delegování rozhodčích' : 'Application for referee appointments'}</p>
+        </div>
+        <a class="ucfr-reffguard-cta" href="${REFFGUARD_URL}" target="_blank" rel="noopener noreferrer">
+          ${lang === 'cs' ? 'Otevřít ReffGuard' : 'Open ReffGuard'} ↗
+        </a>
+      </article>
+    `;
+  }
+
+  function apply() {
+    polishEducationCards();
+    buildExtras();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', apply, { once: true });
+  } else {
+    apply();
+  }
+
+  let frame = null;
+  const observer = new MutationObserver(() => {
+    if (frame !== null) return;
+    frame = window.requestAnimationFrame(() => {
+      frame = null;
+      apply();
+    });
+  });
+
+  observer.observe(document.documentElement, { childList: true, subtree: true });
+
+  document.addEventListener('click', (event) => {
+    if (event.target.closest?.('#langBtn, #logoutBtn')) {
+      window.setTimeout(apply, 100);
+    }
+  });
+})();
