@@ -52,11 +52,60 @@
     `,
   };
 
+  const pillarIcons = [
+    `
+      <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3 19 6v5c0 4.7-2.8 8.2-7 10-4.2-1.8-7-5.3-7-10V6l7-3Z"></path>
+        <path d="m9 12 2 2 4-5"></path>
+      </svg>
+    `,
+    `
+      <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3v17M6 6h12M4 10l3-4 3 4M14 10l3-4 3 4"></path>
+        <path d="M3.5 10h7a3.5 3.5 0 0 1-7 0Zm10 0h7a3.5 3.5 0 0 1-7 0ZM8 20h8"></path>
+      </svg>
+    `,
+    `
+      <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m3 9 9-5 9 5-9 5-9-5Z"></path>
+        <path d="M7 12.5V17c3 2 7 2 10 0v-4.5M21 9v6"></path>
+      </svg>
+    `,
+    `
+      <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="8" cy="9" r="3"></circle>
+        <circle cx="16" cy="9" r="3"></circle>
+        <path d="M3 19c.5-3.3 2.3-5 5-5s4.5 1.7 5 5M11 19c.5-3.3 2.3-5 5-5s4.5 1.7 5 5"></path>
+      </svg>
+    `,
+    `
+      <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 5.5A3.5 3.5 0 0 1 7.5 2H11v17H7.5A3.5 3.5 0 0 0 4 22V5.5Z"></path>
+        <path d="M20 5.5A3.5 3.5 0 0 0 16.5 2H13v17h3.5A3.5 3.5 0 0 1 20 22V5.5Z"></path>
+      </svg>
+    `,
+    `
+      <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 11v4a2 2 0 0 0 2 2h2l2 4h3l-2-4 8-3V8L8 5H6a2 2 0 0 0-2 2v4Z"></path>
+        <path d="M19 9c1 .7 1.5 1.7 1.5 3S20 14.3 19 15"></path>
+      </svg>
+    `,
+  ];
+
   function setCardIcon(card, markup) {
     const icon = card?.querySelector('.test-mode-icon');
     if (!icon || icon.dataset.ucfrPolishedIcon === '1') return;
     icon.dataset.ucfrPolishedIcon = '1';
     icon.innerHTML = markup;
+  }
+
+  function polishPillarIcons() {
+    document.querySelectorAll('#about .grid.cards .card').forEach((card, index) => {
+      const icon = card.querySelector('.icon');
+      if (!icon || !pillarIcons[index]) return;
+      icon.innerHTML = pillarIcons[index];
+      icon.style.color = '#0c2848';
+    });
   }
 
   function polishEducationCards() {
@@ -111,6 +160,7 @@
   }
 
   function apply() {
+    polishPillarIcons();
     polishEducationCards();
     buildExtras();
   }
