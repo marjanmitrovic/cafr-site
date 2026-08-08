@@ -119,16 +119,30 @@
     `;
   }
 
-  function resultsCardIn(grid) {
-    return [...grid.children].find((item) =>
-      item.textContent.includes('Moje výsledky') || item.textContent.includes('My results')
-    );
-  }
-
   function removePracticeMode() {
     const practiceButton = document.querySelector('#tests [data-test-mode="practice"]');
     const practiceCard = practiceButton?.closest('.test-mode-card');
     if (practiceCard) practiceCard.remove();
+  }
+
+  function removePillarLinks() {
+    document.querySelectorAll('#about .grid.cards .card > a').forEach((link) => link.remove());
+  }
+
+  function examCardIn(grid) {
+    return grid.querySelector('[data-test-mode="exam"]')?.closest('.test-mode-card') || null;
+  }
+
+  function resultsCardIn(grid) {
+    return grid.querySelector('[data-modal="results"]')?.closest('.test-mode-card') ||
+      [...grid.children].find((item) => item.textContent.includes('Moje výsledky') || item.textContent.includes('My results')) ||
+      null;
+  }
+
+  function adminCardIn(grid) {
+    return grid.querySelector('[data-modal="admin"]')?.closest('.test-mode-card') ||
+      grid.querySelector('.admin-card') ||
+      null;
   }
 
   function updateVideoAnalysis() {
@@ -141,9 +155,7 @@
     if (!card) {
       card = document.createElement('article');
       card.className = 'test-mode-card ucfr-video-analysis-card';
-      const resultsCard = resultsCardIn(grid);
-      if (resultsCard) grid.insertBefore(card, resultsCard);
-      else grid.appendChild(card);
+      grid.appendChild(card);
     }
 
     card.innerHTML = `
@@ -158,31 +170,82 @@
     `;
   }
 
-  function updateReffGuard() {
+  function ensureAdminSection() {
+    const testsSection = document.querySelector('#tests');
+    if (!testsSection) return;
+
+    const grid = testsSection.querySelector('.test-mode-grid');
+    if (!grid) return;
+
+    const adminCard = adminCardIn(grid);
+    let section = document.querySelector('#education-admin');
+
+    if (!section) {
+      section = document.createElement('section');
+      section.id = 'education-admin';
+      section.className = 'section education-hub ucfr-education-admin';
+      testsSection.insertAdjacentElement('afterend', section);
+    }
+
+    const lang = language();
+    section.innerHTML = `
+      <div class="section-head">
+        <span>${lang === 'cs' ? 'SPRÁVA' : 'MANAGEMENT'}</span>
+        <h2>${lang === 'cs' ? 'Administrace' : 'Administration'}</h2>
+      </div>
+      <div class="test-mode-grid" id="ucfrEducationAdminGrid"></div>
+    `;
+
+    if (adminCard) {
+      section.querySelector('#ucfrEducationAdminGrid').appendChild(adminCard);
+    }
+  }
+
+  function ensureApplicationsSection() {
+    const adminSection = document.querySelector('#education-admin');
+    const testsSection = document.querySelector('#tests');
+    const anchor = adminSection || testsSection;
+    if (!anchor) return;
+
+    let section = document.querySelector('#applications');
+    if (!section) {
+      section = document.createElement('section');
+      section.id = 'applications';
+      section.className = 'section education-hub ucfr-applications';
+      anchor.insertAdjacentElement('afterend', section);
+    }
+
+    const lang = language();
+    section.innerHTML = `
+      <div class="section-head">
+        <span>${lang === 'cs' ? 'NÁSTROJE' : 'TOOLS'}</span>
+        <h2>${lang === 'cs' ? 'Aplikace' : 'Applications'}</h2>
+      </div>
+      <div class="test-mode-grid">
+        <article class="test-mode-card ucfr-reffguard-card">
+          <div class="test-mode-icon">🛡️</div>
+          <h3>ReffGuard</h3>
+          <p>${lang === 'cs'
+            ? 'Aplikace pro delegování rozhodčích.'
+            : 'Application for referee appointments.'}</p>
+          <a class="secondary dark video-analysis-link" href="${REFFGUARD_URL}" target="_blank" rel="noopener noreferrer">
+            ${lang === 'cs' ? 'Otevřít ReffGuard' : 'Open ReffGuard'}
+          </a>
+        </article>
+      </div>
+    `;
+  }
+
+  function organizeEducationCards() {
     const grid = document.querySelector('#tests .test-mode-grid');
     if (!grid) return;
 
-    const lang = language();
-    let card = grid.querySelector('.ucfr-reffguard-card');
+    const exam = examCardIn(grid);
+    const footballTests = grid.querySelector('#fotbaltesty-homepage-card');
+    const results = resultsCardIn(grid);
+    const video = grid.querySelector('.ucfr-video-analysis-card');
 
-    if (!card) {
-      card = document.createElement('article');
-      card.className = 'test-mode-card ucfr-reffguard-card';
-      const resultsCard = resultsCardIn(grid);
-      if (resultsCard) grid.insertBefore(card, resultsCard);
-      else grid.appendChild(card);
-    }
-
-    card.innerHTML = `
-      <div class="test-mode-icon">🛡️</div>
-      <h3>ReffGuard</h3>
-      <p>${lang === 'cs'
-        ? 'Digitální tréninková a podpůrná aplikace pro fotbalové rozhodčí.'
-        : 'A digital training and support application for football referees.'}</p>
-      <a class="secondary dark video-analysis-link" href="${REFFGUARD_URL}" target="_blank" rel="noopener noreferrer">
-        ${lang === 'cs' ? 'Otevřít ReffGuard' : 'Open ReffGuard'}
-      </a>
-    `;
+    [exam, footballTests, results, video].filter(Boolean).forEach((card) => grid.appendChild(card));
   }
 
   function applyUpdates() {
@@ -193,8 +256,11 @@
     updateContactEmail();
     updateDocuments();
     removePracticeMode();
+    removePillarLinks();
     updateVideoAnalysis();
-    updateReffGuard();
+    ensureAdminSection();
+    ensureApplicationsSection();
+    organizeEducationCards();
   }
 
   function applyAfterRender(delay = 0) {
@@ -208,9 +274,24 @@
   }
 
   document.addEventListener('click', (event) => {
-    if (event.target.closest?.('#langBtn, #logoutBtn')) applyAfterRender(0);
+    if (event.target.closest?.('#langBtn, #logoutBtn')) {
+      applyAfterRender(0);
+      applyAfterRender(80);
+    }
   });
 
   document.addEventListener('submit', () => applyAfterRender(150));
   window.addEventListener('pageshow', applyUpdates);
+
+  const observer = new MutationObserver(() => {
+    window.requestAnimationFrame(() => {
+      removePracticeMode();
+      removePillarLinks();
+      updateVideoAnalysis();
+      ensureAdminSection();
+      ensureApplicationsSection();
+      organizeEducationCards();
+    });
+  });
+  observer.observe(document.documentElement, { childList: true, subtree: true });
 })();
