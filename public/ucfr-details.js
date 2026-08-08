@@ -125,6 +125,12 @@
     );
   }
 
+  function removePracticeMode() {
+    const practiceButton = document.querySelector('#tests [data-test-mode="practice"]');
+    const practiceCard = practiceButton?.closest('.test-mode-card');
+    if (practiceCard) practiceCard.remove();
+  }
+
   function updateVideoAnalysis() {
     const grid = document.querySelector('#tests .test-mode-grid');
     if (!grid) return;
@@ -186,6 +192,7 @@
     updateIco();
     updateContactEmail();
     updateDocuments();
+    removePracticeMode();
     updateVideoAnalysis();
     updateReffGuard();
   }
