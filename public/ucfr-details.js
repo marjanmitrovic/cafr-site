@@ -81,6 +81,9 @@
     if (!contactBlock) return;
 
     const paragraph = contactBlock.querySelector('p') || document.createElement('p');
+    const signature = `${lang}:${INFO_EMAIL}:${MEDIA_EMAIL}`;
+    if (paragraph.dataset.ucfrContactSignature === signature) return;
+    paragraph.dataset.ucfrContactSignature = signature;
     paragraph.innerHTML = `
       <strong>${lang === 'en' ? 'General enquiries' : 'Obecný kontakt'}:</strong><br>
       <a class="footer-link" href="mailto:${INFO_EMAIL}">${INFO_EMAIL}</a><br><br>
@@ -158,6 +161,8 @@
       grid.appendChild(card);
     }
 
+    if (card.dataset.ucfrLanguage === lang) return;
+    card.dataset.ucfrLanguage = lang;
     card.innerHTML = `
       <div class="test-mode-icon">🎥</div>
       <h3>${lang === 'cs' ? 'Video analýzy' : 'Video analysis'}</h3>
@@ -174,10 +179,10 @@
     const testsSection = document.querySelector('#tests');
     if (!testsSection) return;
 
-    const grid = testsSection.querySelector('.test-mode-grid');
-    if (!grid) return;
+    const sourceGrid = testsSection.querySelector('.test-mode-grid');
+    if (!sourceGrid) return;
 
-    const adminCard = adminCardIn(grid);
+    const lang = language();
     let section = document.querySelector('#education-admin');
 
     if (!section) {
@@ -187,18 +192,21 @@
       testsSection.insertAdjacentElement('afterend', section);
     }
 
-    const lang = language();
-    section.innerHTML = `
-      <div class="section-head">
-        <span>${lang === 'cs' ? 'SPRÁVA' : 'MANAGEMENT'}</span>
-        <h2>${lang === 'cs' ? 'Administrace' : 'Administration'}</h2>
-      </div>
-      <div class="test-mode-grid" id="ucfrEducationAdminGrid"></div>
-    `;
-
-    if (adminCard) {
-      section.querySelector('#ucfrEducationAdminGrid').appendChild(adminCard);
+    if (section.dataset.ucfrLanguage !== lang) {
+      section.dataset.ucfrLanguage = lang;
+      const existingCard = section.querySelector('.admin-card');
+      section.innerHTML = `
+        <div class="section-head">
+          <span>${lang === 'cs' ? 'SPRÁVA' : 'MANAGEMENT'}</span>
+          <h2>${lang === 'cs' ? 'Administrace' : 'Administration'}</h2>
+        </div>
+        <div class="test-mode-grid" id="ucfrEducationAdminGrid"></div>
+      `;
+      if (existingCard) section.querySelector('#ucfrEducationAdminGrid').appendChild(existingCard);
     }
+
+    const adminCard = adminCardIn(sourceGrid);
+    if (adminCard) section.querySelector('#ucfrEducationAdminGrid')?.appendChild(adminCard);
   }
 
   function ensureApplicationsSection() {
@@ -207,6 +215,7 @@
     const anchor = adminSection || testsSection;
     if (!anchor) return;
 
+    const lang = language();
     let section = document.querySelector('#applications');
     if (!section) {
       section = document.createElement('section');
@@ -215,7 +224,8 @@
       anchor.insertAdjacentElement('afterend', section);
     }
 
-    const lang = language();
+    if (section.dataset.ucfrLanguage === lang) return;
+    section.dataset.ucfrLanguage = lang;
     section.innerHTML = `
       <div class="section-head">
         <span>${lang === 'cs' ? 'NÁSTROJE' : 'TOOLS'}</span>
@@ -240,12 +250,28 @@
     const grid = document.querySelector('#tests .test-mode-grid');
     if (!grid) return;
 
-    const exam = examCardIn(grid);
-    const footballTests = grid.querySelector('#fotbaltesty-homepage-card');
-    const results = resultsCardIn(grid);
-    const video = grid.querySelector('.ucfr-video-analysis-card');
+    const wanted = [
+      examCardIn(grid),
+      grid.querySelector('#fotbaltesty-homepage-card'),
+      resultsCardIn(grid),
+      grid.querySelector('.ucfr-video-analysis-card'),
+    ].filter(Boolean);
 
-    [exam, footballTests, results, video].filter(Boolean).forEach((card) => grid.appendChild(card));
+    if (!wanted.length) return;
+    const relevant = [...grid.children].filter((card) => wanted.includes(card));
+    const alreadyOrdered = wanted.length === relevant.length && wanted.every((card, index) => relevant[index] === card);
+    if (alreadyOrdered) return;
+
+    wanted.forEach((card) => grid.appendChild(card));
+  }
+
+  function applyEducationLayout() {
+    removePracticeMode();
+    removePillarLinks();
+    updateVideoAnalysis();
+    ensureAdminSection();
+    ensureApplicationsSection();
+    organizeEducationCards();
   }
 
   function applyUpdates() {
@@ -255,12 +281,7 @@
     updateIco();
     updateContactEmail();
     updateDocuments();
-    removePracticeMode();
-    removePillarLinks();
-    updateVideoAnalysis();
-    ensureAdminSection();
-    ensureApplicationsSection();
-    organizeEducationCards();
+    applyEducationLayout();
   }
 
   function applyAfterRender(delay = 0) {
@@ -283,14 +304,12 @@
   document.addEventListener('submit', () => applyAfterRender(150));
   window.addEventListener('pageshow', applyUpdates);
 
+  let frame = null;
   const observer = new MutationObserver(() => {
-    window.requestAnimationFrame(() => {
-      removePracticeMode();
-      removePillarLinks();
-      updateVideoAnalysis();
-      ensureAdminSection();
-      ensureApplicationsSection();
-      organizeEducationCards();
+    if (frame !== null) return;
+    frame = window.requestAnimationFrame(() => {
+      frame = null;
+      applyEducationLayout();
     });
   });
   observer.observe(document.documentElement, { childList: true, subtree: true });
