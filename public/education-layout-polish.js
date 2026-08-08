@@ -155,6 +155,17 @@
     ensureQuestionCountBadge(exam);
   }
 
+  function removeActiveQuestionStat() {
+    document.querySelectorAll('.admin-shell .admin-stats').forEach((stats) => {
+      [...stats.querySelectorAll(':scope > article')].forEach((article) => {
+        const text = normalize(article.textContent);
+        if (/aktivnich otazek|active questions/.test(text)) {
+          article.remove();
+        }
+      });
+    });
+  }
+
   function removeQuestionManagement() {
     document.querySelectorAll('.admin-shell').forEach((shell) => {
       let removedTests = false;
@@ -226,6 +237,7 @@
   function apply() {
     polishPillarIcons();
     polishEducationCards();
+    removeActiveQuestionStat();
     removeQuestionManagement();
     buildExtras();
   }
