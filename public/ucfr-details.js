@@ -13,6 +13,18 @@
     return document.documentElement.lang === 'en' ? 'en' : 'cs';
   }
 
+  function currentUser() {
+    try {
+      return JSON.parse(localStorage.getItem('cafr-user') || 'null');
+    } catch {
+      return null;
+    }
+  }
+
+  function canAccessAdmin() {
+    return ['ADMIN', 'BOARD', 'QUESTION_EDITOR'].includes(currentUser()?.role);
+  }
+
   function ensureThemeButton() {
     const actions = document.querySelector('.topbar .actions');
     if (!actions || actions.querySelector('[data-theme-toggle]')) return;
@@ -142,10 +154,11 @@
       null;
   }
 
-  function adminCardIn(grid) {
-    return grid.querySelector('[data-modal="admin"]')?.closest('.test-mode-card') ||
-      grid.querySelector('.admin-card') ||
-      null;
+  function removeAdminCard() {
+    const grid = document.querySelector('#tests .test-mode-grid');
+    const adminCard = grid?.querySelector('[data-modal="admin"]')?.closest('.test-mode-card') ||
+      grid?.querySelector('.admin-card');
+    if (adminCard) adminCard.remove();
   }
 
   function updateVideoAnalysis() {
@@ -175,74 +188,86 @@
     `;
   }
 
-  function ensureAdminSection() {
+  function ensureCompactLinkStyles() {
+    if (document.querySelector('#ucfrCompactEducationLinksStyles')) return;
+    const style = document.createElement('style');
+    style.id = 'ucfrCompactEducationLinksStyles';
+    style.textContent = `
+      .ucfr-education-quick-links {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 10px 22px;
+        padding: 14px 20px 22px;
+      }
+      .ucfr-education-quick-link {
+        appearance: none;
+        border: 0;
+        padding: 0;
+        background: transparent;
+        color: #0b5aa5;
+        font: inherit;
+        font-weight: 800;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      .ucfr-education-quick-link:hover,
+      .ucfr-education-quick-link:focus-visible {
+        text-decoration: underline;
+      }
+      .ucfr-education-quick-link + .ucfr-education-quick-link::before {
+        content: '•';
+        display: inline-block;
+        margin-right: 22px;
+        color: #8a97a8;
+        text-decoration: none;
+      }
+      @media (max-width: 640px) {
+        .ucfr-education-quick-links {
+          align-items: flex-start;
+          flex-direction: column;
+          gap: 9px;
+          padding-inline: 20px;
+        }
+        .ucfr-education-quick-link + .ucfr-education-quick-link::before {
+          display: none;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function ensureQuickLinks() {
     const testsSection = document.querySelector('#tests');
     if (!testsSection) return;
 
-    const sourceGrid = testsSection.querySelector('.test-mode-grid');
-    if (!sourceGrid) return;
+    document.querySelector('#education-admin')?.remove();
+    document.querySelector('#applications')?.remove();
+    ensureCompactLinkStyles();
+
+    let links = document.querySelector('#ucfrEducationQuickLinks');
+    if (!links) {
+      links = document.createElement('nav');
+      links.id = 'ucfrEducationQuickLinks';
+      links.className = 'ucfr-education-quick-links';
+      links.setAttribute('aria-label', 'UČFR links');
+      testsSection.insertAdjacentElement('afterend', links);
+    }
 
     const lang = language();
-    let section = document.querySelector('#education-admin');
-
-    if (!section) {
-      section = document.createElement('section');
-      section.id = 'education-admin';
-      section.className = 'section education-hub ucfr-education-admin';
-      testsSection.insertAdjacentElement('afterend', section);
-    }
-
-    if (section.dataset.ucfrLanguage !== lang) {
-      section.dataset.ucfrLanguage = lang;
-      const existingCard = section.querySelector('.admin-card');
-      section.innerHTML = `
-        <div class="section-head">
-          <span>${lang === 'cs' ? 'SPRÁVA' : 'MANAGEMENT'}</span>
-          <h2>${lang === 'cs' ? 'Administrace' : 'Administration'}</h2>
-        </div>
-        <div class="test-mode-grid" id="ucfrEducationAdminGrid"></div>
-      `;
-      if (existingCard) section.querySelector('#ucfrEducationAdminGrid').appendChild(existingCard);
-    }
-
-    const adminCard = adminCardIn(sourceGrid);
-    if (adminCard) section.querySelector('#ucfrEducationAdminGrid')?.appendChild(adminCard);
-  }
-
-  function ensureApplicationsSection() {
-    const adminSection = document.querySelector('#education-admin');
-    const testsSection = document.querySelector('#tests');
-    const anchor = adminSection || testsSection;
-    if (!anchor) return;
-
-    const lang = language();
-    let section = document.querySelector('#applications');
-    if (!section) {
-      section = document.createElement('section');
-      section.id = 'applications';
-      section.className = 'section education-hub ucfr-applications';
-      anchor.insertAdjacentElement('afterend', section);
-    }
-
-    if (section.dataset.ucfrLanguage === lang) return;
-    section.dataset.ucfrLanguage = lang;
-    section.innerHTML = `
-      <div class="section-head">
-        <span>${lang === 'cs' ? 'NÁSTROJE' : 'TOOLS'}</span>
-        <h2>${lang === 'cs' ? 'Aplikace' : 'Applications'}</h2>
-      </div>
-      <div class="test-mode-grid">
-        <article class="test-mode-card ucfr-reffguard-card">
-          <div class="test-mode-icon">🛡️</div>
-          <h3>ReffGuard</h3>
-          <p>${lang === 'cs'
-            ? 'Aplikace pro delegování rozhodčích.'
-            : 'Application for referee appointments.'}</p>
-          <a class="secondary dark video-analysis-link" href="${REFFGUARD_URL}" target="_blank" rel="noopener noreferrer">
-            ${lang === 'cs' ? 'Otevřít ReffGuard' : 'Open ReffGuard'}
-          </a>
-        </article>
-      </div>
+    const adminLink = canAccessAdmin()
+      ? `<button class="ucfr-education-quick-link" data-modal="admin" type="button">⚙️ ${lang === 'cs' ? 'Administrace' : 'Administration'}</button>`
+      : '';
+    const reffGuardText = lang === 'cs'
+      ? 'ReffGuard – aplikace pro delegování rozhodčích'
+      : 'ReffGuard – referee appointment application';
+    const signature = `${lang}:${canAccessAdmin()}`;
+    if (links.dataset.ucfrSignature === signature) return;
+    links.dataset.ucfrSignature = signature;
+    links.innerHTML = `
+      ${adminLink}
+      <a class="ucfr-education-quick-link" href="${REFFGUARD_URL}" target="_blank" rel="noopener noreferrer">🛡️ ${reffGuardText} ↗</a>
     `;
   }
 
@@ -268,9 +293,9 @@
   function applyEducationLayout() {
     removePracticeMode();
     removePillarLinks();
+    removeAdminCard();
     updateVideoAnalysis();
-    ensureAdminSection();
-    ensureApplicationsSection();
+    ensureQuickLinks();
     organizeEducationCards();
   }
 
