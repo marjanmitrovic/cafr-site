@@ -1,0 +1,290 @@
+/* Final visual polish for the public education area */
+#tests.education-hub {
+  padding-top: 72px;
+  padding-bottom: 74px;
+  background:
+    radial-gradient(circle at 10% 10%, rgba(23, 104, 176, .055), transparent 26%),
+    radial-gradient(circle at 90% 85%, rgba(23, 104, 176, .045), transparent 28%),
+    #f4f7fb;
+}
+
+#tests .section-head {
+  margin-bottom: 38px;
+}
+
+#tests .test-mode-grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  align-items: stretch !important;
+  gap: 22px !important;
+  width: min(1240px, 100%) !important;
+  margin: 0 auto !important;
+}
+
+#tests .test-mode-card,
+#tests .test-mode-card.featured,
+#tests #fotbaltesty-homepage-card {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 390px;
+  padding: 30px 26px 28px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  text-align: center !important;
+  border: 1px solid #dce5f0 !important;
+  border-radius: 20px !important;
+  background: rgba(255, 255, 255, .98) !important;
+  box-shadow: 0 14px 36px rgba(7, 27, 49, .075) !important;
+  transform: none;
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease !important;
+}
+
+#tests .test-mode-card:hover,
+#tests .test-mode-card.featured:hover,
+#tests #fotbaltesty-homepage-card:hover {
+  transform: translateY(-4px) !important;
+  border-color: #c9d8e8 !important;
+  box-shadow: 0 20px 42px rgba(7, 27, 49, .11) !important;
+}
+
+#tests .test-mode-icon {
+  width: 66px !important;
+  height: 66px !important;
+  min-height: 66px;
+  margin: 0 auto 20px !important;
+  display: grid !important;
+  place-items: center !important;
+  border-radius: 17px !important;
+  background: linear-gradient(145deg, #edf5fd, #f7faff) !important;
+  color: #0c3f78 !important;
+  font-size: 31px !important;
+  line-height: 1 !important;
+}
+
+#tests .test-mode-icon svg {
+  width: 36px;
+  height: 36px;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+#tests .test-mode-card h3 {
+  width: 100%;
+  margin: 0 0 16px !important;
+  color: #071b37 !important;
+  font-size: 25px !important;
+  line-height: 1.18 !important;
+  font-weight: 800 !important;
+}
+
+#tests .test-mode-card p {
+  width: 100%;
+  margin: 0 !important;
+  color: #647084 !important;
+  font-size: 16px !important;
+  line-height: 1.7 !important;
+}
+
+#tests .test-mode-card > .primary,
+#tests .test-mode-card > .secondary,
+#tests .test-mode-card > .video-analysis-link,
+#tests .test-mode-card > .fotbaltesty-button {
+  width: 100% !important;
+  min-height: 52px !important;
+  margin-top: auto !important;
+  padding: 13px 16px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 11px !important;
+  text-align: center !important;
+  text-decoration: none !important;
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  line-height: 1.2 !important;
+}
+
+#tests .fotbaltesty-button {
+  position: relative !important;
+  margin-bottom: 28px !important;
+}
+
+#tests .fotbaltesty-button .fotbaltesty-link-label {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+#tests .fotbaltesty-button .fotbaltesty-developer-credit {
+  position: absolute !important;
+  top: calc(100% + 9px) !important;
+  left: 0 !important;
+  right: 0 !important;
+  display: block !important;
+  color: #69778b !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+}
+
+/* ReffGuard stays outside Vzdělávání, but is presented as one compact card. */
+#ucfrEducationQuickLinks.ucfr-education-extras {
+  position: static !important;
+  inset: auto !important;
+  width: min(960px, calc(100% - 44px)) !important;
+  margin: 30px auto 64px !important;
+  padding: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 10px !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.ucfr-education-admin-link {
+  align-self: flex-end;
+  appearance: none;
+  border: 0;
+  padding: 5px 2px;
+  background: transparent;
+  color: #0b5aa5;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.ucfr-education-admin-link:hover,
+.ucfr-education-admin-link:focus-visible {
+  text-decoration: underline;
+}
+
+.ucfr-reffguard-card-final {
+  width: 100%;
+  min-height: 136px;
+  padding: 24px 28px;
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 22px;
+  border: 1px solid #dce5f0;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 14px 36px rgba(7, 27, 49, .075);
+}
+
+.ucfr-reffguard-icon {
+  width: 66px;
+  height: 66px;
+  display: grid;
+  place-items: center;
+  border-radius: 17px;
+  background: linear-gradient(145deg, #edf5fd, #f7faff);
+  color: #0c3f78;
+}
+
+.ucfr-reffguard-icon svg {
+  width: 38px;
+  height: 38px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ucfr-reffguard-copy h3 {
+  margin: 0 0 7px;
+  color: #071b37;
+  font-size: 25px;
+  line-height: 1.2;
+}
+
+.ucfr-reffguard-copy p {
+  margin: 0;
+  color: #647084;
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+.ucfr-reffguard-cta {
+  min-height: 50px;
+  padding: 13px 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 11px;
+  background: #0c2848;
+  color: #fff !important;
+  text-decoration: none !important;
+  font-size: 15px;
+  font-weight: 800;
+  white-space: nowrap;
+  box-shadow: 0 8px 20px rgba(12, 40, 72, .14);
+}
+
+.ucfr-reffguard-cta:hover,
+.ucfr-reffguard-cta:focus-visible {
+  background: #1768b0;
+}
+
+@media (max-width: 1100px) {
+  #tests .test-mode-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 700px) {
+  #tests.education-hub {
+    padding-top: 56px;
+    padding-bottom: 58px;
+  }
+
+  #tests .test-mode-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  #tests .test-mode-card,
+  #tests .test-mode-card.featured,
+  #tests #fotbaltesty-homepage-card {
+    min-height: 330px;
+    padding: 26px 22px !important;
+  }
+
+  #ucfrEducationQuickLinks.ucfr-education-extras {
+    width: min(100% - 32px, 960px) !important;
+    margin-top: 20px !important;
+    margin-bottom: 48px !important;
+  }
+
+  .ucfr-reffguard-card-final {
+    grid-template-columns: 58px 1fr;
+    gap: 16px;
+    padding: 22px;
+  }
+
+  .ucfr-reffguard-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 15px;
+  }
+
+  .ucfr-reffguard-cta {
+    grid-column: 1 / -1;
+    width: 100%;
+    margin-top: 2px;
+  }
+
+  .ucfr-reffguard-copy h3 {
+    font-size: 22px;
+  }
+}
