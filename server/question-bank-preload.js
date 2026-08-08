@@ -71,6 +71,21 @@ async function syncQuestionBank() {
     },
   });
 
+  // The uploaded Cvičení 3 bank is the complete pool for Zkušební test.
+  // Keep exactly questions 1–1219 active and disable legacy/manual extras so
+  // the public random selector and admin statistics both reflect 1219 items.
+  await prisma.question.updateMany({
+    where: {
+      isActive: true,
+      OR: [
+        { legacyId: null },
+        { legacyId: { lt: FIRST_QUESTION_ID } },
+        { legacyId: { gt: LAST_QUESTION_ID } },
+      ],
+    },
+    data: { isActive: false },
+  });
+
   const legacyIds = bank.map((item) => Number(item.legacyId));
   const existing = await prisma.question.findMany({
     where: { legacyId: { in: legacyIds } },
@@ -166,6 +181,14 @@ async function syncQuestionBank() {
         data: optionRows.slice(offset, offset + 1000),
       });
     }
+  }
+
+  const activeQuestionCount = await prisma.question.count({
+    where: { status: 'APPROVED', isActive: true },
+  });
+
+  if (activeQuestionCount !== EXPECTED_QUESTION_COUNT) {
+    throw new Error(`Active question pool must contain exactly ${EXPECTED_QUESTION_COUNT} questions, found ${activeQuestionCount}.`);
   }
 
   await prisma.test.upsert({
