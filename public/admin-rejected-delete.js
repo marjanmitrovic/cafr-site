@@ -11,6 +11,14 @@
     return document.documentElement.lang !== 'en';
   }
 
+  function currentUserRole() {
+    try {
+      return String(JSON.parse(localStorage.getItem('cafr-user') || 'null')?.role || '').toUpperCase();
+    } catch {
+      return '';
+    }
+  }
+
   function ensureStyles() {
     if (document.getElementById('adminRejectedDeleteStyles')) return;
     const style = document.createElement('style');
@@ -136,8 +144,11 @@
     if (!statusSelect) return;
 
     const userId = statusSelect.dataset.userStatus;
-    const role = String(card.querySelector('[data-user-role]')?.value || '').toUpperCase();
-    const shouldShow = String(statusSelect.value || '').toUpperCase() === 'REJECTED' && role !== 'ADMIN';
+    const targetRole = String(card.querySelector('[data-user-role]')?.value || '').toUpperCase();
+    const shouldShow =
+      currentUserRole() === 'ADMIN' &&
+      String(statusSelect.value || '').toUpperCase() === 'REJECTED' &&
+      targetRole !== 'ADMIN';
     let button = card.querySelector('.admin-rejected-delete');
 
     if (!shouldShow) {
