@@ -18,14 +18,28 @@ const allowedImageMimes = new Map([
   ['image/webp', '.webp'],
 ]);
 
+function isImageUrl(value) {
+  const url = String(value || '').trim();
+  if (!url) return false;
+  if (/\.(?:png|jpe?g|webp|gif|avif)(?:[?#].*)?$/i.test(url)) return true;
+  try {
+    const parsed = new URL(url, 'https://ucfr.cz');
+    return parsed.hostname === 'res.cloudinary.com' && parsed.pathname.includes('/image/upload/');
+  } catch {
+    return false;
+  }
+}
+
 function articleResponse(article) {
+  const image = isImageUrl(article.url);
   return {
     id: article.id,
     titleCs: article.titleCs,
     titleEn: article.titleEn,
     textCs: article.descriptionCs || '',
     textEn: article.descriptionEn || article.descriptionCs || '',
-    imageUrl: article.url,
+    imageUrl: image ? article.url : '',
+    externalUrl: !image ? article.url : '',
     status: article.status,
     publishedAt: article.createdAt,
     updatedAt: article.updatedAt,
