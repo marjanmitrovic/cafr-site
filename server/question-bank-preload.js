@@ -36,22 +36,32 @@ async function syncQuestionBank() {
     .filter((item) => Number(item.legacyId) >= FIRST_QUESTION_ID && Number(item.legacyId) <= LAST_QUESTION_ID)
     .sort((a, b) => Number(a.legacyId) - Number(b.legacyId));
 
+  // Never take the whole API down just because a bundled import file is incomplete.
+  // More importantly, stop before any updateMany/create/delete operation so an
+  // incomplete file can never deactivate or overwrite a previously valid DB pool.
   if (bank.length !== EXPECTED_QUESTION_COUNT) {
-    throw new Error(`Cvičení 3 question bank is incomplete: expected ${EXPECTED_QUESTION_COUNT}, found ${bank.length}.`);
+    console.error(
+      `[QUESTION BANK] Import skipped: expected ${EXPECTED_QUESTION_COUNT} questions, `
+      + `but bundled source contains ${bank.length}. Existing database questions were left untouched.`
+    );
+    return;
   }
 
   for (let index = 0; index < bank.length; index += 1) {
     const expectedId = index + FIRST_QUESTION_ID;
     if (Number(bank[index].legacyId) !== expectedId) {
-      throw new Error(`Cvičení 3 question bank sequence is broken at ${expectedId}.`);
+      console.error(`[QUESTION BANK] Import skipped: sequence is broken at question ${expectedId}. Existing DB left untouched.`);
+      return;
     }
 
     if (!normalizeText(bank[index].textCs) || !Array.isArray(bank[index].answers) || bank[index].answers.length < 2) {
-      throw new Error(`Cvičení 3 question ${expectedId} is incomplete.`);
+      console.error(`[QUESTION BANK] Import skipped: question ${expectedId} is incomplete. Existing DB left untouched.`);
+      return;
     }
 
     if (bank[index].answers.filter((answer) => answer.isCorrect).length !== 1) {
-      throw new Error(`Cvičení 3 question ${expectedId} must contain exactly one correct answer.`);
+      console.error(`[QUESTION BANK] Import skipped: question ${expectedId} does not have exactly one correct answer. Existing DB left untouched.`);
+      return;
     }
   }
 
@@ -71,9 +81,6 @@ async function syncQuestionBank() {
     },
   });
 
-  // The uploaded Cvičení 3 bank is the complete pool for Zkušební test.
-  // Keep exactly questions 1–1219 active and disable legacy/manual extras so
-  // the public random selector and admin statistics both reflect 1219 items.
   await prisma.question.updateMany({
     where: {
       isActive: true,
@@ -148,7 +155,11 @@ async function syncQuestionBank() {
   const syncedByLegacyId = new Map(synced.map((question) => [Number(question.legacyId), question]));
 
   if (synced.length !== EXPECTED_QUESTION_COUNT) {
-    throw new Error(`Database question sync is incomplete: expected ${EXPECTED_QUESTION_COUNT}, found ${synced.length}.`);
+    console.error(
+      `[QUESTION BANK] Database sync incomplete: expected ${EXPECTED_QUESTION_COUNT}, found ${synced.length}. `
+      + 'Server will continue running.'
+    );
+    return;
   }
 
   const optionsAreCurrent = bank.every((item) => {
@@ -188,7 +199,10 @@ async function syncQuestionBank() {
   });
 
   if (activeQuestionCount !== EXPECTED_QUESTION_COUNT) {
-    throw new Error(`Active question pool must contain exactly ${EXPECTED_QUESTION_COUNT} questions, found ${activeQuestionCount}.`);
+    console.error(
+      `[QUESTION BANK] Active pool check: expected ${EXPECTED_QUESTION_COUNT}, found ${activeQuestionCount}. `
+      + 'Server will continue running.'
+    );
   }
 
   await prisma.test.upsert({
@@ -219,4 +233,9 @@ async function syncQuestionBank() {
   console.log(`[QUESTION BANK] Cvičení 3 synchronized: ${EXPECTED_QUESTION_COUNT} active questions.`);
 }
 
-await syncQuestionBank();
+try {
+  await syncQuestionBank();
+} catch (error) {
+  // Question-bank maintenance must never make the whole production API unavailable.
+  console.error('[QUESTION BANK] Synchronization failed; server startup will continue:', error);
+}
