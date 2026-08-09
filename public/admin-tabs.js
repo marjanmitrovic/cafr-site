@@ -63,7 +63,7 @@
   }
 
   function memberNameParts(card) {
-    const fullName = String(card.querySelector('h4')?.textContent || '')
+    const fullName = String(card.querySelector('.admin-member-main h4, h4')?.textContent || '')
       .replace(/\s+/g, ' ')
       .trim();
     const parts = fullName.split(' ').filter(Boolean);
@@ -76,8 +76,20 @@
 
   function searchableMemberText(card) {
     const id = memberId(card);
+    const name = memberNameParts(card).fullName;
+    const email = card.querySelector('.admin-member-main h4 + p')?.textContent || '';
+    const meta = [...card.querySelectorAll('.admin-member-meta span')]
+      .map((item) => item.textContent || '')
+      .join(' ');
+    const membership = card.querySelector('[data-user-status]')?.value || '';
+    const role = card.querySelector('[data-user-role]')?.value || '';
+
     return normalize([
-      card.textContent,
+      name,
+      email,
+      meta,
+      membership,
+      role,
       id,
       memberNumber(id),
     ].join(' '));
@@ -163,6 +175,7 @@
       cards.forEach((card) => {
         const show = !query || searchableMemberText(card).includes(query);
         card.hidden = !show;
+        card.classList.toggle('admin-search-filtered-out', !show);
         if (show) visible += 1;
       });
 
@@ -187,6 +200,7 @@
     if (toolbar.dataset.bound !== 'true') {
       toolbar.dataset.bound = 'true';
       input?.addEventListener('input', apply);
+      input?.addEventListener('search', apply);
       sort?.addEventListener('change', apply);
       list.addEventListener('change', (event) => {
         if (event.target.matches('[data-user-status]')) {
