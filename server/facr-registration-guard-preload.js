@@ -1,14 +1,10 @@
 import express from 'express';
 import { prisma } from './lib/prisma.js';
+import { normalizeFacrId, verifyFacrMember } from './lib/facr-public.js';
 
 const originalPost = express.application.post;
 const originalUse = express.application.use;
 const inFlightFacrIds = new Set();
-
-function normalizeFacrId(value) {
-  const digits = String(value || '').trim().replace(/\D+/g, '');
-  return digits.replace(/^0+(?=\d)/, '');
-}
 
 function extractFacrId(refereeStatus) {
   const match = String(refereeStatus || '').match(/ID\s*FAČR\s*:\s*([0-9]+)/i);
@@ -27,11 +23,32 @@ function requiredMessage(language) {
     : 'ID FAČR je povinné a musí obsahovat pouze číslice.';
 }
 
+function mismatchMessage(language) {
+  return language === 'en'
+    ? 'The FAČR ID and surname could not be verified in the public FAČR member database. Check both values.'
+    : 'ID FAČR a příjmení se nepodařilo ověřit ve veřejné databázi členů FAČR. Zkontrolujte oba údaje.';
+}
+
+function unavailableMessage(language) {
+  return language === 'en'
+    ? 'The public FAČR member database is temporarily unavailable. Please try again later.'
+    : 'Veřejná databáze členů FAČR je dočasně nedostupná. Zkuste registraci později.';
+}
+
+async function existingFacrRegistration(facrId) {
+  const candidates = await prisma.user.findMany({
+    where: { refereeStatus: { not: null } },
+    select: { id: true, refereeStatus: true },
+  });
+  return candidates.find((user) => extractFacrId(user.refereeStatus) === facrId) || null;
+}
+
 async function facrRegistrationGuard(req, res, next) {
   if (req.method !== 'POST') return next();
 
   const language = req.body?.language === 'en' ? 'en' : 'cs';
   const facrId = extractFacrId(req.body?.refereeStatus);
+  const surname = String(req.body?.lastName || '').trim();
 
   if (!facrId) {
     return res.status(400).json({
@@ -40,17 +57,29 @@ async function facrRegistrationGuard(req, res, next) {
     });
   }
 
-  try {
-    const candidates = await prisma.user.findMany({
-      where: { refereeStatus: { not: null } },
-      select: { id: true, refereeStatus: true },
+  if (!surname) {
+    return res.status(400).json({
+      error: language === 'en' ? 'Surname is required for FAČR verification.' : 'Pro ověření FAČR je povinné příjmení.',
+      code: 'FACR_SURNAME_REQUIRED',
     });
+  }
 
-    const duplicate = candidates.find((user) => extractFacrId(user.refereeStatus) === facrId);
+  try {
+    const duplicate = await existingFacrRegistration(facrId);
     if (duplicate || inFlightFacrIds.has(facrId)) {
       return res.status(409).json({
         error: duplicateMessage(language),
         code: 'FACR_ID_ALREADY_REGISTERED',
+        facrId,
+      });
+    }
+
+    const verification = await verifyFacrMember({ facrId, surname });
+    if (!verification.verified) {
+      const unavailable = verification.reason === 'SOURCE_UNAVAILABLE';
+      return res.status(unavailable ? 503 : 422).json({
+        error: unavailable ? unavailableMessage(language) : mismatchMessage(language),
+        code: unavailable ? 'FACR_SOURCE_UNAVAILABLE' : 'FACR_MEMBER_NOT_VERIFIED',
         facrId,
       });
     }
@@ -67,13 +96,12 @@ async function facrRegistrationGuard(req, res, next) {
     res.once('finish', release);
     res.once('close', release);
 
+    req.facrVerification = verification;
     return next();
   } catch (error) {
-    console.error('[FAČR REGISTRATION GUARD] Duplicate check failed:', error);
+    console.error('[FAČR REGISTRATION GUARD] Verification failed:', error);
     return res.status(503).json({
-      error: language === 'en'
-        ? 'Registration validation is temporarily unavailable. Please try again.'
-        : 'Kontrola registrace je dočasně nedostupná. Zkuste to prosím znovu.',
+      error: unavailableMessage(language),
       code: 'FACR_ID_CHECK_UNAVAILABLE',
     });
   }
