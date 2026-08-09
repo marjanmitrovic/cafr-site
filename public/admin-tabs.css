@@ -75,6 +75,10 @@
   display: none !important;
 }
 
+.admin-member-card.admin-search-filtered-out {
+  display: none !important;
+}
+
 .admin-member-filterbar {
   display: grid;
   grid-template-columns: minmax(260px, 1fr) minmax(190px, 240px) auto;
