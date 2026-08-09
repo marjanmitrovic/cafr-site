@@ -5,15 +5,15 @@ import { prisma } from './lib/prisma.js';
 const originalListen = express.application.listen;
 const TOKEN_SECRET = process.env.TOKEN_SECRET || process.env.JWT_SECRET || 'replace-this-secret-before-production';
 
-async function requireAdmin(req, res) {
+async function requireAdministrator(req, res) {
   try {
     const auth = req.headers.authorization || '';
     const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
     const payload = jwt.verify(token, TOKEN_SECRET);
     const user = await prisma.user.findUnique({ where: { id: payload.sub } });
 
-    if (!user || !user.isActive || !['ADMIN', 'BOARD', 'QUESTION_EDITOR'].includes(user.role)) {
-      res.status(403).json({ error: 'Forbidden' });
+    if (!user || !user.isActive || user.role !== 'ADMIN') {
+      res.status(403).json({ error: 'Administrator role is required' });
       return null;
     }
 
@@ -32,7 +32,7 @@ if (!express.application.__ucfrRejectedDeleteInstalled) {
       this.__ucfrRejectedDeleteRouteRegistered = true;
 
       this.delete('/api/admin/users/:id', async (req, res) => {
-        const actor = await requireAdmin(req, res);
+        const actor = await requireAdministrator(req, res);
         if (!actor) return;
 
         try {
