@@ -1,6 +1,6 @@
 import express from 'express';
 import { prisma } from './lib/prisma.js';
-import { normalizeFacrId, verifyFacrMember } from './lib/facr-public.js';
+import { normalizeFacrId } from './lib/facr-public.js';
 
 const originalPost = express.application.post;
 const originalUse = express.application.use;
@@ -23,18 +23,6 @@ function requiredMessage(language) {
     : 'ID FAČR je povinné a musí obsahovat pouze číslice.';
 }
 
-function mismatchMessage(language) {
-  return language === 'en'
-    ? 'The FAČR ID and surname could not be verified in the public FAČR member database. Check both values.'
-    : 'ID FAČR a příjmení se nepodařilo ověřit ve veřejné databázi členů FAČR. Zkontrolujte oba údaje.';
-}
-
-function unavailableMessage(language) {
-  return language === 'en'
-    ? 'The public FAČR member database is temporarily unavailable. Please try again later.'
-    : 'Veřejná databáze členů FAČR je dočasně nedostupná. Zkuste registraci později.';
-}
-
 async function existingFacrRegistration(facrId) {
   const candidates = await prisma.user.findMany({
     where: { refereeStatus: { not: null } },
@@ -48,19 +36,11 @@ async function facrRegistrationGuard(req, res, next) {
 
   const language = req.body?.language === 'en' ? 'en' : 'cs';
   const facrId = extractFacrId(req.body?.refereeStatus);
-  const surname = String(req.body?.lastName || '').trim();
 
   if (!facrId) {
     return res.status(400).json({
       error: requiredMessage(language),
       code: 'FACR_ID_REQUIRED',
-    });
-  }
-
-  if (!surname) {
-    return res.status(400).json({
-      error: language === 'en' ? 'Surname is required for FAČR verification.' : 'Pro ověření FAČR je povinné příjmení.',
-      code: 'FACR_SURNAME_REQUIRED',
     });
   }
 
@@ -70,16 +50,6 @@ async function facrRegistrationGuard(req, res, next) {
       return res.status(409).json({
         error: duplicateMessage(language),
         code: 'FACR_ID_ALREADY_REGISTERED',
-        facrId,
-      });
-    }
-
-    const verification = await verifyFacrMember({ facrId, surname });
-    if (!verification.verified) {
-      const unavailable = verification.reason === 'SOURCE_UNAVAILABLE';
-      return res.status(unavailable ? 503 : 422).json({
-        error: unavailable ? unavailableMessage(language) : mismatchMessage(language),
-        code: unavailable ? 'FACR_SOURCE_UNAVAILABLE' : 'FACR_MEMBER_NOT_VERIFIED',
         facrId,
       });
     }
@@ -96,13 +66,14 @@ async function facrRegistrationGuard(req, res, next) {
     res.once('finish', release);
     res.once('close', release);
 
-    req.facrVerification = verification;
     return next();
   } catch (error) {
-    console.error('[FAČR REGISTRATION GUARD] Verification failed:', error);
-    return res.status(503).json({
-      error: unavailableMessage(language),
-      code: 'FACR_ID_CHECK_UNAVAILABLE',
+    console.error('[FAČR REGISTRATION GUARD] Duplicate check failed:', error);
+    return res.status(500).json({
+      error: language === 'en'
+        ? 'Registration could not be completed. Please try again.'
+        : 'Registraci se nepodařilo dokončit. Zkuste to prosím znovu.',
+      code: 'FACR_ID_CHECK_FAILED',
     });
   }
 }
