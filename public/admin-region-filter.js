@@ -18,6 +18,14 @@
     'Moravskoslezský kraj',
   ];
 
+  const membershipStatuses = [
+    { value: 'ALL', cs: 'Všechny stavy', en: 'All statuses' },
+    { value: 'PENDING', cs: 'Čeká na schválení', en: 'Pending approval' },
+    { value: 'APPROVED', cs: 'Schválený', en: 'Approved' },
+    { value: 'REJECTED', cs: 'Zamítnutý', en: 'Rejected' },
+    { value: 'SUSPENDED', cs: 'Pozastavený', en: 'Suspended' },
+  ];
+
   function normalize(value) {
     return String(value || '')
       .toLocaleLowerCase('cs-CZ')
@@ -43,6 +51,15 @@
     return String(card.querySelector('.admin-member-meta span:first-child')?.textContent || '').trim();
   }
 
+  function cardStatus(card) {
+    return String(card.querySelector('[data-user-status]')?.value || '').trim().toUpperCase();
+  }
+
+  function statusLabel(value) {
+    const item = membershipStatuses.find((status) => status.value === value);
+    return item ? (isCzech() ? item.cs : item.en) : value;
+  }
+
   function enhance(shell) {
     const section = primaryMemberSection(shell);
     const toolbar = section?.querySelector(':scope > .admin-member-filterbar');
@@ -56,9 +73,9 @@
     const allRegions = [...regions, ...new Set(legacyRegions)]
       .sort((a, b) => a.localeCompare(b, 'cs', { sensitivity: 'base' }));
 
-    const field = document.createElement('label');
-    field.className = 'admin-member-region-field';
-    field.innerHTML = `
+    const regionField = document.createElement('label');
+    regionField.className = 'admin-member-region-field';
+    regionField.innerHTML = `
       <span>${isCzech() ? 'Kraj' : 'Region'}</span>
       <select class="admin-member-region-select">
         <option value="ALL">${isCzech() ? 'Všechny kraje' : 'All regions'}</option>
@@ -66,50 +83,77 @@
       </select>
     `;
 
-    const sortField = toolbar.querySelector('.admin-member-sort-field');
-    toolbar.insertBefore(field, sortField || toolbar.querySelector('.admin-member-filter-result'));
+    const statusField = document.createElement('label');
+    statusField.className = 'admin-member-status-field';
+    statusField.innerHTML = `
+      <span>${isCzech() ? 'Stav členství' : 'Membership status'}</span>
+      <select class="admin-member-status-select">
+        ${membershipStatuses.map((status) => `
+          <option value="${status.value}">${isCzech() ? status.cs : status.en}</option>
+        `).join('')}
+      </select>
+    `;
 
-    const select = field.querySelector('.admin-member-region-select');
+    const sortField = toolbar.querySelector('.admin-member-sort-field');
+    toolbar.insertBefore(regionField, sortField || toolbar.querySelector('.admin-member-filter-result'));
+    toolbar.insertBefore(statusField, sortField || toolbar.querySelector('.admin-member-filter-result'));
+
+    const regionSelect = regionField.querySelector('.admin-member-region-select');
+    const statusSelect = statusField.querySelector('.admin-member-status-select');
     const searchInput = toolbar.querySelector('.admin-member-search-input');
     const sortSelect = toolbar.querySelector('.admin-member-sort-select');
     const result = toolbar.querySelector('.admin-member-filter-result');
 
-    const applyRegion = () => {
-      const selected = select.value;
-      const normalizedSelected = normalize(selected);
+    const applyFilters = () => {
+      const selectedRegion = regionSelect.value;
+      const selectedStatus = statusSelect.value;
+      const normalizedRegion = normalize(selectedRegion);
       const cards = [...list.querySelectorAll(':scope > .admin-member-card')]
         .filter((card) => card.querySelector('[data-user-status], [data-user-role]'));
 
       cards.forEach((card) => {
-        const matchesRegion = selected === 'ALL' || normalize(cardRegion(card)) === normalizedSelected;
+        const matchesRegion = selectedRegion === 'ALL' || normalize(cardRegion(card)) === normalizedRegion;
+        const matchesStatus = selectedStatus === 'ALL' || cardStatus(card) === selectedStatus;
         card.classList.toggle('admin-region-filtered-out', !matchesRegion);
+        card.classList.toggle('admin-status-filtered-out', !matchesStatus);
       });
 
       const visible = cards.filter((card) =>
         !card.classList.contains('admin-search-filtered-out') &&
-        !card.classList.contains('admin-region-filtered-out')
+        !card.classList.contains('admin-region-filtered-out') &&
+        !card.classList.contains('admin-status-filtered-out')
       ).length;
-      const regionText = selected === 'ALL' ? '' : ` · ${selected}`;
+
+      const details = [];
+      if (selectedRegion !== 'ALL') details.push(selectedRegion);
+      if (selectedStatus !== 'ALL') details.push(statusLabel(selectedStatus));
+      const detailText = details.length ? ` · ${details.join(' · ')}` : '';
+
       if (result) {
         result.textContent = isCzech()
-          ? `Zobrazeno ${visible} z ${cards.length} členů${regionText} · čekající vždy první`
-          : `Showing ${visible} of ${cards.length} members${regionText} · pending always first`;
+          ? `Zobrazeno ${visible} z ${cards.length} členů${detailText} · čekající vždy první`
+          : `Showing ${visible} of ${cards.length} members${detailText} · pending always first`;
       }
 
       const empty = list.querySelector(':scope > .admin-member-filter-empty');
       if (empty) empty.hidden = visible !== 0;
     };
 
-    select.addEventListener('change', applyRegion);
-    searchInput?.addEventListener('input', () => window.setTimeout(applyRegion, 0));
-    searchInput?.addEventListener('search', () => window.setTimeout(applyRegion, 0));
-    sortSelect?.addEventListener('change', () => window.setTimeout(applyRegion, 0));
-    list.addEventListener('change', () => window.setTimeout(applyRegion, 0));
+    regionSelect.addEventListener('change', applyFilters);
+    statusSelect.addEventListener('change', applyFilters);
+    searchInput?.addEventListener('input', () => window.setTimeout(applyFilters, 0));
+    searchInput?.addEventListener('search', () => window.setTimeout(applyFilters, 0));
+    sortSelect?.addEventListener('change', () => window.setTimeout(applyFilters, 0));
+    list.addEventListener('change', (event) => {
+      if (event.target.matches('[data-user-status], [data-user-role]')) {
+        window.setTimeout(applyFilters, 0);
+      }
+    });
 
-    const listObserver = new MutationObserver(() => window.setTimeout(applyRegion, 0));
+    const listObserver = new MutationObserver(() => window.setTimeout(applyFilters, 0));
     listObserver.observe(list, { childList: true, subtree: false });
 
-    applyRegion();
+    applyFilters();
   }
 
   function scan(root = document) {
