@@ -2,6 +2,7 @@ import express from 'express';
 import { prisma } from './lib/prisma.js';
 
 const STATUS_ROUTE = '/api/admin/users/:id/status';
+const ROLE_ROUTE = '/api/admin/users/:id/role';
 const originalPatch = express.application.patch;
 
 if (!express.application.__ucfrAdminStatusGuardInstalled) {
@@ -13,11 +14,12 @@ if (!express.application.__ucfrAdminStatusGuardInstalled) {
   });
 
   express.application.patch = function patchedPatch(path, ...handlers) {
-    if (path !== STATUS_ROUTE || handlers.length === 0) {
+    const protectedRoute = path === STATUS_ROUTE || path === ROLE_ROUTE;
+    if (!protectedRoute || handlers.length === 0) {
       return originalPatch.call(this, path, ...handlers);
     }
 
-    const protectAdminStatus = async (req, res, next) => {
+    const protectAdminAccount = async (req, res, next) => {
       try {
         const target = await prisma.user.findUnique({
           where: { id: req.params.id },
@@ -25,9 +27,14 @@ if (!express.application.__ucfrAdminStatusGuardInstalled) {
         });
 
         if (target?.role === 'ADMIN') {
+          const changingRole = path === ROLE_ROUTE;
           return res.status(403).json({
-            error: 'Status administrátora nelze měnit.',
-            code: 'ADMIN_STATUS_PROTECTED',
+            error: changingRole
+              ? 'Roli administrátora nelze měnit.'
+              : 'Status administrátora nelze měnit.',
+            code: changingRole
+              ? 'ADMIN_ROLE_PROTECTED'
+              : 'ADMIN_STATUS_PROTECTED',
           });
         }
 
@@ -38,6 +45,6 @@ if (!express.application.__ucfrAdminStatusGuardInstalled) {
     };
 
     const [authMiddleware, ...rest] = handlers;
-    return originalPatch.call(this, path, authMiddleware, protectAdminStatus, ...rest);
+    return originalPatch.call(this, path, authMiddleware, protectAdminAccount, ...rest);
   };
 }
