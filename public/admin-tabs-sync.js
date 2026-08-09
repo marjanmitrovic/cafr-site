@@ -16,6 +16,12 @@
     return document.documentElement.lang !== 'en';
   }
 
+  function setText(element, value) {
+    if (!element) return;
+    const next = String(value);
+    if (element.textContent !== next) element.textContent = next;
+  }
+
   function tabFor(section) {
     if (section.id === 'adminMemberDirectory') return 'members';
     if (section.id === 'adminNewsCms') return 'news';
@@ -31,8 +37,6 @@
     if (/pravni|legal/.test(text)) return 'legal';
     if (/seminar/.test(text)) return 'seminars';
     if (/prispevk|fee/.test(text)) return 'fees';
-    // NEWS must be classified before DOCUMENTS because the original section
-    // historically used the label "DOCUMENTS / NEWS".
     if (/aktualit|news|clank/.test(text)) return 'news';
     if (/document|knihovn/.test(text)) return 'documents';
     if (/test|otazk|question/.test(text)) return 'tests';
@@ -48,8 +52,7 @@
     const primaryMembersSection = [...shell.querySelectorAll(':scope > .admin-panel-section')]
       .find((section) => section.id !== 'adminMemberDirectory' && tabFor(section) === 'members');
     const count = primaryMembersSection?.querySelector('.admin-count')?.textContent?.trim();
-    const badge = shell.querySelector('[data-admin-tab-target="members"] b');
-    if (badge && count) badge.textContent = count;
+    if (count) setText(shell.querySelector('[data-admin-tab-target="members"] b'), count);
   }
 
   function isNewsDocumentCard(card) {
@@ -62,8 +65,7 @@
     const newsSection = shell.querySelector(':scope > #adminNewsCms');
     if (newsSection) {
       newsSection.dataset.adminTab = 'news';
-      const label = newsSection.querySelector('.section-label');
-      if (label) label.textContent = isCzech() ? 'AKTUALITY' : 'NEWS';
+      setText(newsSection.querySelector('.section-label'), isCzech() ? 'AKTUALITY' : 'NEWS');
     }
 
     const documentSections = [...shell.querySelectorAll(':scope > .admin-panel-section')]
@@ -78,8 +80,7 @@
       });
 
       const total = list.querySelectorAll(':scope > .admin-member-card').length;
-      const count = section.querySelector('.admin-count');
-      if (count) count.textContent = String(total);
+      setText(section.querySelector('.admin-count'), total);
     });
   }
 
@@ -122,21 +123,17 @@
         activateNewsTab(shell, true);
         nav.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
-    } else {
-      const label = button.querySelector('span');
-      if (label) label.textContent = isCzech() ? 'Aktuality' : 'News';
     }
 
+    setText(button.querySelector('span'), isCzech() ? 'Aktuality' : 'News');
     const count = newsSections.reduce((sum, section) => sum + sectionCount(section), 0);
-    const badge = button.querySelector('b');
-    if (badge) badge.textContent = String(count);
+    setText(button.querySelector('b'), count);
   }
 
   function syncDocumentCount(shell) {
     const total = [...shell.querySelectorAll(':scope > .admin-panel-section[data-admin-tab="documents"]')]
       .reduce((sum, section) => sum + sectionCount(section), 0);
-    const badge = shell.querySelector('[data-admin-tab-target="documents"] b');
-    if (badge) badge.textContent = String(total);
+    setText(shell.querySelector('[data-admin-tab-target="documents"] b'), total);
   }
 
   function sync(shell) {
@@ -173,17 +170,6 @@
     window.setTimeout(() => sync(event.target.closest('.admin-shell')), 0);
   });
 
-  function syncNearestShell(node) {
-    if (node?.nodeType === Node.ELEMENT_NODE) {
-      const shell = node.matches?.('.admin-shell') ? node : node.closest?.('.admin-shell');
-      if (shell) sync(shell);
-      node.querySelectorAll?.('.admin-shell').forEach(sync);
-      return;
-    }
-    const shell = node?.parentElement?.closest?.('.admin-shell');
-    if (shell) sync(shell);
-  }
-
   let frame = null;
   const pendingShells = new Set();
   const observer = new MutationObserver((mutations) => {
@@ -211,5 +197,5 @@
   });
 
   document.querySelectorAll('.admin-shell').forEach(sync);
-  observer.observe(document.documentElement, { childList: true, subtree: true, characterData: true });
+  observer.observe(document.documentElement, { childList: true, subtree: true });
 })();
