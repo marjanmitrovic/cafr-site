@@ -85,7 +85,10 @@
         card.classList.toggle('admin-region-filtered-out', !matchesRegion);
       });
 
-      const visible = cards.filter((card) => !card.hidden && !card.classList.contains('admin-region-filtered-out')).length;
+      const visible = cards.filter((card) =>
+        !card.classList.contains('admin-search-filtered-out') &&
+        !card.classList.contains('admin-region-filtered-out')
+      ).length;
       const regionText = selected === 'ALL' ? '' : ` · ${selected}`;
       if (result) {
         result.textContent = isCzech()
@@ -93,12 +96,13 @@
           : `Showing ${visible} of ${cards.length} members${regionText} · pending always first`;
       }
 
-      let empty = list.querySelector(':scope > .admin-member-filter-empty');
+      const empty = list.querySelector(':scope > .admin-member-filter-empty');
       if (empty) empty.hidden = visible !== 0;
     };
 
     select.addEventListener('change', applyRegion);
     searchInput?.addEventListener('input', () => window.setTimeout(applyRegion, 0));
+    searchInput?.addEventListener('search', () => window.setTimeout(applyRegion, 0));
     sortSelect?.addEventListener('change', () => window.setTimeout(applyRegion, 0));
     list.addEventListener('change', () => window.setTimeout(applyRegion, 0));
 
