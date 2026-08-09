@@ -1,10 +1,12 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { brotliDecompressSync } from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 import { prisma } from './lib/prisma.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const QUESTION_BANK_PATH = path.join(__dirname, 'data', 'fotbaltesty.json');
+const COMPRESSED_BANK_DIR = path.join(__dirname, 'data', 'cviceni3-bank');
 const FIRST_QUESTION_ID = 1;
 const LAST_QUESTION_ID = 1219;
 const EXPECTED_QUESTION_COUNT = LAST_QUESTION_ID - FIRST_QUESTION_ID + 1;
@@ -30,8 +32,36 @@ function sameOptions(existingOptions, sourceAnswers) {
   });
 }
 
+async function loadBundledQuestionBank() {
+  try {
+    const names = (await fs.readdir(COMPRESSED_BANK_DIR))
+      .filter((name) => /^part-\d+\.b64$/.test(name))
+      .sort();
+
+    if (names.length) {
+      const encoded = (
+        await Promise.all(
+          names.map((name) => fs.readFile(path.join(COMPRESSED_BANK_DIR, name), 'utf8'))
+        )
+      ).join('').replace(/\s+/g, '');
+
+      const json = brotliDecompressSync(Buffer.from(encoded, 'base64')).toString('utf8');
+      const bank = JSON.parse(json);
+      console.log(`[QUESTION BANK] Loaded compressed Cvičení 3 bank: ${bank.length} questions.`);
+      return bank;
+    }
+  } catch (error) {
+    console.error(
+      '[QUESTION BANK] Could not load compressed Cvičení 3 bank; falling back to legacy JSON:',
+      error
+    );
+  }
+
+  return JSON.parse(await fs.readFile(QUESTION_BANK_PATH, 'utf8'));
+}
+
 async function syncQuestionBank() {
-  const raw = JSON.parse(await fs.readFile(QUESTION_BANK_PATH, 'utf8'));
+  const raw = await loadBundledQuestionBank();
   const bank = raw
     .filter((item) => Number(item.legacyId) >= FIRST_QUESTION_ID && Number(item.legacyId) <= LAST_QUESTION_ID)
     .sort((a, b) => Number(a.legacyId) - Number(b.legacyId));
