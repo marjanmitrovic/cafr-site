@@ -1,0 +1,36 @@
+name: Restore server.js
+
+on:
+  push:
+    paths:
+      - '.github/workflows/restore-server.yml'
+      - 'server/server.js'
+      - 'server/.restore-marker.tmp'
+      - 'server/.restore-note'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Restore last known good server
+        shell: bash
+        run: |
+          set -euo pipefail
+          git checkout febf943819a178b2c2f971eda0879a9b19cd442e -- server/server.js
+          rm -f server/.restore-marker.tmp server/.restore-note
+          if git diff --quiet && git diff --cached --quiet; then
+            echo "Nothing to restore"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add server/server.js server/.restore-marker.tmp server/.restore-note || true
+          git commit -m "Restore server.js after failed edit"
+          git push origin HEAD:main
