@@ -1,10 +1,11 @@
-/* Region and membership-status filtering for the primary administration member list. */
+/* Region, membership-status and duplicate filtering for the primary administration member list. */
 .admin-member-filterbar {
-  grid-template-columns: minmax(250px, 1fr) minmax(165px, 210px) minmax(165px, 210px) minmax(180px, 220px) auto;
+  grid-template-columns: minmax(230px, 1fr) minmax(150px, 190px) minmax(150px, 190px) minmax(150px, 190px) minmax(170px, 210px) auto;
 }
 
 .admin-member-region-field,
-.admin-member-status-field {
+.admin-member-status-field,
+.admin-member-duplicate-field {
   display: grid;
   gap: 7px;
   min-width: 0;
@@ -14,7 +15,8 @@
 }
 
 .admin-member-region-select,
-.admin-member-status-select {
+.admin-member-status-select,
+.admin-member-duplicate-select {
   width: 100%;
   min-width: 0;
   min-height: 45px;
@@ -28,31 +30,35 @@
 }
 
 .admin-member-region-select:focus,
-.admin-member-status-select:focus {
+.admin-member-status-select:focus,
+.admin-member-duplicate-select:focus {
   outline: 3px solid rgba(23, 104, 176, 0.18);
   border-color: #1768b0;
 }
 
 .admin-member-card.admin-region-filtered-out,
-.admin-member-card.admin-status-filtered-out {
+.admin-member-card.admin-status-filtered-out,
+.admin-member-card.admin-duplicate-filtered-out {
   display: none !important;
 }
 
 html.theme-dark .admin-member-region-field,
-html.theme-dark .admin-member-status-field {
+html.theme-dark .admin-member-status-field,
+html.theme-dark .admin-member-duplicate-field {
   color: #bdcadb;
 }
 
 html.theme-dark .admin-member-region-select,
-html.theme-dark .admin-member-status-select {
+html.theme-dark .admin-member-status-select,
+html.theme-dark .admin-member-duplicate-select {
   border-color: rgba(255, 255, 255, 0.15);
   background: #071527;
   color: #edf4ff;
 }
 
-@media (max-width: 1180px) {
+@media (max-width: 1320px) {
   .admin-member-filterbar {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
   }
 
   .admin-member-search-field {
@@ -65,6 +71,12 @@ html.theme-dark .admin-member-status-select {
   }
 }
 
+@media (max-width: 900px) {
+  .admin-member-filterbar {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
 @media (max-width: 720px) {
   .admin-member-filterbar {
     grid-template-columns: 1fr;
@@ -73,6 +85,7 @@ html.theme-dark .admin-member-status-select {
   .admin-member-search-field,
   .admin-member-region-field,
   .admin-member-status-field,
+  .admin-member-duplicate-field,
   .admin-member-sort-field,
   .admin-member-filter-result {
     grid-column: auto;
