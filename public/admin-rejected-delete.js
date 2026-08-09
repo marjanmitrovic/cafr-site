@@ -11,7 +11,23 @@
     return document.documentElement.lang !== 'en';
   }
 
+  function decodeJwtRole(token) {
+    try {
+      const payloadPart = String(token || '').split('.')[1];
+      if (!payloadPart) return '';
+      const normalized = payloadPart.replace(/-/g, '+').replace(/_/g, '/');
+      const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
+      const payload = JSON.parse(atob(padded));
+      return String(payload?.role || '').toUpperCase();
+    } catch {
+      return '';
+    }
+  }
+
   function currentUserRole() {
+    const tokenRole = decodeJwtRole(sessionStorage.getItem('cafr-admin-token') || localStorage.getItem('cafr-token') || '');
+    if (tokenRole) return tokenRole;
+
     try {
       return String(JSON.parse(localStorage.getItem('cafr-user') || 'null')?.role || '').toUpperCase();
     } catch {
@@ -69,7 +85,7 @@
   }
 
   function currentToken() {
-    return sessionStorage.getItem('cafr-admin-token') || '';
+    return sessionStorage.getItem('cafr-admin-token') || localStorage.getItem('cafr-token') || '';
   }
 
   function updateVisibleCounters() {
