@@ -19,6 +19,7 @@ exec node \
   --import ./server/ucfr-details-preload.js \
   --import ./server/brevo-password-reset-preload.js \
   --import ./server/public-member-count-preload.js \
+  --import ./server/local-units-preload.js \
   --import ./server/news-content-migration-preload.js \
   --import ./server/news-preload.js \
   server/server.js
