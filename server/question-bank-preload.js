@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import express from 'express';
 import { brotliDecompressSync } from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 import { prisma } from './lib/prisma.js';
@@ -14,6 +15,7 @@ const SOURCE = 'Cvičení 3, Varianta 1 (04.08.2026)';
 const CATEGORY_SLUG = 'zkusebny-test-cviceni-3';
 const CATEGORY_NAME_CS = 'Zkušební test – Cvičení 3';
 const CATEGORY_NAME_EN = 'Mock exam – Cvičení 3';
+const originalListen = express.application.listen;
 
 function normalizeText(value) {
   return String(value ?? '').replace(/\s+/g, ' ').trim();
@@ -66,9 +68,6 @@ async function syncQuestionBank() {
     .filter((item) => Number(item.legacyId) >= FIRST_QUESTION_ID && Number(item.legacyId) <= LAST_QUESTION_ID)
     .sort((a, b) => Number(a.legacyId) - Number(b.legacyId));
 
-  // Never take the whole API down just because a bundled import file is incomplete.
-  // More importantly, stop before any updateMany/create/delete operation so an
-  // incomplete file can never deactivate or overwrite a previously valid DB pool.
   if (bank.length !== EXPECTED_QUESTION_COUNT) {
     console.error(
       `[QUESTION BANK] Import skipped: expected ${EXPECTED_QUESTION_COUNT} questions, `
@@ -263,9 +262,22 @@ async function syncQuestionBank() {
   console.log(`[QUESTION BANK] Cvičení 3 synchronized: ${EXPECTED_QUESTION_COUNT} active questions.`);
 }
 
-try {
-  await syncQuestionBank();
-} catch (error) {
-  // Question-bank maintenance must never make the whole production API unavailable.
-  console.error('[QUESTION BANK] Synchronization failed; server startup will continue:', error);
+async function runQuestionBankSync() {
+  try {
+    await syncQuestionBank();
+  } catch (error) {
+    console.error('[QUESTION BANK] Background synchronization failed:', error);
+  }
+}
+
+if (!express.application.__ucfrQuestionBankBackgroundSyncInstalled) {
+  express.application.__ucfrQuestionBankBackgroundSyncInstalled = true;
+
+  express.application.listen = function ucfrListenWithQuestionBankBackgroundSync(...args) {
+    const server = originalListen.apply(this, args);
+    // The API must become reachable immediately. Syncing 1,219 questions can be slow on Neon/Render,
+    // so database maintenance runs only after the HTTP server has started.
+    void runQuestionBankSync();
+    return server;
+  };
 }
