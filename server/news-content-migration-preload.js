@@ -1,8 +1,10 @@
+import express from 'express';
 import { prisma } from './lib/prisma.js';
 
 const TARGET_TITLE = 'Fotbal bez vesnice';
 const EXTERNAL_DESCRIPTION_CS = 'Externí článek – celý text se otevře na zdrojovém webu.';
 const EXTERNAL_DESCRIPTION_EN = 'External article – the full text opens on the source website.';
+const originalListen = express.application.listen;
 
 async function migrateNewsContent() {
   const matches = await prisma.document.findMany({
@@ -45,9 +47,20 @@ async function migrateNewsContent() {
   }
 }
 
-try {
-  await migrateNewsContent();
-} catch (error) {
-  // Content migration must never make the production API unavailable.
-  console.error('[NEWS MIGRATION] Could not migrate article; server startup will continue:', error);
+async function runMigration() {
+  try {
+    await migrateNewsContent();
+  } catch (error) {
+    console.error('[NEWS MIGRATION] Background migration failed:', error);
+  }
+}
+
+if (!express.application.__ucfrNewsMigrationBackgroundInstalled) {
+  express.application.__ucfrNewsMigrationBackgroundInstalled = true;
+
+  express.application.listen = function ucfrListenWithNewsMigrationBackground(...args) {
+    const server = originalListen.apply(this, args);
+    void runMigration();
+    return server;
+  };
 }
