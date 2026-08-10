@@ -7,34 +7,42 @@
 
   function ensureStyles() {
     if (document.getElementById('ucfrLocalUnitsCollapseStyles')) return;
+
     const style = document.createElement('style');
     style.id = 'ucfrLocalUnitsCollapseStyles';
     style.textContent = `
       #local-units.local-units-section {
-        padding-top: 46px !important;
-        padding-bottom: 46px !important;
+        padding-top: 30px !important;
+        padding-bottom: 30px !important;
       }
       #local-units .section-head {
-        margin-bottom: 18px !important;
+        width: min(820px, calc(100% - 36px));
+        margin: 0 auto 14px !important;
+        text-align: center;
       }
       #local-units .section-head h2 {
-        margin-bottom: 8px !important;
-        font-size: clamp(30px, 4vw, 46px) !important;
+        margin: 5px 0 0 !important;
+        font-size: clamp(26px, 3vw, 34px) !important;
+        line-height: 1.15 !important;
+      }
+      #local-units:not(.local-units-open) .section-head p,
+      #local-units:not(.local-units-open) .local-units-grid {
+        display: none !important;
       }
       #local-units .local-units-toggle {
-        width: min(720px, calc(100% - 32px));
-        min-height: 56px;
-        margin: 8px auto 0;
-        padding: 14px 18px;
+        width: min(620px, calc(100% - 36px));
+        min-height: 52px;
+        margin: 0 auto;
+        padding: 12px 16px;
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 14px;
         border: 1px solid #cbd9e8;
         border-radius: 14px;
-        background: #ffffff;
+        background: #fff;
         color: #102b4c;
-        box-shadow: 0 8px 24px rgba(16, 42, 77, .07);
+        box-shadow: 0 8px 22px rgba(16, 42, 77, .07);
         font: inherit;
         font-weight: 800;
         cursor: pointer;
@@ -42,18 +50,19 @@
       #local-units .local-units-toggle:hover,
       #local-units .local-units-toggle:focus-visible {
         border-color: #0b5aa5;
+        outline: none;
       }
       #local-units .local-units-toggle-arrow {
         flex: 0 0 auto;
-        font-size: 22px;
+        font-size: 20px;
         line-height: 1;
         transition: transform .2s ease;
       }
       #local-units .local-units-toggle[aria-expanded="true"] .local-units-toggle-arrow {
         transform: rotate(180deg);
       }
-      #local-units .local-units-grid[hidden] {
-        display: none !important;
+      #local-units.local-units-open .section-head p {
+        margin-top: 12px !important;
       }
       #local-units .local-units-grid {
         margin-top: 22px !important;
@@ -66,35 +75,29 @@
       }
       @media (max-width: 640px) {
         #local-units.local-units-section {
-          padding-top: 30px !important;
-          padding-bottom: 30px !important;
+          padding-top: 22px !important;
+          padding-bottom: 22px !important;
         }
         #local-units .section-head {
-          padding-inline: 22px;
-          margin-bottom: 14px !important;
+          width: calc(100% - 32px);
+          margin-bottom: 12px !important;
         }
         #local-units .section-head h2 {
-          margin-top: 7px !important;
-          font-size: 28px !important;
-          line-height: 1.12 !important;
-        }
-        #local-units:not(.local-units-open) .section-head p {
-          display: none !important;
+          font-size: 25px !important;
         }
         #local-units .section-head span {
-          font-size: 12px !important;
-          letter-spacing: .16em !important;
+          font-size: 11px !important;
+          letter-spacing: .14em !important;
         }
         #local-units .local-units-toggle {
-          width: calc(100% - 36px);
-          min-height: 52px;
-          margin-top: 4px;
-          padding: 12px 15px;
+          width: calc(100% - 32px);
+          min-height: 50px;
+          padding: 11px 14px;
           text-align: left;
         }
         #local-units .local-units-grid {
-          margin-top: 18px !important;
-          padding-inline: 18px;
+          margin-top: 16px !important;
+          padding-inline: 16px;
         }
       }
     `;
@@ -104,16 +107,36 @@
   function label(count, open) {
     if (isCzech()) {
       return open
-        ? `Skrýt organizační jednotky`
+        ? 'Skrýt organizační jednotky'
         : `Zobrazit organizační jednotky${count ? ` (${count})` : ''}`;
     }
+
     return open
       ? 'Hide organizational units'
       : `Show organizational units${count ? ` (${count})` : ''}`;
   }
 
+  function applyState(section) {
+    const grid = section.querySelector('.local-units-grid');
+    const toggle = section.querySelector(':scope > .local-units-toggle');
+    if (!grid || !toggle) return;
+
+    const count = grid.querySelectorAll('.local-unit-card').length;
+    const open = section.dataset.localUnitsOpen === '1';
+
+    section.classList.toggle('local-units-open', open);
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.setAttribute('aria-controls', 'localUnitsGrid');
+    grid.id = 'localUnitsGrid';
+
+    const labelNode = toggle.querySelector('.local-units-toggle-label');
+    const nextLabel = label(count, open);
+    if (labelNode && labelNode.textContent !== nextLabel) labelNode.textContent = nextLabel;
+  }
+
   function enhance() {
     ensureStyles();
+
     const section = document.getElementById('local-units');
     if (!section) return;
 
@@ -121,41 +144,30 @@
     const head = section.querySelector('.section-head');
     if (!grid || !head) return;
 
-    const count = grid.querySelectorAll('.local-unit-card').length;
-    const open = section.dataset.localUnitsOpen === '1';
+    if (!section.dataset.localUnitsOpen) section.dataset.localUnitsOpen = '0';
 
     let toggle = section.querySelector(':scope > .local-units-toggle');
     if (!toggle) {
       toggle = document.createElement('button');
       toggle.type = 'button';
       toggle.className = 'local-units-toggle';
+      toggle.innerHTML = '<span class="local-units-toggle-label"></span><span class="local-units-toggle-arrow" aria-hidden="true">⌄</span>';
       head.insertAdjacentElement('afterend', toggle);
-      toggle.addEventListener('click', () => {
-        const nextOpen = section.dataset.localUnitsOpen !== '1';
-        section.dataset.localUnitsOpen = nextOpen ? '1' : '0';
-        applyState(section);
-      });
     }
 
-    toggle.innerHTML = `<span class="local-units-toggle-label"></span><span class="local-units-toggle-arrow" aria-hidden="true">⌄</span>`;
-    applyState(section, count);
+    applyState(section);
   }
 
-  function applyState(section, knownCount) {
-    const grid = section.querySelector('.local-units-grid');
-    const toggle = section.querySelector(':scope > .local-units-toggle');
-    if (!grid || !toggle) return;
+  document.addEventListener('click', (event) => {
+    const toggle = event.target.closest?.('#local-units > .local-units-toggle');
+    if (!toggle) return;
 
-    const count = Number.isFinite(knownCount)
-      ? knownCount
-      : grid.querySelectorAll('.local-unit-card').length;
-    const open = section.dataset.localUnitsOpen === '1';
+    const section = toggle.closest('#local-units');
+    if (!section) return;
 
-    section.classList.toggle('local-units-open', open);
-    grid.hidden = !open;
-    toggle.setAttribute('aria-expanded', String(open));
-    toggle.querySelector('.local-units-toggle-label').textContent = label(count, open);
-  }
+    section.dataset.localUnitsOpen = section.dataset.localUnitsOpen === '1' ? '0' : '1';
+    applyState(section);
+  });
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', enhance, { once: true });
@@ -163,11 +175,11 @@
     enhance();
   }
 
-  let frame = null;
+  let frame = 0;
   const observer = new MutationObserver(() => {
-    if (frame !== null) return;
+    if (frame) return;
     frame = requestAnimationFrame(() => {
-      frame = null;
+      frame = 0;
       enhance();
     });
   });
