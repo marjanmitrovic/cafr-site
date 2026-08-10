@@ -76,8 +76,6 @@ async function seedInitialUnits() {
           category: CATEGORY,
           url: `local-unit://${String(index + 1).padStart(3, '0')}`,
           visibility: 'PUBLIC',
-          // DRAFT keeps these structured records out of the generic member document feed.
-          // They are published through the dedicated /api/local-units endpoint instead.
           status: 'DRAFT',
         },
       });
@@ -113,8 +111,6 @@ async function listUnits() {
   });
   return documents.map(unitResponse).sort((a, b) => a.order - b.order || a.name.localeCompare(b.name, 'cs'));
 }
-
-await seedInitialUnits();
 
 if (!express.application.__ucfrLocalUnitsInstalled) {
   express.application.__ucfrLocalUnitsInstalled = true;
@@ -208,6 +204,10 @@ if (!express.application.__ucfrLocalUnitsInstalled) {
       });
     }
 
-    return originalListen.apply(this, args);
+    const server = originalListen.apply(this, args);
+    // Do not block Express startup while Neon/Render is waking up.
+    // Seed initial units in the background after the server is already listening.
+    void seedInitialUnits();
+    return server;
   };
 }
