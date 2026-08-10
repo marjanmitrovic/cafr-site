@@ -1,6 +1,34 @@
 (() => {
   'use strict';
 
+  // Public, non-critical API requests must never make the page feel stuck when
+  // Render is waking up. Keep writes/login untouched; only same-origin GET /api
+  // calls without an existing AbortSignal receive a short timeout.
+  const nativeFetch = window.fetch.bind(window);
+  window.fetch = function ucfrFetchWithPublicTimeout(input, init = {}) {
+    try {
+      const method = String(init?.method || 'GET').toUpperCase();
+      const rawUrl = typeof input === 'string' ? input : input?.url;
+      const url = new URL(String(rawUrl || ''), window.location.href);
+      const isSameOriginApi = url.origin === window.location.origin && url.pathname.startsWith('/api/');
+
+      if (method !== 'GET' || !isSameOriginApi || init?.signal) {
+        return nativeFetch(input, init);
+      }
+
+      const controller = new AbortController();
+      const timer = window.setTimeout(() => controller.abort(), 8000);
+      return nativeFetch(input, { ...init, signal: controller.signal })
+        .finally(() => window.clearTimeout(timer));
+    } catch {
+      return nativeFetch(input, init);
+    }
+  };
+})();
+
+(() => {
+  'use strict';
+
   const NOTICE_DATE = '2026-08-05';
   const TIME_ZONE = 'Europe/Prague';
 
@@ -108,74 +136,6 @@
   if ('ResizeObserver' in window) {
     new ResizeObserver(updateHeight).observe(notice);
   }
-})();
-
-(() => {
-  'use strict';
-
-  const PUBLIC_BASELINE = 450;
-  const LIVE_COUNTER_THRESHOLD = 500;
-  const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
-  let liveMemberCount = null;
-
-  function displayedMemberCount() {
-    if (Number.isInteger(liveMemberCount) && liveMemberCount > LIVE_COUNTER_THRESHOLD) {
-      const locale = document.documentElement.lang === 'en' ? 'en-GB' : 'cs-CZ';
-      return new Intl.NumberFormat(locale).format(liveMemberCount);
-    }
-
-    return `${PUBLIC_BASELINE}+`;
-  }
-
-  function applyPublicCopy() {
-    const isCzech = document.documentElement.lang !== 'en';
-    const aboutLink = document.querySelector('.topbar nav a[href="#about"]');
-
-    if (aboutLink && isCzech && aboutLink.textContent.trim() !== 'O Unii') {
-      aboutLink.textContent = 'O Unii';
-    }
-
-    const memberCounter = document.querySelector('.stats > div:first-child b');
-    if (memberCounter) {
-      const nextValue = displayedMemberCount();
-      if (memberCounter.textContent.trim() !== nextValue) {
-        memberCounter.textContent = nextValue;
-      }
-
-      memberCounter.dataset.counterMode =
-        Number.isInteger(liveMemberCount) && liveMemberCount > LIVE_COUNTER_THRESHOLD
-          ? 'live'
-          : 'baseline';
-    }
-  }
-
-  async function refreshMemberCount() {
-    try {
-      const response = await fetch('/api/public/member-count', {
-        headers: { Accept: 'application/json' },
-        cache: 'no-store',
-      });
-
-      if (!response.ok) return;
-
-      const data = await response.json();
-      const count = Number(data?.count);
-      liveMemberCount = Number.isInteger(count) && count >= 0 ? count : null;
-      applyPublicCopy();
-    } catch {
-      // Keep the public baseline when the live endpoint is unavailable.
-    }
-  }
-
-  const observer = new MutationObserver(applyPublicCopy);
-  observer.observe(document.documentElement, {
-    childList: true,
-    subtree: true,
-  });
-
-  applyPublicCopy();
-  refreshMemberCount();
-  window.setInterval(refreshMemberCount, REFRESH_INTERVAL_MS);
 })();
 
 (() => {
