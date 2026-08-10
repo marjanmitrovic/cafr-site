@@ -25,6 +25,7 @@
   function tabFor(section) {
     if (section.id === 'adminMemberDirectory') return 'members';
     if (section.id === 'adminNewsCms') return 'news';
+    if (section.id === 'adminLocalUnits') return 'units';
 
     const text = normalize([
       section.id,
@@ -38,6 +39,7 @@
     if (/seminar/.test(text)) return 'seminars';
     if (/prispevk|fee/.test(text)) return 'fees';
     if (/aktualit|news|clank/.test(text)) return 'news';
+    if (/lokalni jednotk|organizacni jednotk|local unit/.test(text)) return 'units';
     if (/document|knihovn/.test(text)) return 'documents';
     if (/test|otazk|question/.test(text)) return 'tests';
     return 'other';
@@ -55,28 +57,38 @@
     if (count) setText(shell.querySelector('[data-admin-tab-target="members"] b'), count);
   }
 
-  function isNewsDocumentCard(card) {
-    if (card.matches('[data-news-card]')) return true;
-    const category = card.querySelector('.admin-member-meta span:first-child')?.textContent || '';
-    return normalize(category) === 'news';
+  function documentCategory(card) {
+    return normalize(card.querySelector('.admin-member-meta span:first-child')?.textContent || '');
   }
 
-  function separateNewsFromDocuments(shell) {
+  function isNewsDocumentCard(card) {
+    if (card.matches('[data-news-card]')) return true;
+    return documentCategory(card) === 'news';
+  }
+
+  function isLocalUnitDocumentCard(card) {
+    return documentCategory(card) === 'local_unit';
+  }
+
+  function separateStructuredRecordsFromDocuments(shell) {
     const newsSection = shell.querySelector(':scope > #adminNewsCms');
     if (newsSection) {
       newsSection.dataset.adminTab = 'news';
       setText(newsSection.querySelector('.section-label'), isCzech() ? 'AKTUALITY' : 'NEWS');
     }
 
+    const unitsSection = shell.querySelector(':scope > #adminLocalUnits');
+    if (unitsSection) unitsSection.dataset.adminTab = 'units';
+
     const documentSections = [...shell.querySelectorAll(':scope > .admin-panel-section')]
-      .filter((section) => section !== newsSection && section.dataset.adminTab === 'documents');
+      .filter((section) => section !== newsSection && section !== unitsSection && section.dataset.adminTab === 'documents');
 
     documentSections.forEach((section) => {
       const list = section.querySelector(':scope > .admin-member-list');
       if (!list) return;
 
       list.querySelectorAll(':scope > .admin-member-card').forEach((card) => {
-        if (isNewsDocumentCard(card)) card.remove();
+        if (isNewsDocumentCard(card) || isLocalUnitDocumentCard(card)) card.remove();
       });
 
       const total = list.querySelectorAll(':scope > .admin-member-card').length;
@@ -84,20 +96,20 @@
     });
   }
 
-  function activateNewsTab(shell, focus = false) {
+  function activateTab(shell, tabId, focus = false) {
     shell.querySelectorAll(':scope > .admin-panel-section[data-admin-tab]').forEach((section) => {
-      section.hidden = section.dataset.adminTab !== 'news';
+      section.hidden = section.dataset.adminTab !== tabId;
     });
 
     shell.querySelectorAll('.admin-tab-button').forEach((button) => {
-      const active = button.dataset.adminTabTarget === 'news';
+      const active = button.dataset.adminTabTarget === tabId;
       button.classList.toggle('active', active);
       button.setAttribute('aria-selected', String(active));
       button.tabIndex = active ? 0 : -1;
     });
 
-    sessionStorage.setItem(ACTIVE_TAB_KEY, 'news');
-    if (focus) shell.querySelector('[data-admin-tab-target="news"]')?.focus();
+    sessionStorage.setItem(ACTIVE_TAB_KEY, tabId);
+    if (focus) shell.querySelector(`[data-admin-tab-target="${tabId}"]`)?.focus();
   }
 
   function ensureNewsTab(shell) {
@@ -120,13 +132,43 @@
       else nav.appendChild(button);
 
       button.addEventListener('click', () => {
-        activateNewsTab(shell, true);
+        activateTab(shell, 'news', true);
         nav.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
     }
 
     setText(button.querySelector('span'), isCzech() ? 'Aktuality' : 'News');
     const count = newsSections.reduce((sum, section) => sum + sectionCount(section), 0);
+    setText(button.querySelector('b'), count);
+  }
+
+  function ensureUnitsTab(shell) {
+    const nav = shell.querySelector(':scope > .admin-tab-navigation');
+    const unitSections = [...shell.querySelectorAll(':scope > .admin-panel-section[data-admin-tab="units"]')];
+    if (!nav || !unitSections.length) return;
+
+    let button = nav.querySelector('[data-admin-tab-target="units"]');
+    if (!button) {
+      button = document.createElement('button');
+      button.className = 'admin-tab-button';
+      button.type = 'button';
+      button.setAttribute('role', 'tab');
+      button.setAttribute('aria-selected', 'false');
+      button.dataset.adminTabTarget = 'units';
+      button.innerHTML = `<span>${isCzech() ? 'Organizační jednotky' : 'Local units'}</span><b>0</b>`;
+
+      const documentsButton = nav.querySelector('[data-admin-tab-target="documents"]');
+      if (documentsButton) nav.insertBefore(button, documentsButton);
+      else nav.appendChild(button);
+
+      button.addEventListener('click', () => {
+        activateTab(shell, 'units', true);
+        nav.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
+
+    setText(button.querySelector('span'), isCzech() ? 'Organizační jednotky' : 'Local units');
+    const count = unitSections.reduce((sum, section) => sum + sectionCount(section), 0);
     setText(button.querySelector('b'), count);
   }
 
@@ -144,8 +186,9 @@
       section.dataset.adminTab = tabFor(section);
     });
 
-    separateNewsFromDocuments(shell);
+    separateStructuredRecordsFromDocuments(shell);
     ensureNewsTab(shell);
+    ensureUnitsTab(shell);
     syncMemberCount(shell);
     syncDocumentCount(shell);
 
