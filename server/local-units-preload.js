@@ -16,8 +16,8 @@ const INITIAL_UNITS = [
     people: ['Jiří Pečenka', 'Marek Peterka'],
   },
   {
-    name: 'Unie českých fotbalových rozhodčích Karlovarského fotbalového svazu',
-    people: ['Slavomír Kozel'],
+    name: 'Unie českých fotbalových rozhodčích Karlovarského kraje',
+    people: ['Vladimír Melničuk', 'Slavomír Kozel'],
   },
   {
     name: 'Unie českých fotbalových rozhodčích OFS Beroun',
@@ -38,6 +38,10 @@ const INITIAL_UNITS = [
   {
     name: 'Unie českých fotbalových rozhodčích OFS Kolín',
     people: ['Zdeněk Tasch'],
+  },
+  {
+    name: 'Unie českých fotbalových rozhodčích Jihomoravského kraje',
+    people: ['Jakub Šmíd'],
   },
 ];
 
@@ -84,6 +88,81 @@ async function seedInitialUnits() {
     console.log(`[LOCAL UNITS] Seeded ${INITIAL_UNITS.length} organizational units.`);
   } catch (error) {
     console.error('[LOCAL UNITS] Initial seed failed:', error);
+  }
+}
+
+async function syncRequiredUnits() {
+  try {
+    const existing = await prisma.document.findMany({
+      where: { category: CATEGORY },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    const karlovy = existing.find((item) => /Karlovarsk/i.test(String(item.titleCs || '')));
+    const karlovyName = 'Unie českých fotbalových rozhodčích Karlovarského kraje';
+    const karlovyPeople = 'Vladimír Melničuk, Slavomír Kozel';
+
+    if (karlovy) {
+      if (
+        karlovy.titleCs !== karlovyName ||
+        karlovy.titleEn !== karlovyName ||
+        karlovy.descriptionCs !== karlovyPeople ||
+        karlovy.descriptionEn !== karlovyPeople
+      ) {
+        await prisma.document.update({
+          where: { id: karlovy.id },
+          data: {
+            titleCs: karlovyName,
+            titleEn: karlovyName,
+            descriptionCs: karlovyPeople,
+            descriptionEn: karlovyPeople,
+          },
+        });
+        console.log('[LOCAL UNITS] Updated Karlovarský kraj organizational unit.');
+      }
+    }
+
+    const southMoraviaName = 'Unie českých fotbalových rozhodčích Jihomoravského kraje';
+    const southMoravia = existing.find((item) => /Jihomoravsk/i.test(String(item.titleCs || '')));
+
+    if (!southMoravia) {
+      const maxOrder = existing.reduce((max, item) => {
+        const order = orderFromUrl(item.url);
+        return Number.isFinite(order) && order < 9999 ? Math.max(max, order) : max;
+      }, 0);
+
+      await prisma.document.create({
+        data: {
+          titleCs: southMoraviaName,
+          titleEn: southMoraviaName,
+          descriptionCs: 'Jakub Šmíd',
+          descriptionEn: 'Jakub Šmíd',
+          category: CATEGORY,
+          url: `local-unit://${String(maxOrder + 1).padStart(3, '0')}`,
+          visibility: 'PUBLIC',
+          status: 'DRAFT',
+        },
+      });
+      console.log('[LOCAL UNITS] Added Jihomoravský kraj organizational unit.');
+    } else if (
+      southMoravia.titleCs !== southMoraviaName ||
+      southMoravia.titleEn !== southMoraviaName ||
+      southMoravia.descriptionCs !== 'Jakub Šmíd' ||
+      southMoravia.descriptionEn !== 'Jakub Šmíd'
+    ) {
+      await prisma.document.update({
+        where: { id: southMoravia.id },
+        data: {
+          titleCs: southMoraviaName,
+          titleEn: southMoraviaName,
+          descriptionCs: 'Jakub Šmíd',
+          descriptionEn: 'Jakub Šmíd',
+        },
+      });
+      console.log('[LOCAL UNITS] Updated Jihomoravský kraj organizational unit.');
+    }
+  } catch (error) {
+    console.error('[LOCAL UNITS] Required-unit sync failed:', error);
   }
 }
 
@@ -206,8 +285,11 @@ if (!express.application.__ucfrLocalUnitsInstalled) {
 
     const server = originalListen.apply(this, args);
     // Do not block Express startup while Neon/Render is waking up.
-    // Seed initial units in the background after the server is already listening.
-    void seedInitialUnits();
+    // Seed defaults and synchronize required public units in the background.
+    void (async () => {
+      await seedInitialUnits();
+      await syncRequiredUnits();
+    })();
     return server;
   };
 }
