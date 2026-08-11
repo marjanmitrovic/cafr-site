@@ -1,60 +1,34 @@
 (() => {
   'use strict';
 
-  const STATUTES = [
-    {
-      cs: 'Stanovy UČFR – aktualizované',
-      en: 'UČFR Statutes – updated',
-      url: '/documents/Stanovy_CAFR_aktualizovane.pdf',
-    },
-    {
-      cs: 'Stanovy UČFR – návrh',
-      en: 'UČFR Statutes – draft',
-      url: '/documents/Stanovy_CAFR_navrh.pdf',
-    },
-  ];
+  const HIDDEN_STATUTE_PATHS = new Set([
+    '/documents/Stanovy_CAFR_aktualizovane.pdf',
+    '/documents/Stanovy_CAFR_navrh.pdf',
+  ]);
 
-  function language() {
-    return document.documentElement.lang === 'en' ? 'en' : 'cs';
-  }
-
-  function inject() {
-    const links = document.querySelector('#documents.documents-section .document-links');
-    if (!links) return;
-
-    const lang = language();
-    for (const statute of STATUTES) {
-      let link = [...links.querySelectorAll('a[href]')].find((item) => {
-        try {
-          return new URL(item.getAttribute('href'), window.location.origin).pathname === statute.url;
-        } catch {
-          return false;
+  function removeStatuteLinks() {
+    for (const link of document.querySelectorAll('a[href]')) {
+      try {
+        const pathname = new URL(link.getAttribute('href'), window.location.origin).pathname;
+        if (HIDDEN_STATUTE_PATHS.has(pathname)) {
+          link.remove();
         }
-      });
-
-      if (!link) {
-        link = document.createElement('a');
-        link.className = 'document-link ucfr-statute-link';
-        link.href = statute.url;
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-        links.appendChild(link);
+      } catch {
+        // Ignore malformed URLs.
       }
-
-      link.textContent = `📄 ${statute[lang]}`;
     }
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', inject, { once: true });
+    document.addEventListener('DOMContentLoaded', removeStatuteLinks, { once: true });
   } else {
-    inject();
+    removeStatuteLinks();
   }
 
   document.addEventListener('click', (event) => {
     if (event.target.closest?.('#langBtn')) {
-      window.setTimeout(inject, 0);
-      window.setTimeout(inject, 100);
+      window.setTimeout(removeStatuteLinks, 0);
+      window.setTimeout(removeStatuteLinks, 100);
     }
   });
 
@@ -63,8 +37,9 @@
     if (frame !== null) return;
     frame = requestAnimationFrame(() => {
       frame = null;
-      inject();
+      removeStatuteLinks();
     });
   });
+
   observer.observe(document.documentElement, { childList: true, subtree: true });
 })();
