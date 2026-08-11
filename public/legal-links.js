@@ -10,23 +10,42 @@
     const style = document.createElement('style');
     style.id = 'ucfrLegalLinksStyle';
     style.textContent = `
-      .ucfr-legal-links {
-        display: flex;
+      footer#contact .ucfr-legal-links {
+        grid-column: 1 / -1;
+        position: static !important;
+        inset: auto !important;
+        display: flex !important;
+        flex-direction: row !important;
         flex-wrap: wrap;
-        gap: 8px 16px;
+        gap: 8px 18px;
         align-items: center;
-        margin-top: 14px;
+        padding: 18px 0 0 !important;
+        margin: 0 !important;
+        border-top: 1px solid #1e3650;
+        background: transparent !important;
         font-size: 13px;
       }
-      .ucfr-legal-links a {
-        color: inherit;
+      footer#contact .ucfr-legal-links a {
+        color: #d8e3ef !important;
         text-decoration: underline;
         text-underline-offset: 3px;
+        font-weight: 600;
+      }
+      footer#contact .ucfr-legal-links a:hover {
+        color: #fff !important;
       }
       #joinForm .ucfr-privacy-inline-link {
         font-weight: 800;
         text-decoration: underline;
         text-underline-offset: 2px;
+      }
+      @media (max-width: 720px) {
+        footer#contact .ucfr-legal-links {
+          grid-column: auto;
+          flex-direction: column !important;
+          align-items: flex-start;
+          gap: 10px;
+        }
       }
     `;
     document.head.appendChild(style);
@@ -37,20 +56,21 @@
     if (!footer) return;
 
     const lang = language();
-    let nav = footer.querySelector('.ucfr-legal-links');
-    if (!nav) {
-      nav = document.createElement('nav');
-      nav.className = 'ucfr-legal-links';
-      nav.setAttribute('aria-label', lang === 'en' ? 'Legal information' : 'Právní informace');
+    let links = footer.querySelector('.ucfr-legal-links');
+    if (!links) {
+      links = document.createElement('div');
+      links.className = 'ucfr-legal-links';
+      links.setAttribute('role', 'navigation');
+      links.setAttribute('aria-label', lang === 'en' ? 'Legal information' : 'Právní informace');
       const copy = footer.querySelector('.copy');
-      if (copy) copy.insertAdjacentElement('beforebegin', nav);
-      else footer.appendChild(nav);
+      if (copy) copy.insertAdjacentElement('beforebegin', links);
+      else footer.appendChild(links);
     }
 
-    const signature = lang;
-    if (nav.dataset.language === signature) return;
-    nav.dataset.language = signature;
-    nav.innerHTML = lang === 'en'
+    links.setAttribute('aria-label', lang === 'en' ? 'Legal information' : 'Právní informace');
+    if (links.dataset.language === lang) return;
+    links.dataset.language = lang;
+    links.innerHTML = lang === 'en'
       ? '<a href="/privacy.html">Privacy</a><a href="/cookies.html">Cookies</a><a href="/terms.html">Terms of use</a>'
       : '<a href="/privacy.html">Ochrana osobních údajů</a><a href="/cookies.html">Cookies</a><a href="/terms.html">Podmínky užití</a>';
   }
