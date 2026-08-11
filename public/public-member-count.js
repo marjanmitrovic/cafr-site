@@ -1,13 +1,13 @@
 (() => {
   'use strict';
 
-  const PUBLIC_FLOOR = 600;
   let latestApprovedCount = null;
   let refreshTimer = null;
 
   function displayCount() {
-    const actual = Number.isFinite(latestApprovedCount) ? latestApprovedCount : 0;
-    return `${Math.max(PUBLIC_FLOOR, actual)}+`;
+    return Number.isFinite(latestApprovedCount)
+      ? String(latestApprovedCount)
+      : '—';
   }
 
   function applyCount() {
@@ -29,7 +29,7 @@
       const count = Number(data?.count);
       if (Number.isFinite(count) && count >= 0) latestApprovedCount = count;
     } catch (error) {
-      console.warn('[PUBLIC MEMBER COUNT] Using 600+ fallback:', error);
+      console.warn('[PUBLIC MEMBER COUNT] Could not load live member count:', error);
     } finally {
       applyCount();
     }
