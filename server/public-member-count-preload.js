@@ -12,12 +12,7 @@ if (!express.application.__ucfrPublicMemberCountInstalled) {
 
       this.get('/api/public/member-count', async (_req, res) => {
         try {
-          const count = await prisma.user.count({
-            where: {
-              membershipStatus: 'APPROVED',
-              isActive: true,
-            },
-          });
+          const count = await prisma.user.count();
 
           res.set('Cache-Control', 'public, max-age=60, s-maxage=300');
           return res.json({ count });
