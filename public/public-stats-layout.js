@@ -5,22 +5,62 @@
     return document.documentElement.lang === 'en' ? 'en' : 'cs';
   }
 
+  function ensureStyles() {
+    if (document.getElementById('ucfrPublicStatsLayoutStyles')) return;
+    const style = document.createElement('style');
+    style.id = 'ucfrPublicStatsLayoutStyles';
+    style.textContent = `
+      #home .stats .ucfr-region-district-stat {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 22px;
+        align-items: start;
+      }
+      #home .stats .ucfr-region-district-stat > span {
+        display: flex;
+        flex-direction: column;
+      }
+      #home .stats .ucfr-region-district-stat b {
+        font-size: 26px;
+        color: #fff;
+        line-height: 1.15;
+      }
+      #home .stats .ucfr-region-district-stat small {
+        font-size: 12px;
+        color: #aabfd4;
+        line-height: 1.35;
+      }
+      @media (max-width: 720px) {
+        #home .stats .ucfr-region-district-stat {
+          gap: 18px;
+        }
+        #home .stats .ucfr-region-district-stat b {
+          font-size: 26px;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
   function apply() {
+    ensureStyles();
     const stats = document.querySelector('#home .stats');
     if (!stats) return;
 
     const items = [...stats.children];
-    const regions = items.find((item) => /krajů|regions/i.test(item.textContent || ''));
+    const regions = items.find((item) => /krajů|regions|okresů|districts/i.test(item.textContent || ''));
     if (!regions) return;
 
-    let districts = stats.querySelector('[data-public-stat="districts"]');
-    if (!districts) {
-      districts = document.createElement('div');
-      districts.dataset.publicStat = 'districts';
-      regions.insertAdjacentElement('afterend', districts);
-    }
+    const oldDistrict = stats.querySelector('[data-public-stat="districts"]');
+    if (oldDistrict && oldDistrict !== regions) oldDistrict.remove();
 
-    districts.innerHTML = `<b>76</b><span>${language() === 'cs' ? 'okresů' : 'districts'}</span>`;
+    regions.classList.add('ucfr-region-district-stat');
+    regions.dataset.publicStat = 'regions-districts';
+    const cs = language() === 'cs';
+    regions.innerHTML = `
+      <span><b>14</b><small>${cs ? 'krajů' : 'regions'}</small></span>
+      <span><b>76</b><small>${cs ? 'okresů' : 'districts'}</small></span>
+    `;
   }
 
   if (document.readyState === 'loading') {
