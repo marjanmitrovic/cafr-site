@@ -12,10 +12,14 @@ if (!express.application.__ucfrPublicMemberCountInstalled) {
 
       this.get('/api/public/member-count', async (_req, res) => {
         try {
-          const count = await prisma.user.count();
+          const count = await prisma.user.count({
+            where: {
+              membershipStatus: 'APPROVED',
+            },
+          });
 
-          res.set('Cache-Control', 'public, max-age=60, s-maxage=300');
-          return res.json({ count });
+          res.set('Cache-Control', 'no-store');
+          return res.json({ count, status: 'APPROVED' });
         } catch (error) {
           console.error('Public member count error:', error);
           return res.status(503).json({ error: 'Member count is temporarily unavailable' });
