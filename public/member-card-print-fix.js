@@ -1,11 +1,25 @@
 (() => {
   'use strict';
 
+  function isAndroid() {
+    return /Android/i.test(navigator.userAgent || '');
+  }
+
   function setMessage(container, message, isError = false) {
     const element = container?.querySelector?.('.cafr-card-message');
     if (!element) return;
     element.textContent = message || '';
     element.style.color = isError ? '#b42318' : '#0b4ea2';
+  }
+
+  function relabelAndroidPrintButtons() {
+    if (!isAndroid()) return;
+    document.querySelectorAll('[data-card-action="print"]').forEach((button) => {
+      if (button.dataset.androidPrintRelabeled === '1') return;
+      button.dataset.androidPrintRelabeled = '1';
+      button.textContent = 'Tisk / PDF';
+      button.title = 'Na Androidu se připraví PDF v přesném rozměru 85,60 × 53,98 mm pro tisk.';
+    });
   }
 
   function printFromIframe(svg, container) {
@@ -56,7 +70,6 @@ svg { display: block; width: 85.6mm; height: 53.98mm; }
       }
     };
 
-    // A short delay lets mobile browsers finish rendering the SVG in the iframe.
     window.setTimeout(runPrint, 180);
   }
 
@@ -65,11 +78,30 @@ svg { display: block; width: 85.6mm; height: 53.98mm; }
     if (!button) return;
 
     const workbench = button.closest('.cafr-card-workbench');
-    const preview = workbench?.querySelector('.cafr-card-preview-shell');
-    const svg = preview?.querySelector('svg')?.outerHTML;
-    if (!workbench || !svg) return;
+    if (!workbench) return;
 
-    // Stop the legacy handler, which uses window.open() and gets blocked on mobile.
+    // Android Chromium/Brave does not provide reliable script-triggered printing.
+    // Use the already existing PDF export as the dependable print path.
+    if (isAndroid()) {
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+
+      const pdfButton = workbench.querySelector('[data-card-action="pdf"]');
+      if (!pdfButton) {
+        setMessage(workbench, 'PDF pro tisk nelze připravit.', true);
+        return;
+      }
+
+      setMessage(workbench, 'Brave Android nepodporuje spolehlivý přímý tisk. Připravuji PDF 85,60 × 53,98 mm pro tisk…');
+      pdfButton.click();
+      return;
+    }
+
+    const preview = workbench.querySelector('.cafr-card-preview-shell');
+    const svg = preview?.querySelector('svg')?.outerHTML;
+    if (!svg) return;
+
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
@@ -81,4 +113,13 @@ svg { display: block; width: 85.6mm; height: 53.98mm; }
       setMessage(workbench, error.message || 'Tisk se nezdařil. Použijte Stáhnout PDF.', true);
     }
   }, true);
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', relabelAndroidPrintButtons, { once: true });
+  } else {
+    relabelAndroidPrintButtons();
+  }
+
+  const observer = new MutationObserver(relabelAndroidPrintButtons);
+  observer.observe(document.documentElement, { childList: true, subtree: true });
 })();
