@@ -1,0 +1,50 @@
+name: remove-simple-card-extra-actions
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Keep only PDF action in simple member card
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('public/simple-member-card.js')
+          s = p.read_text()
+
+          old = '''  function renderActions() {\n    return `\n      <div class="cafr-card-export-actions" aria-label="Stažení a tisk členského průkazu">\n        <button type="button" class="cafr-card-export-primary" data-simple-card-action="png">Stáhnout PNG</button>\n        <button type="button" data-simple-card-action="pdf">Stáhnout PDF</button>\n        <button type="button" data-simple-card-action="svg">Stáhnout SVG</button>\n        <button type="button" data-simple-card-action="print">Tisk 85,60 × 53,98 mm</button>\n      </div>\n      <p class="cafr-card-export-message" aria-live="polite"></p>\n    `;\n  }'''
+          new = '''  function renderActions() {\n    return `\n      <div class="cafr-card-export-actions" aria-label="Stažení členského průkazu PDF">\n        <button type="button" class="cafr-card-export-primary" data-simple-card-action="pdf">Stáhnout PDF</button>\n      </div>\n      <p class="cafr-card-export-message" aria-live="polite"></p>\n    `;\n  }'''
+          if old not in s:
+              raise SystemExit('renderActions block not found')
+          s = s.replace(old, new, 1)
+
+          old2 = '''      setExportMessage(container, action === 'print' ? 'Připravuji tisk…' : 'Připravuji soubor…');'''
+          new2 = '''      setExportMessage(container, 'Připravuji PDF 85,60 × 53,98 mm…');'''
+          s = s.replace(old2, new2, 1)
+
+          start = '''        if (action === 'png') {\n          downloadBlob(await engine.createPngBlob(svg), `${stem}.png`);\n        } else if (action === 'pdf') {\n          downloadBlob(await engine.createPdfBlob(svg), `${stem}.pdf`);\n        } else if (action === 'svg') {\n          downloadBlob(\n            new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }),\n            `${stem}.svg`\n          );\n        } else if (action === 'print') {\n          engine.printSvg(svg);\n        }\n\n        setExportMessage(\n          container,\n          action === 'print'\n            ? 'Tiskové okno bylo otevřeno v přesném formátu 85,60 × 53,98 mm.'\n            : 'Soubor byl vytvořen.'\n        );'''
+          repl = '''        if (action === 'pdf') {\n          downloadBlob(await engine.createPdfBlob(svg), `${stem}.pdf`);\n        }\n\n        setExportMessage(container, 'PDF 85,60 × 53,98 mm byl vytvořen.');'''
+          if start not in s:
+              raise SystemExit('export handler block not found')
+          s = s.replace(start, repl, 1)
+          p.write_text(s)
+
+          p = Path('index.html')
+          s = p.read_text().replace('/simple-member-card.js?v=3', '/simple-member-card.js?v=4')
+          p.write_text(s)
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add public/simple-member-card.js index.html
+          git commit -m 'Keep only PDF export on simple member card'
+          git push
