@@ -93,11 +93,8 @@
 
   function renderActions() {
     return `
-      <div class="cafr-card-export-actions" aria-label="Stažení a tisk členského průkazu">
-        <button type="button" class="cafr-card-export-primary" data-simple-card-action="png">Stáhnout PNG</button>
-        <button type="button" data-simple-card-action="pdf">Stáhnout PDF</button>
-        <button type="button" data-simple-card-action="svg">Stáhnout SVG</button>
-        <button type="button" data-simple-card-action="print">Tisk 85,60 × 53,98 mm</button>
+      <div class="cafr-card-export-actions" aria-label="Stažení členského průkazu PDF">
+        <button type="button" class="cafr-card-export-primary" data-simple-card-action="pdf">Stáhnout PDF</button>
       </div>
       <p class="cafr-card-export-message" aria-live="polite"></p>
     `;
@@ -181,32 +178,18 @@
 
       const action = button.dataset.simpleCardAction;
       setExportBusy(container, true);
-      setExportMessage(container, action === 'print' ? 'Připravuji tisk…' : 'Připravuji soubor…');
+      setExportMessage(container, 'Připravuji PDF 85,60 × 53,98 mm…');
 
       try {
         const engine = await getCardEngine();
         const svg = await engine.renderCardSvg(member);
         const stem = fileStem(member);
 
-        if (action === 'png') {
-          downloadBlob(await engine.createPngBlob(svg), `${stem}.png`);
-        } else if (action === 'pdf') {
+        if (action === 'pdf') {
           downloadBlob(await engine.createPdfBlob(svg), `${stem}.pdf`);
-        } else if (action === 'svg') {
-          downloadBlob(
-            new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }),
-            `${stem}.svg`
-          );
-        } else if (action === 'print') {
-          engine.printSvg(svg);
         }
 
-        setExportMessage(
-          container,
-          action === 'print'
-            ? 'Tiskové okno bylo otevřeno v přesném formátu 85,60 × 53,98 mm.'
-            : 'Soubor byl vytvořen.'
-        );
+        setExportMessage(container, 'PDF 85,60 × 53,98 mm byl vytvořen.');
       } catch (error) {
         setExportMessage(container, error.message || 'Export průkazu se nezdařil.', true);
       } finally {
