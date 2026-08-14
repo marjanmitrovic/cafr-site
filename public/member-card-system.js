@@ -338,8 +338,18 @@
         if (action === 'png') downloadBlob(await createPngBlob(svg), `${stem}.png`);
         if (action === 'pdf') downloadBlob(await createPdfBlob(svg), `${stem}.pdf`);
         if (action === 'svg') downloadBlob(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }), `${stem}.svg`);
-        if (action === 'print') printSvg(svg);
-        setMessage(wrapper, action === 'print' ? 'Tiskové okno bylo otevřeno.' : 'Soubor byl vytvořen.');
+        if (action === 'print') {
+          if (/Android/i.test(navigator.userAgent || '')) {
+            downloadBlob(await createPdfBlob(svg), `${stem}-tisk.pdf`);
+          } else {
+            printSvg(svg);
+          }
+        }
+        setMessage(wrapper, action === 'print'
+          ? (/Android/i.test(navigator.userAgent || '')
+            ? 'PDF pro tisk byl stažen do zařízení.'
+            : 'Tiskové okno bylo otevřeno.')
+          : 'Soubor byl vytvořen.');
       } catch (error) {
         setMessage(wrapper, error.message || 'Export se nezdařil.', true);
       } finally {
