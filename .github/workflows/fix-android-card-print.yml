@@ -1,0 +1,44 @@
+name: fix-android-card-print
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Replace Android print button with direct PDF export
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('public/member-card-system.js')
+          s = p.read_text()
+          old = '''        if (action === 'print') printSvg(svg);\n        setMessage(wrapper, action === 'print' ? 'Tiskové okno bylo otevřeno.' : 'Soubor byl vytvořen.');'''
+          new = '''        if (action === 'print') {\n          if (/Android/i.test(navigator.userAgent || '')) {\n            downloadBlob(await createPdfBlob(svg), `${stem}-tisk.pdf`);\n          } else {\n            printSvg(svg);\n          }\n        }\n        setMessage(wrapper, action === 'print'\n          ? (/Android/i.test(navigator.userAgent || '')\n            ? 'PDF pro tisk byl stažen do zařízení.'\n            : 'Tiskové okno bylo otevřeno.')\n          : 'Soubor byl vytvořen.');'''
+          if old not in s:
+              raise SystemExit('Target print block not found')
+          s = s.replace(old, new, 1)
+          p.write_text(s)
+
+          p = Path('public/member-card-print-fix.js')
+          p.write_text("""(() => {\n  'use strict';\n  function isAndroid(){ return /Android/i.test(navigator.userAgent || ''); }\n  function relabel(){\n    if (!isAndroid()) return;\n    document.querySelectorAll('[data-card-action=\"print\"]').forEach((button) => {\n      button.textContent = 'Stáhnout PDF pro tisk';\n      button.title = 'PDF 85,60 × 53,98 mm pro systémový tisk';\n    });\n  }\n  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', relabel, {once:true});\n  else relabel();\n  new MutationObserver(relabel).observe(document.documentElement, {childList:true, subtree:true});\n})();\n""")
+
+          p = Path('index.html')
+          s = p.read_text()
+          s = s.replace('/member-card-system.js?v=12', '/member-card-system.js?v=13')
+          s = s.replace('/member-card-print-fix.js?v=2', '/member-card-print-fix.js?v=3')
+          p.write_text(s)
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add public/member-card-system.js public/member-card-print-fix.js index.html
+          git commit -m 'Use direct PDF download for Android card printing'
+          git push
