@@ -4,22 +4,44 @@
   // Public, non-critical API requests must never make the page feel stuck when
   // Render is waking up. Keep writes/login untouched; only same-origin GET /api
   // calls without an existing AbortSignal receive a short timeout.
+  // The legacy admin screen used to request every member at once. Redirect that
+  // single GET to the paginated endpoint so opening Administrace never waits for
+  // hundreds or thousands of member records.
   const nativeFetch = window.fetch.bind(window);
-  window.fetch = function ucfrFetchWithPublicTimeout(input, init = {}) {
+
+  window.fetch = async function ucfrFetchWithPublicTimeout(input, init = {}) {
     try {
       const method = String(init?.method || 'GET').toUpperCase();
       const rawUrl = typeof input === 'string' ? input : input?.url;
       const url = new URL(String(rawUrl || ''), window.location.href);
       const isSameOriginApi = url.origin === window.location.origin && url.pathname.startsWith('/api/');
+      const isLegacyAdminUsers = method === 'GET' && isSameOriginApi && url.pathname === '/api/admin/users' && !url.search;
+
+      let requestInput = input;
+      if (isLegacyAdminUsers) {
+        const pagedUrl = new URL('/api/admin/users-page', window.location.origin);
+        pagedUrl.searchParams.set('page', '1');
+        pagedUrl.searchParams.set('limit', '50');
+        requestInput = pagedUrl.toString();
+      }
 
       if (method !== 'GET' || !isSameOriginApi || init?.signal) {
-        return nativeFetch(input, init);
+        return nativeFetch(requestInput, init);
       }
 
       const controller = new AbortController();
       const timer = window.setTimeout(() => controller.abort(), 8000);
-      return nativeFetch(input, { ...init, signal: controller.signal })
+      const response = await nativeFetch(requestInput, { ...init, signal: controller.signal })
         .finally(() => window.clearTimeout(timer));
+
+      if (!isLegacyAdminUsers || !response.ok) return response;
+
+      const data = await response.json().catch(() => ({}));
+      const body = JSON.stringify(Array.isArray(data.users) ? data.users : []);
+      const headers = new Headers(response.headers);
+      headers.set('Content-Type', 'application/json; charset=utf-8');
+      headers.set('Cache-Control', 'no-store');
+      return new Response(body, { status: response.status, statusText: response.statusText, headers });
     } catch {
       return nativeFetch(input, init);
     }
