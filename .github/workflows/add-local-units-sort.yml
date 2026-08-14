@@ -1,0 +1,29 @@
+name: add-local-units-sort
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Include hierarchy sorting script
+        run: |
+          if grep -q 'local-units-sort.js' index.html; then
+            echo 'Already included'
+            exit 0
+          fi
+          sed -i '/<script src="\/local-units.js?v=1" defer><\/script>/a\  <script src="/local-units-sort.js?v=1" defer></script>' index.html
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'Enable permanent local unit hierarchy sorting'
+          git push
