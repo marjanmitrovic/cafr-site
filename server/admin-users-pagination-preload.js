@@ -27,12 +27,10 @@ async function requireAdmin(request, response) {
     const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
     const payload = jwt.verify(token, TOKEN_SECRET);
     const user = await prisma.user.findUnique({ where: { id: payload.sub } });
-
     if (!user || !user.isActive || !['ADMIN', 'BOARD', 'QUESTION_EDITOR'].includes(user.role)) {
       response.status(403).json({ error: 'Forbidden' });
       return null;
     }
-
     return user;
   } catch {
     response.status(401).json({ error: 'Unauthorized' });
@@ -57,25 +55,43 @@ if (!express.application.__ucfrAdminUsersPaginationInstalled) {
         if (!admin) return;
 
         try {
+          if (String(request.query.summary || '') === '1') {
+            const [total, pending, approved, rejected, suspended] = await Promise.all([
+              prisma.user.count(),
+              prisma.user.count({ where: { membershipStatus: 'PENDING' } }),
+              prisma.user.count({ where: { membershipStatus: 'APPROVED' } }),
+              prisma.user.count({ where: { membershipStatus: 'REJECTED' } }),
+              prisma.user.count({ where: { membershipStatus: 'SUSPENDED' } }),
+            ]);
+            response.set('Cache-Control', 'no-store');
+            return response.json({ total, pending, approved, rejected, suspended });
+          }
+
           const page = positiveInt(request.query.page, 1);
           const limit = Math.min(100, positiveInt(request.query.limit, 50));
           const query = String(request.query.q || '').trim().slice(0, 120);
+          const region = String(request.query.region || '').trim().slice(0, 120);
+          const status = String(request.query.status || '').trim().toUpperCase();
           const exportAll = String(request.query.export || '') === '1';
           const idQuery = query.replace(/^UCFR-/i, '').trim();
 
-          const where = query
-            ? {
-                OR: [
-                  { firstName: { contains: query, mode: 'insensitive' } },
-                  { lastName: { contains: query, mode: 'insensitive' } },
-                  { email: { contains: query, mode: 'insensitive' } },
-                  { phone: { contains: query, mode: 'insensitive' } },
-                  { region: { contains: query, mode: 'insensitive' } },
-                  { refereeStatus: { contains: query, mode: 'insensitive' } },
-                  ...(idQuery ? [{ id: { contains: idQuery, mode: 'insensitive' } }] : []),
-                ],
-              }
-            : {};
+          const clauses = [];
+          if (query) {
+            clauses.push({
+              OR: [
+                { firstName: { contains: query, mode: 'insensitive' } },
+                { lastName: { contains: query, mode: 'insensitive' } },
+                { email: { contains: query, mode: 'insensitive' } },
+                { phone: { contains: query, mode: 'insensitive' } },
+                { region: { contains: query, mode: 'insensitive' } },
+                { refereeStatus: { contains: query, mode: 'insensitive' } },
+                ...(idQuery ? [{ id: { contains: idQuery, mode: 'insensitive' } }] : []),
+              ],
+            });
+          }
+          if (region && region !== 'ALL') clauses.push({ region });
+          if (['PENDING', 'APPROVED', 'REJECTED', 'SUSPENDED'].includes(status)) clauses.push({ membershipStatus: status });
+          const where = clauses.length ? { AND: clauses } : {};
 
           if (exportAll) {
             const users = await prisma.user.findMany({
@@ -86,37 +102,15 @@ if (!express.application.__ucfrAdminUsersPaginationInstalled) {
             return response.json({ users: users.map(publicUser), total: users.length });
           }
 
-          const skip = (page - 1) * limit;
-          const [users, total] = await prisma.$transaction([
-            prisma.user.findMany({
-              where,
-              orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }, { createdAt: 'desc' }],
-              skip,
-              take: limit,
-            }),
-            prisma.user.count({ where }),
-          ]);
-
+          const total = await prisma.user.count({ where });
           const totalPages = Math.max(1, Math.ceil(total / limit));
           const safePage = Math.min(page, totalPages);
-
-          if (safePage !== page && total > 0) {
-            const correctedUsers = await prisma.user.findMany({
-              where,
-              orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }, { createdAt: 'desc' }],
-              skip: (safePage - 1) * limit,
-              take: limit,
-            });
-
-            response.set('Cache-Control', 'no-store');
-            return response.json({
-              users: correctedUsers.map(publicUser),
-              page: safePage,
-              limit,
-              total,
-              totalPages,
-            });
-          }
+          const users = await prisma.user.findMany({
+            where,
+            orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }, { createdAt: 'desc' }],
+            skip: (safePage - 1) * limit,
+            take: limit,
+          });
 
           response.set('Cache-Control', 'no-store');
           return response.json({
