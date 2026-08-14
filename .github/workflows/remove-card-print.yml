@@ -1,0 +1,55 @@
+name: remove-card-print
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Keep PDF-only card export
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path('public/member-card-system.js')
+          s = p.read_text()
+
+          old_actions = '''      <div class="cafr-card-actions">\n        <button class="primary-card-action" type="button" data-card-action="png">Stáhnout PNG</button>\n        <button type="button" data-card-action="pdf">Stáhnout PDF</button>\n        <button type="button" data-card-action="svg">Stáhnout SVG</button>\n        <button type="button" data-card-action="print">Tisk</button>\n        <a data-card-action="verify" href="${verificationUrl(member)}" target="_blank" rel="noopener">Ověřit průkaz</a>\n      </div>'''
+          new_actions = '''      <div class="cafr-card-actions">\n        <button class="primary-card-action" type="button" data-card-action="pdf">Stáhnout PDF</button>\n        <a data-card-action="verify" href="${verificationUrl(member)}" target="_blank" rel="noopener">Ověřit průkaz</a>\n      </div>'''
+          if old_actions not in s:
+              raise SystemExit('Card actions block not found')
+          s = s.replace(old_actions, new_actions, 1)
+
+          old_handlers = '''        if (action === 'png') downloadBlob(await createPngBlob(svg), `${stem}.png`);\n        if (action === 'pdf') downloadBlob(await createPdfBlob(svg), `${stem}.pdf`);\n        if (action === 'svg') downloadBlob(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }), `${stem}.svg`);\n        if (action === 'print') {\n          if (/Android/i.test(navigator.userAgent || '')) {\n            downloadBlob(await createPdfBlob(svg), `${stem}-tisk.pdf`);\n          } else {\n            printSvg(svg);\n          }\n        }\n        setMessage(wrapper, action === 'print'\n          ? (/Android/i.test(navigator.userAgent || '')\n            ? 'PDF pro tisk byl stažen do zařízení.'\n            : 'Tiskové okno bylo otevřeno.')\n          : 'Soubor byl vytvořen.');'''
+          new_handlers = '''        if (action === 'pdf') downloadBlob(await createPdfBlob(svg), `${stem}.pdf`);\n        setMessage(wrapper, 'PDF 85,60 × 53,98 mm byl vytvořen.');'''
+          if old_handlers not in s:
+              raise SystemExit('Card export handlers block not found')
+          s = s.replace(old_handlers, new_handlers, 1)
+
+          p.write_text(s)
+
+          p = Path('index.html')
+          s = p.read_text()
+          s = s.replace('  <script src="/member-card-print-fix.js?v=3" defer></script>\n', '')
+          s = s.replace('/member-card-system.js?v=13', '/member-card-system.js?v=14')
+          p.write_text(s)
+
+          hotfix = Path('public/member-card-print-fix.js')
+          if hotfix.exists():
+              hotfix.unlink()
+          PY
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A public/member-card-system.js public/member-card-print-fix.js index.html
+          git commit -m 'Keep only CR80 PDF membership card export'
+          git push
