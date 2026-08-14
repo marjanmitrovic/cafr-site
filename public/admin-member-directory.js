@@ -1,492 +1,148 @@
 (() => {
   'use strict';
 
-  const API_BASE =
-    localStorage.getItem('cafr-api-base') ||
-    (
-      window.location.hostname === 'localhost' ||
-      window.location.hostname === '127.0.0.1'
-        ? 'http://localhost:3001'
-        : window.location.origin
-    );
+  const DEFAULT_PAGE_SIZE = 25;
+  const stateBySection = new WeakMap();
 
-  const DIRECTORY_ID = 'adminMemberDirectory';
-  const DEFAULT_PAGE_SIZE = 50;
-
-  const REGION_OPTIONS = [
-    'Hlavní město Praha',
-    'Středočeský kraj',
-    'Jihočeský kraj',
-    'Plzeňský kraj',
-    'Karlovarský kraj',
-    'Ústecký kraj',
-    'Liberecký kraj',
-    'Královéhradecký kraj',
-    'Pardubický kraj',
-    'Kraj Vysočina',
-    'Jihomoravský kraj',
-    'Olomoucký kraj',
-    'Zlínský kraj',
-    'Moravskoslezský kraj',
-  ];
-
-  const REFEREE_ROLES = [
-    'Aktivní rozhodčí',
-    'Asistent rozhodčího',
-    'Bývalý rozhodčí',
-    'Delegát',
-    'Pozorovatel rozhodčích',
-  ];
-
-  const REFEREE_LISTS = [
-    'Profesionální soutěže',
-    'Divize / ČFL / MSFL',
-    'Krajské soutěže',
-    'Okresní soutěže',
-    'Bývalý rozhodčí / Ostatní',
-  ];
-
-  function escapeHtml(value) {
-    return String(value ?? '').replace(/[&<>"']/g, (char) => ({
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#39;',
-    })[char]);
+  function normalize(value) {
+    return String(value || '')
+      .toLocaleLowerCase('cs-CZ')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 
-  function adminToken() {
-    return sessionStorage.getItem('cafr-admin-token') || localStorage.getItem('cafr-token') || '';
+  function primaryMembersSection(shell) {
+    return [...shell.querySelectorAll(':scope > .admin-panel-section')].find((section) => {
+      if (section.id === 'adminMemberDirectory') return false;
+      const heading = normalize(section.querySelector('h3')?.textContent);
+      return /registrovani clenove|registered members/.test(heading);
+    });
   }
 
-  function memberNumber(user) {
-    return `UCFR-${String(user.id || '').slice(-8).toUpperCase()}`;
+  function memberCards(section) {
+    return [...section.querySelectorAll(':scope > .admin-member-list > .admin-member-card')]
+      .filter((card) => card.querySelector('[data-user-status], [data-user-role]'));
   }
 
-  function parseRefereeStatus(value) {
-    const raw = String(value || '').trim();
-    const parts = raw.split('|').map((part) => part.trim()).filter(Boolean);
-    const facrPart = parts.find((part) => /^(?:ID\s*)?FAČR\s*:/i.test(part));
-    const listPart = parts.find((part) => /^(?:Listina|Soutěž|Referee list)\s*:/i.test(part));
-    const roleParts = parts.filter((part) => part !== facrPart && part !== listPart);
-
-    return {
-      role: roleParts.join(' | ') || (!facrPart && !listPart ? raw : ''),
-      facrId: facrPart ? facrPart.replace(/^(?:ID\s*)?FAČR\s*:\s*/i, '') : '',
-      refereeList: listPart ? listPart.replace(/^(?:Listina|Soutěž|Referee list)\s*:\s*/i, '') : '',
-    };
+  function matchingCards(section) {
+    return memberCards(section).filter((card) => !card.classList.contains('admin-search-filtered-out'));
   }
 
-  function membershipLabel(value) {
-    return ({
-      PENDING: 'Čeká na schválení',
-      APPROVED: 'Schválené členství',
-      REJECTED: 'Zamítnutá přihláška',
-      SUSPENDED: 'Pozastavené členství',
-    })[value] || String(value || '');
-  }
+  function render(section) {
+    const state = stateBySection.get(section);
+    if (!state) return;
 
-  function formatDate(value) {
-    if (!value) return '';
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString('cs-CZ');
-  }
+    const cards = memberCards(section);
+    const matches = matchingCards(section);
+    const totalPages = Math.max(1, Math.ceil(matches.length / state.pageSize));
+    if (state.page > totalPages) state.page = totalPages;
 
-  function protectSpreadsheetFormula(value) {
-    const text = String(value ?? '').replace(/\r?\n/g, ' ').trim();
-    return /^[=+\-@\t\r]/.test(text) ? `'${text}` : text;
-  }
+    const start = (state.page - 1) * state.pageSize;
+    const end = start + state.pageSize;
+    const pageSet = new Set(matches.slice(start, end));
 
-  function toCsvValue(value) {
-    return `"${protectSpreadsheetFormula(value).replace(/"/g, '""')}"`;
-  }
-
-  function optionList(values, placeholder) {
-    return [
-      `<option value="">${escapeHtml(placeholder)}</option>`,
-      ...values.map((value) => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`),
-    ].join('');
-  }
-
-  function exportCsv(users) {
-    const header = [
-      'Členské číslo', 'Interní ID', 'Jméno', 'Příjmení', 'E-mail', 'Telefon',
-      'Kraj / okres', 'Status / funkce rozhodčího', 'ID FAČR', 'Listina rozhodčích',
-      'Stav členství', 'Systémová role', 'Aktivní účet', 'Jazyk', 'Datum registrace', 'Datum schválení',
-    ];
-
-    const rows = users.map((user) => {
-      const referee = parseRefereeStatus(user.refereeStatus);
-      return [
-        memberNumber(user), user.id, user.firstName, user.lastName, user.email, user.phone || '',
-        user.region || '', referee.role, referee.facrId, referee.refereeList,
-        membershipLabel(user.membershipStatus), user.role || '', user.isActive ? 'Ano' : 'Ne',
-        user.language || '', formatDate(user.createdAt), formatDate(user.approvedAt),
-      ];
+    cards.forEach((card) => {
+      const filteredOut = card.classList.contains('admin-search-filtered-out');
+      card.hidden = filteredOut || !pageSet.has(card);
     });
 
-    const csv = [header, ...rows].map((row) => row.map(toCsvValue).join(';')).join('\r\n');
-    const blob = new Blob([`\ufeff${csv}`], { type: 'text/csv;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `ucfr-databaze-clenstvi-${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    const from = matches.length ? start + 1 : 0;
+    const to = Math.min(end, matches.length);
+    state.info.textContent = matches.length
+      ? `Zobrazeno ${from}–${to} z ${matches.length}`
+      : 'Žádní členové';
+    state.pageLabel.textContent = `Strana ${state.page} z ${totalPages}`;
+    state.prev.disabled = state.page <= 1;
+    state.next.disabled = state.page >= totalPages;
+
+    const oldResult = section.querySelector('.admin-member-filter-result');
+    if (oldResult) oldResult.textContent = matches.length ? `${matches.length} členů` : '0 členů';
   }
 
-  function renderRows(users) {
-    return users.map((user) => `
-      <tr>
-        <td><strong>${escapeHtml(memberNumber(user))}</strong></td>
-        <td>${escapeHtml(user.firstName)} ${escapeHtml(user.lastName)}</td>
-        <td>${escapeHtml(user.email)}</td>
-        <td>${escapeHtml(user.phone || '—')}</td>
-        <td>${escapeHtml(user.region || '—')}</td>
-        <td>${escapeHtml(user.refereeStatus || '—')}</td>
-        <td><span class="admin-directory-status ${escapeHtml(user.membershipStatus || '')}">${escapeHtml(membershipLabel(user.membershipStatus) || '—')}</span></td>
-        <td>${escapeHtml(user.role || '—')}</td>
-        <td>${user.createdAt ? new Date(user.createdAt).toLocaleDateString('cs-CZ') : '—'}</td>
-        <td>
-          ${user.membershipStatus === 'PENDING'
-            ? `<button class="admin-directory-edit" type="button" data-edit-member="${escapeHtml(user.id)}">Upravit před schválením</button>`
-            : '<span class="admin-directory-locked">—</span>'}
-        </td>
-      </tr>
-    `).join('');
-  }
+  function install(section) {
+    if (!section || stateBySection.has(section)) return;
+    const list = section.querySelector(':scope > .admin-member-list');
+    if (!list) return;
 
-  function closeEditor(section) {
-    const editor = section.querySelector('#adminMemberEditor');
-    if (!editor) return;
-    editor.hidden = true;
-    editor.querySelector('form')?.reset();
-    const message = editor.querySelector('#adminMemberEditorMessage');
-    if (message) {
-      message.textContent = '';
-      message.className = 'admin-member-editor-message';
-    }
-  }
+    // Remove the separately injected directory if an older cached script created it.
+    section.closest('.admin-shell')?.querySelector('#adminMemberDirectory')?.remove();
 
-  function setSelectValue(select, value) {
-    if (!select) return;
-    const normalizedValue = String(value || '').trim();
-    if (normalizedValue && ![...select.options].some((option) => option.value === normalizedValue)) {
-      select.add(new Option(normalizedValue, normalizedValue));
-    }
-    select.value = normalizedValue;
-  }
-
-  function openEditor(section, user) {
-    if (!user || user.membershipStatus !== 'PENDING') return;
-    const editor = section.querySelector('#adminMemberEditor');
-    const form = editor?.querySelector('#adminMemberEditorForm');
-    if (!editor || !form) return;
-
-    const referee = parseRefereeStatus(user.refereeStatus);
-    form.elements.memberId.value = user.id;
-    form.elements.firstName.value = user.firstName || '';
-    form.elements.lastName.value = user.lastName || '';
-    form.elements.email.value = user.email || '';
-    form.elements.phone.value = user.phone || '';
-    setSelectValue(form.elements.region, user.region || '');
-    setSelectValue(form.elements.refereeRole, referee.role || '');
-    form.elements.facrId.value = referee.facrId || '';
-    setSelectValue(form.elements.refereeList, referee.refereeList || '');
-    editor.querySelector('#adminMemberEditorTitle').textContent =
-      `Upravit přihlášku: ${user.firstName || ''} ${user.lastName || ''}`.trim();
-    editor.hidden = false;
-    form.elements.firstName.focus();
-  }
-
-  async function requestUsers(params = {}) {
-    const token = adminToken();
-    if (!token) throw new Error('Chybí administrátorský token. Přihlaste se znovu.');
-
-    const query = new URLSearchParams();
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') query.set(key, String(value));
-    });
-
-    const response = await fetch(`${API_BASE}/api/admin/users-page?${query.toString()}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.error || 'Databázi členů nelze načíst.');
-    return data;
-  }
-
-  function updatePagination(section, state) {
-    const info = section.querySelector('#adminDirectoryPageInfo');
-    const number = section.querySelector('#adminDirectoryPageNumber');
-    const prev = section.querySelector('[data-directory-prev]');
-    const next = section.querySelector('[data-directory-next]');
-    const count = section.querySelector('#adminDirectoryCount');
-
-    const from = state.total ? ((state.page - 1) * state.limit) + 1 : 0;
-    const to = Math.min(state.page * state.limit, state.total);
-    info.textContent = state.total ? `Zobrazeno ${from}–${to} z ${state.total}` : 'Žádné záznamy';
-    number.textContent = `${state.page} / ${state.totalPages}`;
-    count.textContent = String(state.total);
-    prev.disabled = state.loading || state.page <= 1;
-    next.disabled = state.loading || state.page >= state.totalPages;
-  }
-
-  async function loadPage(section, state) {
-    const tbody = section.querySelector('#adminDirectoryRows');
-    const requestId = ++state.requestId;
-    state.loading = true;
-    updatePagination(section, state);
-    tbody.innerHTML = '<tr><td colspan="10">Načítám členy…</td></tr>';
-
-    try {
-      const data = await requestUsers({ page: state.page, limit: state.limit, q: state.query });
-      if (requestId !== state.requestId) return;
-
-      state.users = Array.isArray(data.users) ? data.users : [];
-      state.page = Number(data.page || 1);
-      state.limit = Number(data.limit || state.limit);
-      state.total = Number(data.total || 0);
-      state.totalPages = Number(data.totalPages || 1);
-
-      tbody.innerHTML = state.users.length
-        ? renderRows(state.users)
-        : '<tr><td colspan="10">Žádný člen neodpovídá filtru.</td></tr>';
-    } catch (error) {
-      if (requestId !== state.requestId) return;
-      tbody.innerHTML = `<tr><td colspan="10">${escapeHtml(error.message)}</td></tr>`;
-    } finally {
-      if (requestId === state.requestId) {
-        state.loading = false;
-        updatePagination(section, state);
-      }
-    }
-  }
-
-  async function saveMember(section, state, form) {
-    const message = section.querySelector('#adminMemberEditorMessage');
-    const submitButton = form.querySelector('button[type="submit"]');
-
-    if (!form.checkValidity()) {
-      message.textContent = 'Vyplňte prosím všechna povinná pole.';
-      message.className = 'admin-member-editor-message error';
-      form.reportValidity();
-      return;
-    }
-
-    const facrId = String(form.elements.facrId.value || '').trim();
-    if (!/^\d+$/.test(facrId)) {
-      form.elements.facrId.setCustomValidity('ID FAČR může obsahovat pouze číslice.');
-      message.textContent = 'ID FAČR je povinné a může obsahovat pouze číslice.';
-      message.className = 'admin-member-editor-message error';
-      form.elements.facrId.reportValidity();
-      return;
-    }
-
-    form.elements.facrId.setCustomValidity('');
-    const payload = {
-      firstName: String(form.elements.firstName.value || '').trim(),
-      lastName: String(form.elements.lastName.value || '').trim(),
-      email: String(form.elements.email.value || '').trim(),
-      phone: String(form.elements.phone.value || '').trim(),
-      region: String(form.elements.region.value || '').trim(),
-      refereeStatus: [
-        String(form.elements.refereeRole.value || '').trim(),
-        `ID FAČR: ${facrId}`,
-        `Listina: ${String(form.elements.refereeList.value || '').trim()}`,
-      ].join(' | '),
-    };
-
-    submitButton.disabled = true;
-    submitButton.textContent = 'Ukládám…';
-    message.textContent = '';
-
-    try {
-      const response = await fetch(`${API_BASE}/api/admin/users/${encodeURIComponent(form.elements.memberId.value)}/profile`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${adminToken()}`,
-        },
-        body: JSON.stringify(payload),
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data.error || 'Údaje přihlášky se nepodařilo uložit.');
-
-      message.textContent = 'Údaje byly uloženy.';
-      message.className = 'admin-member-editor-message success';
-      await loadPage(section, state);
-      window.setTimeout(() => closeEditor(section), 700);
-    } catch (error) {
-      message.textContent = error.message;
-      message.className = 'admin-member-editor-message error';
-    } finally {
-      submitButton.disabled = false;
-      submitButton.textContent = 'Uložit změny';
-    }
-  }
-
-  async function injectDirectory() {
-    if (document.getElementById(DIRECTORY_ID)) return true;
-    const shell = document.querySelector('.admin-shell');
-    if (!shell) return false;
-
-    const section = document.createElement('section');
-    section.id = DIRECTORY_ID;
-    section.className = 'admin-panel-section admin-directory-section';
-    section.innerHTML = `
-      <div class="admin-section-head">
-        <div>
-          <span class="section-label">DATABÁZE ČLENSTVÍ</span>
-          <h3>Členský adresář</h3>
-          <p class="admin-directory-note">Členové se načítají po stránkách, aby administrace zůstala rychlá i při velkém počtu záznamů.</p>
-        </div>
-        <span class="admin-count" id="adminDirectoryCount">0</span>
-      </div>
-
-      <div class="admin-directory-toolbar">
-        <input id="adminDirectorySearch" class="admin-directory-search" type="search" placeholder="Hledat podle jména, e-mailu, telefonu, regionu, ID FAČR…">
-        <button id="adminDirectoryExport" class="admin-directory-export" type="button">Export databáze členství (.CSV)</button>
-      </div>
-
-      <div class="admin-directory-table-wrap">
-        <table class="admin-directory-table">
-          <thead><tr>
-            <th>Číslo</th><th>Jméno</th><th>E-mail</th><th>Telefon</th><th>Region</th>
-            <th>Status rozhodčího</th><th>Členství</th><th>Role</th><th>Registrace</th><th>Akce</th>
-          </tr></thead>
-          <tbody id="adminDirectoryRows"><tr><td colspan="10">Načítám členy…</td></tr></tbody>
-        </table>
-      </div>
-
-      <div class="admin-directory-toolbar" style="margin-top:14px;align-items:center;flex-wrap:wrap">
-        <span id="adminDirectoryPageInfo">Načítám…</span>
-        <label style="display:flex;align-items:center;gap:8px">Na stránku
-          <select id="adminDirectoryPageSize" class="admin-directory-search" style="width:auto;padding-right:34px">
-            <option value="25">25</option><option value="50" selected>50</option><option value="100">100</option>
+    const controls = document.createElement('div');
+    controls.className = 'admin-member-pagination';
+    controls.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:16px 0 4px;padding:12px 0;';
+    controls.innerHTML = `
+      <span data-member-page-info style="font-weight:600">Načítám…</span>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <label style="display:flex;align-items:center;gap:6px">
+          Na stránku
+          <select data-member-page-size style="padding:8px 30px 8px 10px;border-radius:10px;border:1px solid #d7deea;background:#fff">
+            <option value="25" selected>25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
           </select>
         </label>
-        <div style="display:flex;align-items:center;gap:8px;margin-left:auto">
-          <button class="admin-directory-export" type="button" data-directory-prev>← Předchozí</button>
-          <strong id="adminDirectoryPageNumber">1 / 1</strong>
-          <button class="admin-directory-export" type="button" data-directory-next>Další →</button>
-        </div>
-      </div>
-
-      <div class="admin-member-editor-backdrop" id="adminMemberEditor" hidden>
-        <div class="admin-member-editor" role="dialog" aria-modal="true" aria-labelledby="adminMemberEditorTitle">
-          <button class="admin-member-editor-close" type="button" data-close-member-editor aria-label="Zavřít">×</button>
-          <span class="section-label">KONTROLA PŘIHLÁŠKY</span>
-          <h3 id="adminMemberEditorTitle">Upravit přihlášku před schválením</h3>
-          <p>Opravte údaje a teprve potom přihlášku schvalte. Po schválení je tento editor uzamčen.</p>
-          <form id="adminMemberEditorForm" class="admin-member-editor-form">
-            <input type="hidden" name="memberId">
-            <div class="admin-member-editor-grid">
-              <label>Jméno <input name="firstName" required></label>
-              <label>Příjmení <input name="lastName" required></label>
-              <label>E-mail <input name="email" type="email" required></label>
-              <label>Telefon <input name="phone" required></label>
-              <label>Kraj / okres <select name="region" required>${optionList(REGION_OPTIONS, 'Vyberte kraj')}</select></label>
-              <label>Status rozhodčího <select name="refereeRole" required>${optionList(REFEREE_ROLES, 'Vyberte status')}</select></label>
-              <label>ID FAČR <input name="facrId" inputmode="numeric" pattern="[0-9]+" required></label>
-              <label>Listina rozhodčích <select name="refereeList" required>${optionList(REFEREE_LISTS, 'Vyberte listinu')}</select></label>
-            </div>
-            <p id="adminMemberEditorMessage" class="admin-member-editor-message" aria-live="polite"></p>
-            <div class="admin-member-editor-actions">
-              <button class="admin-member-editor-cancel" type="button" data-close-member-editor>Zrušit</button>
-              <button class="admin-directory-export" type="submit">Uložit změny</button>
-            </div>
-          </form>
-        </div>
+        <button type="button" data-member-prev style="padding:8px 12px;border-radius:10px;border:1px solid #d7deea;background:#fff;font-weight:700">‹ Předchozí</button>
+        <strong data-member-page-label style="min-width:100px;text-align:center">Strana 1 z 1</strong>
+        <button type="button" data-member-next style="padding:8px 12px;border-radius:10px;border:1px solid #d7deea;background:#fff;font-weight:700">Další ›</button>
       </div>
     `;
-
-    const firstMembersSection = shell.querySelector('.admin-panel-section');
-    if (firstMembersSection?.after) firstMembersSection.after(section);
-    else shell.appendChild(section);
+    list.after(controls);
 
     const state = {
-      users: [], page: 1, limit: DEFAULT_PAGE_SIZE, total: 0, totalPages: 1,
-      query: '', loading: false, requestId: 0, searchTimer: null,
+      page: 1,
+      pageSize: DEFAULT_PAGE_SIZE,
+      info: controls.querySelector('[data-member-page-info]'),
+      pageLabel: controls.querySelector('[data-member-page-label]'),
+      prev: controls.querySelector('[data-member-prev]'),
+      next: controls.querySelector('[data-member-next]'),
     };
+    stateBySection.set(section, state);
 
-    const search = section.querySelector('#adminDirectorySearch');
-    search.addEventListener('input', () => {
-      window.clearTimeout(state.searchTimer);
-      state.searchTimer = window.setTimeout(() => {
-        state.query = String(search.value || '').trim();
-        state.page = 1;
-        loadPage(section, state);
-      }, 300);
-    });
-
-    section.querySelector('#adminDirectoryPageSize').addEventListener('change', (event) => {
-      state.limit = Number(event.target.value || DEFAULT_PAGE_SIZE);
-      state.page = 1;
-      loadPage(section, state);
-    });
-
-    section.addEventListener('click', (event) => {
-      const editButton = event.target.closest('[data-edit-member]');
-      if (editButton) {
-        openEditor(section, state.users.find((user) => user.id === editButton.dataset.editMember));
-        return;
-      }
-      if (event.target.closest('[data-directory-prev]') && state.page > 1 && !state.loading) {
+    state.prev.addEventListener('click', () => {
+      if (state.page > 1) {
         state.page -= 1;
-        loadPage(section, state);
-        return;
-      }
-      if (event.target.closest('[data-directory-next]') && state.page < state.totalPages && !state.loading) {
-        state.page += 1;
-        loadPage(section, state);
-        return;
-      }
-      if (event.target.closest('[data-close-member-editor]') || event.target.id === 'adminMemberEditor') {
-        closeEditor(section);
+        render(section);
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     });
 
-    section.querySelector('#adminMemberEditorForm').addEventListener('submit', (event) => {
-      event.preventDefault();
-      saveMember(section, state, event.currentTarget);
-    });
-    section.querySelector('#adminMemberEditorForm').addEventListener('input', (event) => {
-      event.target.setCustomValidity?.('');
+    state.next.addEventListener('click', () => {
+      state.page += 1;
+      render(section);
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
 
-    const exportButton = section.querySelector('#adminDirectoryExport');
-    exportButton.addEventListener('click', async () => {
-      const originalText = exportButton.textContent;
-      exportButton.disabled = true;
-      exportButton.textContent = 'Připravuji CSV…';
-      try {
-        const data = await requestUsers({ q: state.query, export: 1 });
-        const users = Array.isArray(data.users) ? data.users : [];
-        exportCsv(users);
-        exportButton.textContent = `Exportováno: ${users.length} záznamů`;
-      } catch (error) {
-        console.error('Membership CSV export error:', error);
-        exportButton.textContent = 'Export se nezdařil';
-      }
-      window.setTimeout(() => {
-        exportButton.disabled = false;
-        exportButton.textContent = originalText;
-      }, 1800);
+    controls.querySelector('[data-member-page-size]').addEventListener('change', (event) => {
+      state.pageSize = Number(event.target.value) || DEFAULT_PAGE_SIZE;
+      state.page = 1;
+      render(section);
     });
 
-    loadPage(section, state);
-    return true;
+    const refresh = () => window.setTimeout(() => {
+      state.page = 1;
+      render(section);
+    }, 0);
+
+    section.querySelector('.admin-member-search-input')?.addEventListener('input', refresh);
+    section.querySelector('.admin-member-search-input')?.addEventListener('search', refresh);
+    section.querySelector('.admin-member-sort-select')?.addEventListener('change', refresh);
+
+    const observer = new MutationObserver(() => render(section));
+    observer.observe(list, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+
+    render(section);
   }
 
-  if (!injectDirectory()) {
-    const observer = new MutationObserver(() => {
-      if (injectDirectory()) observer.disconnect();
+  function scan() {
+    document.querySelectorAll('.admin-shell').forEach((shell) => {
+      const section = primaryMembersSection(shell);
+      if (section) install(section);
     });
-    observer.observe(document.body, { childList: true, subtree: true });
-    window.setTimeout(() => observer.disconnect(), 20000);
   }
+
+  scan();
+  const observer = new MutationObserver(scan);
+  observer.observe(document.documentElement, { childList: true, subtree: true });
 })();
