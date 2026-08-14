@@ -302,10 +302,7 @@
       ${options.showTitle === false ? '' : `<div><h2>${options.admin ? 'Členský průkaz člena' : 'Můj členský průkaz'}</h2><p>${escapeXml(member.firstName || '')} ${escapeXml(member.lastName || '')} · ${escapeXml(cardNumber(member))}</p></div>`}
       <div class="cafr-card-preview-shell"><div class="cafr-card-loading">Generuji bezpečný náhled průkazu…</div></div>
       <div class="cafr-card-actions">
-        <button class="primary-card-action" type="button" data-card-action="png">Stáhnout PNG</button>
-        <button type="button" data-card-action="pdf">Stáhnout PDF</button>
-        <button type="button" data-card-action="svg">Stáhnout SVG</button>
-        <button type="button" data-card-action="print">Tisk</button>
+        <button class="primary-card-action" type="button" data-card-action="pdf">Stáhnout PDF</button>
         <a data-card-action="verify" href="${verificationUrl(member)}" target="_blank" rel="noopener">Ověřit průkaz</a>
       </div>
       <p class="cafr-card-note">CR80 · 85,60 × 53,98 mm · export 1011 × 638 px</p>
@@ -335,21 +332,8 @@
         setBusy(wrapper, true);
         setMessage(wrapper, 'Připravuji soubor…');
         const stem = memberFileStem(member);
-        if (action === 'png') downloadBlob(await createPngBlob(svg), `${stem}.png`);
         if (action === 'pdf') downloadBlob(await createPdfBlob(svg), `${stem}.pdf`);
-        if (action === 'svg') downloadBlob(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }), `${stem}.svg`);
-        if (action === 'print') {
-          if (/Android/i.test(navigator.userAgent || '')) {
-            downloadBlob(await createPdfBlob(svg), `${stem}-tisk.pdf`);
-          } else {
-            printSvg(svg);
-          }
-        }
-        setMessage(wrapper, action === 'print'
-          ? (/Android/i.test(navigator.userAgent || '')
-            ? 'PDF pro tisk byl stažen do zařízení.'
-            : 'Tiskové okno bylo otevřeno.')
-          : 'Soubor byl vytvořen.');
+        setMessage(wrapper, 'PDF 85,60 × 53,98 mm byl vytvořen.');
       } catch (error) {
         setMessage(wrapper, error.message || 'Export se nezdařil.', true);
       } finally {
