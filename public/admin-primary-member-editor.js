@@ -147,13 +147,20 @@
     const token = adminToken();
     if (!token) throw new Error('Chybí administrátorské přihlášení. Přihlaste se znovu.');
 
-    const response = await fetch(`${API_BASE}/api/admin/users`, {
+    const params = new URLSearchParams({
+      q: String(memberId || ''),
+      page: '1',
+      limit: '100',
+    });
+
+    const response = await fetch(`${API_BASE}/api/admin/users-page?${params.toString()}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error || 'Údaje kandidáta nelze načíst.');
 
-    const member = Array.isArray(data) ? data.find((item) => item.id === memberId) : null;
+    const candidates = Array.isArray(data?.users) ? data.users : [];
+    const member = candidates.find((item) => item.id === memberId);
     if (!member) throw new Error('Kandidát nebyl nalezen.');
     return member;
   }
