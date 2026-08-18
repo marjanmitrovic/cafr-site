@@ -107,24 +107,32 @@
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `ucfr-databaze-clenstvi-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.download = `ucfr-schvaleni-clenove-${new Date().toISOString().slice(0, 10)}.csv`;
     document.body.appendChild(link);
     link.click();
     link.remove();
     window.setTimeout(() => URL.revokeObjectURL(url), 1200);
   }
 
-  async function exportMembership(button) {
+  async function exportMembership() {
     const token = adminToken();
     if (!token) throw new Error('Chybí administrátorský token. Přihlaste se znovu.');
 
-    const response = await fetch(`${API_BASE}/api/admin/users`, {
+    const params = new URLSearchParams({
+      export: '1',
+      status: 'APPROVED',
+    });
+
+    const response = await fetch(`${API_BASE}/api/admin/users-page?${params.toString()}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error || 'Databázi členů nelze načíst.');
 
-    const users = Array.isArray(data) ? data : [];
+    const users = Array.isArray(data.users)
+      ? data.users.filter((user) => user.membershipStatus === 'APPROVED')
+      : [];
+
     users.sort((a, b) => `${a.lastName || ''} ${a.firstName || ''}`.localeCompare(`${b.lastName || ''} ${b.firstName || ''}`, 'cs'));
     downloadCsv(users);
     return users.length;
@@ -139,7 +147,7 @@
     button.id = BUTTON_ID;
     button.type = 'button';
     button.className = 'primary small';
-    button.textContent = 'Export databáze členství (.CSV)';
+    button.textContent = 'Export schválených členů (.CSV)';
     button.style.marginLeft = 'auto';
     button.style.minHeight = '42px';
     button.style.padding = '0 16px';
@@ -156,8 +164,8 @@
       button.textContent = 'Připravuji CSV…';
 
       try {
-        const count = await exportMembership(button);
-        button.textContent = `Exportováno: ${count} záznamů`;
+        const count = await exportMembership();
+        button.textContent = `Exportováno: ${count} schválených členů`;
       } catch (error) {
         console.error('Top membership export error:', error);
         button.textContent = error.message || 'Export se nezdařil';
