@@ -5,7 +5,7 @@
     cs: {
       kicker: 'PARTNEŘI A PODPORA',
       title: 'Prostor pro partnery UČFR',
-      description: 'Nenápadné místo pro reklamní partnery, sponzory a dárce, kteří podporují činnost UČFR.',
+      description: 'Místo pro reklamní partnery, sponzory a dárce, kteří podporují činnost UČFR.',
       tabsLabel: 'Partneři a podpora UČFR',
       advertising: 'Reklama',
       sponsors: 'Sponzoři',
