@@ -33,7 +33,21 @@
     closeTimer = window.setTimeout(closeMenu, AUTO_CLOSE_MS);
   }
 
+  function restoreUnionLabel(root = document) {
+    const links = [];
+    if (root.matches?.('.topbar nav a')) links.push(root);
+    root.querySelectorAll?.('.topbar nav a').forEach((link) => links.push(link));
+
+    links.forEach((link) => {
+      if (String(link.textContent || '').trim() === 'O asociaci') {
+        link.textContent = 'O Unii';
+      }
+    });
+  }
+
   function bindPublicMenu() {
+    restoreUnionLabel();
+
     const nav = getNav();
     const button = getMenuButton();
     const topbar = document.querySelector('.topbar');
@@ -44,6 +58,7 @@
 
     button.addEventListener('click', () => {
       window.setTimeout(() => {
+        restoreUnionLabel();
         const opened = isOpen();
         button.setAttribute('aria-expanded', opened ? 'true' : 'false');
         if (opened) scheduleClose();
@@ -70,11 +85,17 @@
     return true;
   }
 
-  if (!bindPublicMenu()) {
-    const observer = new MutationObserver(() => {
-      if (bindPublicMenu()) observer.disconnect();
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
-    window.setTimeout(() => observer.disconnect(), 15000);
-  }
+  bindPublicMenu();
+
+  const observer = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      mutation.addedNodes.forEach((node) => {
+        if (node.nodeType !== Node.ELEMENT_NODE) return;
+        restoreUnionLabel(node);
+      });
+    }
+    bindPublicMenu();
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
 })();
