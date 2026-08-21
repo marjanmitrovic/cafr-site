@@ -42,6 +42,36 @@
     return `Externí článek – ${source}`;
   }
 
+  function setImageOptionalState(form, hasExternal) {
+    const image = form.querySelector('[name="image"]');
+    if (!image) return;
+
+    image.required = !hasExternal;
+    const label = image.closest('label');
+    if (label) {
+      const firstText = Array.from(label.childNodes).find((node) => node.nodeType === Node.TEXT_NODE);
+      if (firstText) {
+        firstText.textContent = hasExternal ? '\n          Úvodní obrázek (volitelné)\n          ' : '\n          Úvodní obrázek\n          ';
+      }
+      label.style.opacity = hasExternal ? '.72' : '';
+    }
+  }
+
+  function addTransparentPlaceholder(imageInput) {
+    if (!imageInput || imageInput.files?.length) return;
+    try {
+      const binary = atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZlQAAAABJRU5ErkJggg==');
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+      const file = new File([bytes], 'external-link-placeholder.png', { type: 'image/png' });
+      const transfer = new DataTransfer();
+      transfer.items.add(file);
+      imageInput.files = transfer.files;
+    } catch {
+      // If the browser cannot construct a FileList, the original validation remains as fallback.
+    }
+  }
+
   function syncForm(form) {
     if (!form) return;
     const external = form.querySelector('[name="externalUrl"]');
@@ -52,6 +82,7 @@
     const hasExternal = Boolean(normalizeUrl(external.value));
     title.required = !hasExternal;
     text.required = !hasExternal;
+    setImageOptionalState(form, hasExternal);
 
     const titleLabel = title.closest('label');
     const textLabel = text.closest('label');
@@ -71,7 +102,8 @@
     const external = form.querySelector('[name="externalUrl"]');
     const title = form.querySelector('[name="title"]');
     const text = form.querySelector('[name="text"]');
-    if (!external || !title || !text) return;
+    const image = form.querySelector('[name="image"]');
+    if (!external || !title || !text || !image) return;
 
     form.dataset.externalOptionalReady = 'true';
     external.addEventListener('input', () => syncForm(form));
@@ -87,6 +119,12 @@
       if (!String(text.value || '').trim()) {
         text.value = `Externí článek – celý obsah je dostupný na ${sourceLabel(url)}.`;
       }
+
+      // Legacy CMS still checks that a new article contains an image.
+      // Supply a transparent technical placeholder so the administrator
+      // does not have to upload any cover image for an external link.
+      addTransparentPlaceholder(image);
+      image.required = false;
     }, true);
 
     form.addEventListener('reset', () => {
