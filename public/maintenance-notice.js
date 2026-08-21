@@ -179,3 +179,13 @@
     document.body.appendChild(script);
   }
 })();
+
+(() => {
+  'use strict';
+  if (document.querySelector('script[data-ucfr-external-news]')) return;
+  const script = document.createElement('script');
+  script.src = '/news-external-links.js?v=1';
+  script.defer = true;
+  script.dataset.ucfrExternalNews = 'true';
+  document.body.appendChild(script);
+})();
