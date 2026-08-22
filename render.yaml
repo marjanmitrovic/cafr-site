@@ -19,7 +19,9 @@ services:
       - key: TOKEN_SECRET
         sync: false
       - key: ADMIN_EMAIL
-        value: admin@ucfr.cz
+        value: marjan.posao@gmail.com
+      - key: SUPER_ADMIN_EMAIL
+        value: marjan.posao@gmail.com
       - key: ADMIN_PASSWORD
         sync: false
       - key: WEB_ORIGIN
