@@ -21,6 +21,22 @@ if (!express.application.__ucfrAdminStatusGuardInstalled) {
 
     const protectAdminAccount = async (req, res, next) => {
       try {
+        // Only the primary owner account (ADMIN_EMAIL on Render) may grant
+        // ADMIN privileges. Other administrators can manage members and other
+        // roles, but cannot create another administrator even by calling the
+        // API directly.
+        if (path === ROLE_ROUTE && String(req.body?.role || '').toUpperCase() === 'ADMIN') {
+          const ownerEmail = String(process.env.ADMIN_EMAIL || '').trim().toLowerCase();
+          const actorEmail = String(req.user?.email || '').trim().toLowerCase();
+
+          if (!ownerEmail || actorEmail !== ownerEmail) {
+            return res.status(403).json({
+              error: 'Pouze hlavní administrátor může přidělit roli ADMIN.',
+              code: 'ADMIN_ROLE_OWNER_ONLY',
+            });
+          }
+        }
+
         const target = await prisma.user.findUnique({
           where: { id: req.params.id },
           select: { role: true },
