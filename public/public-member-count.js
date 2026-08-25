@@ -1,8 +1,12 @@
 (() => {
   'use strict';
 
+  const REFRESH_INTERVAL_MS = 15 * 60 * 1000;
+  const MIN_REFRESH_GAP_MS = 5 * 60 * 1000;
+
   let latestApprovedCount = null;
-  let refreshTimer = null;
+  let lastRefreshAt = 0;
+  let refreshInFlight = null;
 
   function displayCount() {
     return Number.isFinite(latestApprovedCount)
@@ -18,48 +22,52 @@
     if (firstValue.textContent !== value) firstValue.textContent = value;
   }
 
-  async function refreshCount() {
-    try {
-      const response = await fetch(`/api/public/member-count?ts=${Date.now()}`, {
-        headers: { Accept: 'application/json' },
-        cache: 'no-store',
-      });
-      if (!response.ok) throw new Error(`${response.status}`);
-      const data = await response.json();
-      const count = Number(data?.count);
-      if (Number.isFinite(count) && count >= 0) latestApprovedCount = count;
-    } catch (error) {
-      console.warn('[PUBLIC MEMBER COUNT] Could not load live member count:', error);
-    } finally {
+  async function refreshCount({ force = false } = {}) {
+    const now = Date.now();
+    if (!force && now - lastRefreshAt < MIN_REFRESH_GAP_MS) {
       applyCount();
+      return;
     }
+
+    if (refreshInFlight) return refreshInFlight;
+
+    refreshInFlight = (async () => {
+      try {
+        const response = await fetch('/api/public/member-count', {
+          headers: { Accept: 'application/json' },
+          cache: 'default',
+        });
+        if (!response.ok) throw new Error(`${response.status}`);
+        const data = await response.json();
+        const count = Number(data?.count);
+        if (Number.isFinite(count) && count >= 0) latestApprovedCount = count;
+        lastRefreshAt = Date.now();
+      } catch (error) {
+        console.warn('[PUBLIC MEMBER COUNT] Could not load member count:', error);
+      } finally {
+        refreshInFlight = null;
+        applyCount();
+      }
+    })();
+
+    return refreshInFlight;
   }
 
-  function scheduleRefresh() {
-    window.clearTimeout(refreshTimer);
-    refreshTimer = window.setTimeout(refreshCount, 250);
+  function init() {
+    applyCount();
+    refreshCount({ force: true });
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      applyCount();
-      refreshCount();
-    }, { once: true });
+    document.addEventListener('DOMContentLoaded', init, { once: true });
   } else {
-    applyCount();
-    refreshCount();
+    init();
   }
 
-  window.addEventListener('pageshow', refreshCount);
+  window.addEventListener('pageshow', () => refreshCount());
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) refreshCount();
   });
 
-  const observer = new MutationObserver(() => {
-    applyCount();
-    scheduleRefresh();
-  });
-  observer.observe(document.documentElement, { childList: true, subtree: true });
-
-  window.setInterval(refreshCount, 5 * 60 * 1000);
+  window.setInterval(() => refreshCount(), REFRESH_INTERVAL_MS);
 })();
