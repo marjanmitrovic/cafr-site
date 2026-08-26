@@ -2,7 +2,7 @@ import express from 'express';
 import { prisma } from './lib/prisma.js';
 
 const originalListen = express.application.listen;
-const CACHE_TTL_MS = 5 * 60 * 1000;
+const CACHE_TTL_MS = 12 * 60 * 60 * 1000;
 
 let cachedCount = null;
 let cachedAt = 0;
@@ -42,7 +42,7 @@ if (!express.application.__ucfrPublicMemberCountInstalled) {
         try {
           const count = await getApprovedMemberCount();
 
-          res.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=600');
+          res.set('Cache-Control', 'public, max-age=43200, stale-while-revalidate=86400');
           return res.json({ count, status: 'APPROVED' });
         } catch (error) {
           console.error('Public member count error:', error);
