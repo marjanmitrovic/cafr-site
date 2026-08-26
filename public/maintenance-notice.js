@@ -51,7 +51,7 @@
 (() => {
   'use strict';
 
-  const NOTICE_DATE = '2026-08-05';
+  const NOTICE_END_DATE = '2026-09-01';
   const TIME_ZONE = 'Europe/Prague';
 
   function dateInPrague() {
@@ -66,7 +66,7 @@
     return `${values.year}-${values.month}-${values.day}`;
   }
 
-  if (dateInPrague() !== NOTICE_DATE) return;
+  if (dateInPrague() >= NOTICE_END_DATE) return;
 
   const style = document.createElement('style');
   style.textContent = `
@@ -138,7 +138,7 @@
   notice.innerHTML = `
     <div class="maintenance-inner">
       <strong>DŮLEŽITÉ UPOZORNĚNÍ</strong>
-      Dnes 5. 8. 2026 probíhá technická aktualizace webu. Web a některé členské funkce mohou být během dne dočasně nedostupné. Děkujeme za pochopení.
+      Z důvodu probíhající aktualizace a údržby systému je dočasně pozastavena registrace nových členů a přihlašování členů. Obnovení registrace a přihlašování je plánováno na 1. 9. 2026. Děkujeme za pochopení.
     </div>
   `;
 
