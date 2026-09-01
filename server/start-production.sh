@@ -1,16 +1,16 @@
 #!/bin/sh
 set -eu
 
-# Render services created/edited manually can occasionally start with an empty
-# or incomplete node_modules directory (for example after a cache/runtime
-# change). Do not let the API fail with ERR_MODULE_NOT_FOUND in that case.
-if ! node -e "require.resolve('express/package.json'); require.resolve('@prisma/client/package.json')" >/dev/null 2>&1; then
-  echo "[BOOT] Node dependencies are missing or incomplete. Installing dependencies..."
-  npm install --include=dev --no-audit --no-fund
-  echo "[BOOT] Generating Prisma client..."
-  npm run db:generate
-fi
+# Emergency-safe Render bootstrap: always ensure runtime dependencies are
+# present before Node loads any preload module. This avoids ERR_MODULE_NOT_FOUND
+# when Render starts an instance with an incomplete node_modules directory.
+echo "[BOOT] Ensuring Node runtime dependencies are installed..."
+npm install --include=dev --no-audit --no-fund
 
+echo "[BOOT] Generating Prisma client..."
+npm run db:generate
+
+echo "[BOOT] Starting UČFR API..."
 exec node \
   --import ./server/admin-status-guard-preload.js \
   --import ./server/rejected-user-delete-preload.js \
