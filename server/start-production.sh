@@ -1,14 +1,19 @@
 #!/bin/sh
 set -eu
 
-# Emergency-safe Render bootstrap: always ensure runtime dependencies are
-# present before Node loads any preload module. This avoids ERR_MODULE_NOT_FOUND
-# when Render starts an instance with an incomplete node_modules directory.
-echo "[BOOT] Ensuring Node runtime dependencies are installed..."
-npm install --include=dev --no-audit --no-fund
+echo "[BOOT] Installing runtime dependencies..."
+npm install --omit=dev --no-audit --no-fund
+
+if ! node -e "require.resolve('express/package.json'); require.resolve('@prisma/client/package.json'); require.resolve('@prisma/adapter-pg/package.json'); require.resolve('pg/package.json')" >/dev/null 2>&1; then
+  echo "[BOOT] Core runtime packages still missing; installing explicitly..."
+  npm install --no-save --omit=dev --no-audit --no-fund express@^5.1.0 @prisma/client@^7.8.0 @prisma/adapter-pg@^7.8.0 pg@^8.16.3 bcryptjs@^3.0.2 cors@^2.8.5 jsonwebtoken@^9.0.2 resend@^6.0.0
+fi
+
+echo "[BOOT] Verifying Express..."
+node -e "console.log('[BOOT] express:', require.resolve('express/package.json'))"
 
 echo "[BOOT] Generating Prisma client..."
-npm run db:generate
+npx prisma generate --config ./prisma.config.ts
 
 echo "[BOOT] Starting UČFR API..."
 exec node \
