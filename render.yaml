@@ -4,7 +4,7 @@ services:
     env: node
     plan: free
     autoDeployTrigger: commit
-    buildCommand: npm install --no-audit --no-fund && npm run render:build
+    buildCommand: npm run render:build
     startCommand: npm run start:production
     # Check the static homepage instead of /api/health, because that API route
     # runs a database query and would keep the Neon compute endpoint awake.
