@@ -12,11 +12,16 @@ const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME || '';
 const CLOUDINARY_UPLOAD_PRESET = process.env.CLOUDINARY_UPLOAD_PRESET || '';
 const CLOUDINARY_FOLDER = process.env.CLOUDINARY_FOLDER || 'cafr';
 const NEWS_UPLOAD_DIR = path.resolve(process.cwd(), 'public', 'uploads', 'documents');
+const NEWS_CACHE_TTL_MS = 60 * 60 * 1000;
 const allowedImageMimes = new Map([
   ['image/png', '.png'],
   ['image/jpeg', '.jpg'],
   ['image/webp', '.webp'],
 ]);
+
+let publicNewsCache = null;
+let publicNewsCachedAt = 0;
+let publicNewsInFlight = null;
 
 function isImageUrl(value) {
   const url = String(value || '').trim();
@@ -44,6 +49,38 @@ function articleResponse(article) {
     publishedAt: article.createdAt,
     updatedAt: article.updatedAt,
   };
+}
+
+async function getPublicNews() {
+  const now = Date.now();
+  if (Array.isArray(publicNewsCache) && now - publicNewsCachedAt < NEWS_CACHE_TTL_MS) {
+    return publicNewsCache;
+  }
+
+  if (publicNewsInFlight) return publicNewsInFlight;
+
+  publicNewsInFlight = prisma.document.findMany({
+    where: {
+      category: 'NEWS',
+      status: 'PUBLISHED',
+      visibility: 'PUBLIC',
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 24,
+  }).then((articles) => {
+    publicNewsCache = articles.map(articleResponse);
+    publicNewsCachedAt = Date.now();
+    return publicNewsCache;
+  }).finally(() => {
+    publicNewsInFlight = null;
+  });
+
+  return publicNewsInFlight;
+}
+
+function invalidatePublicNewsCache() {
+  publicNewsCache = null;
+  publicNewsCachedAt = 0;
 }
 
 function decodeDataUrl(dataUrl) {
@@ -139,18 +176,9 @@ if (!express.application.__ucfrPublicNewsInstalled) {
 
       this.get('/api/news', async (_req, res) => {
         try {
-          const articles = await prisma.document.findMany({
-            where: {
-              category: 'NEWS',
-              status: 'PUBLISHED',
-              visibility: 'PUBLIC',
-            },
-            orderBy: { createdAt: 'desc' },
-            take: 24,
-          });
-
-          res.set('Cache-Control', 'no-store');
-          return res.json(articles.map(articleResponse));
+          const articles = await getPublicNews();
+          res.set('Cache-Control', 'public, max-age=1800, stale-while-revalidate=3600');
+          return res.json(articles);
         } catch (error) {
           console.error('Public news error:', error);
           return res.status(503).json({ error: 'News is temporarily unavailable' });
@@ -203,6 +231,7 @@ if (!express.application.__ucfrPublicNewsInstalled) {
             },
           });
 
+          invalidatePublicNewsCache();
           res.set('Cache-Control', 'no-store');
           return res.json({ article: articleResponse(article) });
         } catch (error) {
