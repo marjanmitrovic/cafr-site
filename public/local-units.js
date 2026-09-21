@@ -157,16 +157,40 @@
         margin: 0;
         color: #66758b;
       }
+      #adminLocalUnits .local-unit-admin-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+      #adminLocalUnits .local-unit-move,
+      #adminLocalUnits .local-unit-importance,
       #adminLocalUnits .local-unit-delete {
         flex: 0 0 auto;
-        border: 1px solid #c5162e;
         border-radius: 10px;
         padding: 9px 13px;
         background: transparent;
-        color: #b41528;
         font: inherit;
         font-weight: 800;
         cursor: pointer;
+      }
+      #adminLocalUnits .local-unit-move,
+      #adminLocalUnits .local-unit-importance {
+        border: 1px solid #0b5aa5;
+        color: #0b5aa5;
+      }
+      #adminLocalUnits .local-unit-move:disabled {
+        opacity: .42;
+        cursor: not-allowed;
+      }
+      #adminLocalUnits .local-unit-move:hover:not(:disabled),
+      #adminLocalUnits .local-unit-importance:hover {
+        background: #0b5aa5;
+        color: #fff;
+      }
+      #adminLocalUnits .local-unit-delete {
+        border: 1px solid #c5162e;
+        color: #b41528;
       }
       #adminLocalUnits .local-unit-delete:hover {
         background: #c5162e;
@@ -203,6 +227,9 @@
         .local-unit-number { width: 38px; height: 38px; }
         .local-unit-card h3 { font-size: 16px; }
         #adminLocalUnits .local-unit-admin-card { align-items: stretch; flex-direction: column; }
+        #adminLocalUnits .local-unit-admin-actions,
+        #adminLocalUnits .local-unit-move,
+        #adminLocalUnits .local-unit-importance,
         #adminLocalUnits .local-unit-delete { width: 100%; }
       }
     `;
@@ -286,6 +313,9 @@
         </div>
         <span class="admin-count">0</span>
       </div>
+      <button class="local-unit-importance" type="button" data-local-units-importance>
+        ${isCzech() ? 'Seřadit podle důležitosti: LFA → RKČ → krajské → okresní' : 'Order by importance: LFA → RKČ → regional → district'}
+      </button>
       <form class="local-unit-admin-form" id="localUnitAdminForm">
         <label>
           <span>${isCzech() ? 'Název jednotky' : 'Unit name'}</span>
@@ -331,6 +361,39 @@
     });
 
     section.addEventListener('click', async (event) => {
+      const importanceButton = event.target.closest('[data-local-units-importance]');
+      if (importanceButton) {
+        importanceButton.disabled = true;
+        try {
+          await request('/api/admin/local-units/importance-order', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${adminToken()}` },
+          });
+          await refreshAll();
+        } catch (error) {
+          window.alert(error.message);
+          importanceButton.disabled = false;
+        }
+        return;
+      }
+
+      const moveButton = event.target.closest('[data-move-local-unit]');
+      if (moveButton) {
+        moveButton.disabled = true;
+        try {
+          await request(`/api/admin/local-units/${encodeURIComponent(moveButton.dataset.moveLocalUnit)}/order`, {
+            method: 'PATCH',
+            headers: { Authorization: `Bearer ${adminToken()}` },
+            body: JSON.stringify({ direction: moveButton.dataset.direction }),
+          });
+          await refreshAll();
+        } catch (error) {
+          window.alert(error.message);
+          moveButton.disabled = false;
+        }
+        return;
+      }
+
       const button = event.target.closest('[data-delete-local-unit]');
       if (!button) return;
       const name = button.dataset.unitName || '';
@@ -363,18 +426,34 @@
     if (count) count.textContent = String(units.length);
     if (!list) return;
 
-    list.innerHTML = units.length ? units.map((unit) => `
+    list.innerHTML = units.length ? units.map((unit, index) => `
       <article class="local-unit-admin-card">
         <div>
-          <h4>${escapeHtml(unit.name)}</h4>
+          <h4>${index + 1}. ${escapeHtml(unit.name)}</h4>
           <p><strong>${isCzech() ? 'Odpovědné osoby:' : 'Responsible persons:'}</strong> ${escapeHtml((unit.responsiblePersons || []).join(', '))}</p>
         </div>
-        <button
-          type="button"
-          class="local-unit-delete"
-          data-delete-local-unit="${escapeHtml(unit.id)}"
-          data-unit-name="${escapeHtml(unit.name)}"
-        >${isCzech() ? 'Smazat' : 'Delete'}</button>
+        <div class="local-unit-admin-actions">
+          <button
+            type="button"
+            class="local-unit-move"
+            data-move-local-unit="${escapeHtml(unit.id)}"
+            data-direction="up"
+            ${index === 0 ? 'disabled' : ''}
+          >${isCzech() ? 'Nahoru' : 'Up'}</button>
+          <button
+            type="button"
+            class="local-unit-move"
+            data-move-local-unit="${escapeHtml(unit.id)}"
+            data-direction="down"
+            ${index === units.length - 1 ? 'disabled' : ''}
+          >${isCzech() ? 'Dolů' : 'Down'}</button>
+          <button
+            type="button"
+            class="local-unit-delete"
+            data-delete-local-unit="${escapeHtml(unit.id)}"
+            data-unit-name="${escapeHtml(unit.name)}"
+          >${isCzech() ? 'Smazat' : 'Delete'}</button>
+        </div>
       </article>
     `).join('') : `<div class="empty-results">${isCzech() ? 'Žádné organizační jednotky.' : 'No organizational units.'}</div>`;
   }
