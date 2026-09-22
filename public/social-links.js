@@ -4,6 +4,7 @@
   const FACEBOOK_URL = 'https://www.facebook.com/share/1Bi9WVrVAx/?mibextid=wwXIfr';
   const INSTAGRAM_URL = 'https://www.instagram.com/ucfr_official?igsh=MW9hOWl6cDVuZW91cw==';
   const YOUTUBE_URL = 'https://www.youtube.com/@UnieCFR';
+  const X_URL = 'https://x.com/ucfr_official';
 
   function socialMarkup() {
     const isCzech = document.documentElement.lang !== 'en';
@@ -36,6 +37,19 @@
             <path d="M7.7 2h8.6A5.7 5.7 0 0 1 22 7.7v8.6a5.7 5.7 0 0 1-5.7 5.7H7.7A5.7 5.7 0 0 1 2 16.3V7.7A5.7 5.7 0 0 1 7.7 2Zm-.2 2.1A3.4 3.4 0 0 0 4.1 7.5v9A3.4 3.4 0 0 0 7.5 20h9a3.4 3.4 0 0 0 3.4-3.4v-9a3.4 3.4 0 0 0-3.4-3.4h-9Zm9.2 1.6a1.35 1.35 0 1 1 0 2.7 1.35 1.35 0 0 1 0-2.7ZM12 7.1a4.9 4.9 0 1 1 0 9.8 4.9 4.9 0 0 1 0-9.8Zm0 2.1a2.8 2.8 0 1 0 0 5.6 2.8 2.8 0 0 0 0-5.6Z"/>
           </svg>
           <span>Instagram</span>
+        </a>
+
+        <a
+          class="ucfr-social-link ucfr-social-x"
+          href="${X_URL}"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="X UČFR"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M18.9 2H22l-6.8 7.8L23.2 22h-6.3L12 14.6 5.5 22H2.3l7.3-8.5L1.8 2h6.5l4.5 6.9L18.9 2Zm-1.1 18h1.7L7.4 3.9H5.6L17.8 20Z"/>
+          </svg>
+          <span>X</span>
         </a>
 
         <a
