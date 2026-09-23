@@ -72,10 +72,10 @@
           <div class="supporters-panels">
             <div class="supporters-panel supporters-panel-ad">
               <div class="supporters-slot-grid">
-                <div class="supporters-placeholder">
-                  <span>${t.adPartner}</span>
-                  <small>${t.adMeta}</small>
-                </div>
+                <a class="supporters-placeholder supporters-partner-link" href="https://www.ref-guide.cz/" target="_blank" rel="noopener noreferrer" aria-label="Ref Guide – otevřít web v nové záložce">
+                  <span>Ref Guide</span>
+                  <small>www.ref-guide.cz ↗</small>
+                </a>
                 <div class="supporters-placeholder">
                   <span>${t.adPartner}</span>
                   <small>${t.adMeta}</small>
