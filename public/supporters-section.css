@@ -184,3 +184,19 @@ html.theme-dark .supporters-note {
     text-align: center;
   }
 }
+
+/* Linked partner cards remain visually consistent with available advertising slots. */
+.supporters-partner-link {
+  border-style: solid;
+  color: var(--ucfr-text, #172033);
+  text-decoration: none;
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+.supporters-partner-link:hover,
+.supporters-partner-link:focus-visible {
+  border-color: var(--blue, #1768b0);
+  box-shadow: 0 2px 10px rgba(7, 27, 49, .1);
+}
+.supporters-partner-link small {
+  color: var(--blue, #1768b0);
+}
