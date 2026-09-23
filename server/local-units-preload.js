@@ -254,7 +254,10 @@ async function requireAdmin(req, res) {
 
 async function listUnits() {
   const documents = await prisma.document.findMany({
-    where: { category: CATEGORY },
+    where: {
+      category: CATEGORY,
+      status: { not: 'ARCHIVED' },
+    },
     orderBy: { createdAt: 'asc' },
   });
   return documents.map(unitResponse).sort((a, b) => {
@@ -409,11 +412,18 @@ if (!express.application.__ucfrLocalUnitsInstalled) {
 
         try {
           const target = await prisma.document.findUnique({ where: { id: String(req.params.id) } });
-          if (!target || target.category !== CATEGORY) {
+          if (!target || target.category !== CATEGORY || target.status === 'ARCHIVED') {
             return res.status(404).json({ error: 'Local organizational unit not found' });
           }
 
-          await prisma.document.delete({ where: { id: target.id } });
+          await prisma.document.update({
+            where: { id: target.id },
+            data: {
+              status: 'ARCHIVED',
+              visibility: 'ADMIN_ONLY',
+            },
+          });
+          await resequenceUnits(await listUnits());
           return res.json({ ok: true });
         } catch (error) {
           console.error('[LOCAL UNITS] Delete failed:', error);
