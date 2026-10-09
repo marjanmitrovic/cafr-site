@@ -5,7 +5,9 @@
     const cards = document.querySelectorAll('#local-units .local-unit-card');
     cards.forEach((card, index) => {
       const number = card.querySelector('.local-unit-number');
-      if (number) number.textContent = String(index + 1);
+      // Setting textContent replaces text nodes and retriggers our observer.
+      // Only write when the visible number actually changes.
+      if (number && number.textContent !== String(index + 1)) number.textContent = String(index + 1);
     });
   }
 
