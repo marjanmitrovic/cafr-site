@@ -1700,17 +1700,20 @@ app.get('/api/admin/stats', requireAdmin, async (_req, res) => {
 
 
 if (process.env.NODE_ENV === 'production') {
+  // HTML must revalidate after each deploy. Fingerprinted assets are immutable.
+  app.use((req, res, next) => {
+    if (req.path === '/' || req.path.endsWith('.html')) res.set('Cache-Control', 'no-cache, must-revalidate');
+    next();
+  });
   app.use(express.static(DIST_DIR));
 
-  app.get(/^\/(?!api\/).*/, async (req, res, next) => {
-    try {
-      const filePath = req.path === '/' ? '/index.html' : req.path;
-      const absolutePath = path.join(DIST_DIR, filePath);
-      await fs.access(absolutePath);
-      return res.sendFile(absolutePath);
-    } catch {
-      return res.sendFile(path.join(DIST_DIR, 'index.html'));
+  app.get(/^\/(?!api\/).*/, async (req, res) => {
+    // Never return HTML for missing JS/CSS/images: browsers otherwise report misleading module errors.
+    if (/\.(?:js|mjs|css|map|json|png|jpe?g|svg|webp|gif|ico|woff2?|ttf)$/i.test(req.path) || req.path.startsWith('/assets/')) {
+      return res.status(404).type('text/plain').send('Static asset not found');
     }
+    res.set('Cache-Control', 'no-cache, must-revalidate');
+    return res.sendFile(path.join(DIST_DIR, 'index.html'));
   });
 }
 
