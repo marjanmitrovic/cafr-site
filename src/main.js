@@ -1,7 +1,11 @@
 import './style.css';
 
+const safeStorageGet = (storage, key) => {
+  try { return storage.getItem(key); } catch { return null; }
+};
+
 const API_BASE =
-  localStorage.getItem('cafr-api-base') ||
+  safeStorageGet(localStorage, 'cafr-api-base') ||
   (
     window.location.hostname === 'localhost' ||
     window.location.hostname === '127.0.0.1'
@@ -9,9 +13,9 @@ const API_BASE =
       : window.location.origin
   );
 
-let lang = localStorage.getItem('cafr-lang') || 'cs';
+let lang = safeStorageGet(localStorage, 'cafr-lang') === 'en' ? 'en' : 'cs';
 let adminToken =
-  sessionStorage.getItem('cafr-admin-token') || '';
+  safeStorageGet(sessionStorage, 'cafr-admin-token') || '';
 
 let activeTest = null;
 let timerId = null;
@@ -2097,7 +2101,13 @@ function formatTime(seconds) {
   ).padStart(2, '0')}`;
 }
 
-render();
+try {
+  render();
+} catch (error) {
+  console.error('[UČFR] Initial page render failed:', error);
+  const root = document.getElementById('app');
+  if (root) root.innerHTML = '<main style="padding:32px;font-family:Arial,sans-serif;color:#18314d"><h1>UČFR</h1><p>Stránku se nepodařilo načíst. Zkuste ji obnovit.</p><button type="button" onclick="location.reload()">Obnovit stránku</button></main>';
+}
 
 const requestedAdminPanel = new URLSearchParams(window.location.search).get('admin') === '1';
 const signedInUser = getCurrentUser();
