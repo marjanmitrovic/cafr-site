@@ -1,6 +1,11 @@
 #!/bin/sh
 set -eu
 
+# This script is used exclusively for the production Render web service.
+# The actual Render service may not have imported render.yaml environment variables.
+export NODE_ENV=production
+echo "[BOOT] NODE_ENV=$NODE_ENV PORT=${PORT:-unset} API_PORT=${API_PORT:-unset}"
+
 echo "[BOOT] Verifying dependencies prepared during build..."
 node -e "import('express').then(() => import('@prisma/client')).then(() => import('@prisma/adapter-pg')).then(() => import('pg')).catch(err => { console.error(err); process.exit(1); })"
 
