@@ -116,11 +116,15 @@
       const externalUrl = externalFromText(article?.descriptionEn || '');
       const heading = button.closest('.admin-member-card')?.querySelector('.admin-news-preview h4');
       if (!heading) return;
-      heading.querySelector('.admin-news-external-badge')?.remove();
-      if (externalUrl) {
+      const existing = heading.querySelector('.admin-news-external-badge');
+      const label = externalUrl ? `EXTERNÍ · ${sourceLabel(externalUrl)}` : '';
+      // Avoid remove/append cycles whenever the page changes.
+      if (existing && !externalUrl) existing.remove();
+      else if (existing && existing.textContent !== label) existing.textContent = label;
+      else if (!existing && externalUrl) {
         const badge = document.createElement('span');
         badge.className = 'admin-news-external-badge';
-        badge.textContent = `EXTERNÍ · ${sourceLabel(externalUrl)}`;
+        badge.textContent = label;
         heading.appendChild(badge);
       }
     });
@@ -188,7 +192,12 @@
       if (!externalUrl) return;
 
       const paragraph = card.querySelector('.ucfr-news-content p');
-      if (paragraph) paragraph.textContent = stripMarker(paragraph.textContent);
+      if (paragraph) {
+        const clean = stripMarker(paragraph.textContent);
+        // Writing identical text replaces the DOM text node and triggers
+        // this document-wide MutationObserver indefinitely.
+        if (paragraph.textContent !== clean) paragraph.textContent = clean;
+      }
 
       if (trigger && trigger.tagName !== 'A') {
         const link = document.createElement('a');
