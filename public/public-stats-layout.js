@@ -57,6 +57,12 @@
     regions.classList.add('ucfr-region-district-stat');
     regions.dataset.publicStat = 'regions-districts';
     const cs = language() === 'cs';
+    // Do not replace child nodes on every mutation: doing so triggers the
+    // document-wide MutationObserver again and freezes the page on mobile.
+    const currentLanguage = cs ? 'cs' : 'en';
+    if (regions.dataset.publicStatsLayoutLanguage === currentLanguage &&
+        regions.querySelectorAll(':scope > span').length === 2) return;
+    regions.dataset.publicStatsLayoutLanguage = currentLanguage;
     regions.innerHTML = `
       <span><b>14</b><small>${cs ? 'krajů' : 'regions'}</small></span>
       <span><b>76</b><small>${cs ? 'okresů' : 'districts'}</small></span>
