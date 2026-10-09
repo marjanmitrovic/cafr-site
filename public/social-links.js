@@ -80,6 +80,11 @@
       footer.insertBefore(block, copy || null);
     }
 
+    // The observer watches DOM additions. Replacing innerHTML on EVERY mutation
+    // recursively schedules another animation frame and can freeze mobile browsers.
+    // Rebuild only when the footer (and therefore this block) was freshly created.
+    if (block.dataset.ucfrSocialReady === 'true') return;
+    block.dataset.ucfrSocialReady = 'true';
     block.innerHTML = socialMarkup();
   }
 
