@@ -2,7 +2,7 @@
 set -eu
 
 echo "[BOOT] Verifying dependencies prepared during build..."
-node -e "require.resolve('express/package.json'); require.resolve('@prisma/client/package.json'); require.resolve('@prisma/adapter-pg/package.json'); require.resolve('pg/package.json')"
+node -e "import('express').then(() => import('@prisma/client')).then(() => import('@prisma/adapter-pg')).then(() => import('pg')).catch(err => { console.error(err); process.exit(1); })"
 
 echo "[BOOT] Starting UČFR API..."
 exec node \
