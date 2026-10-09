@@ -73,10 +73,10 @@
 
       const total = list.querySelectorAll(':scope > .admin-member-card').length;
       const sectionCount = section.querySelector('.admin-count');
-      if (sectionCount) sectionCount.textContent = String(total);
+      if (sectionCount && sectionCount.textContent !== String(total)) sectionCount.textContent = String(total);
 
       const tabCount = shell.querySelector('[data-admin-tab-target="documents"] b');
-      if (tabCount) tabCount.textContent = String(total);
+      if (tabCount && tabCount.textContent !== String(total)) tabCount.textContent = String(total);
     });
   }
 
