@@ -1722,7 +1722,29 @@ app.use((error, _req, res, _next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-const server = app.listen(PORT, () => console.log(`UČFR API running on http://localhost:${PORT}`));
+const server = app.listen(PORT, async () => {
+  console.log(`UČFR API running on http://localhost:${PORT}`);
+  if (process.env.NODE_ENV !== 'production') return;
+  // Verify that the production homepage and its actual Vite JavaScript bundle
+  // are served as HTML and JavaScript (not as a 404 or HTML fallback).
+  try {
+    const origin = `http://127.0.0.1:${PORT}`;
+    const home = await fetch(`${origin}/`);
+    const html = await home.text();
+    const bundle = html.match(/<script[^>]+type="module"[^>]+src="([^"]+)"/)?.[1];
+    if (!home.ok || !html.includes('id="app"') || !bundle) {
+      throw new Error(`Homepage failed: HTTP ${home.status}, bundle=${bundle || 'missing'}`);
+    }
+    const js = await fetch(new URL(bundle, origin));
+    const contentType = js.headers.get('content-type') || '';
+    if (!js.ok || !/javascript/i.test(contentType)) {
+      throw new Error(`JS bundle failed: HTTP ${js.status}, content-type=${contentType}, path=${bundle}`);
+    }
+    console.log(`[STATIC SELF-CHECK] OK homepage=${home.status} JS=${js.status} bundle=${bundle}`);
+  } catch (error) {
+    console.error('[STATIC SELF-CHECK] FAILED:', error.message);
+  }
+});
 const shutdown = async () => { server.close(); await prisma.$disconnect(); process.exit(0); };
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
