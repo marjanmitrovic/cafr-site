@@ -92,7 +92,7 @@
 
     if (!document.querySelector('script[data-ucfr-social-script], script[src*="social-links.js"]')) {
       const script = document.createElement('script');
-      script.src = '/social-links.js?v=2';
+      script.src = '/social-links.js?v=3';
       script.dataset.ucfrSocialScript = 'true';
       document.body.appendChild(script);
     }
