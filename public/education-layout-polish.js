@@ -114,6 +114,10 @@
     document.querySelectorAll('#about .grid.cards .card').forEach((card, index) => {
       const icon = card.querySelector('.icon');
       if (!icon || !pillarIcons[index]) return;
+      // Changing innerHTML in an observer callback retriggers the observer.
+      // Each icon should be transformed only once per freshly rendered card.
+      if (icon.dataset.ucfrPillarPolished === String(index)) return;
+      icon.dataset.ucfrPillarPolished = String(index);
       icon.innerHTML = pillarIcons[index];
       icon.style.color = '#0c2848';
     });
@@ -127,9 +131,10 @@
       badge.className = 'ucfr-question-count-badge';
       exam.appendChild(badge);
     }
-    badge.textContent = language() === 'cs'
+    const label = language() === 'cs'
       ? `${QUESTION_BANK_COUNT} otázek`
       : `${QUESTION_BANK_COUNT} questions`;
+    if (badge.textContent !== label) badge.textContent = label;
     badge.title = language() === 'cs'
       ? `Celkem ${QUESTION_BANK_COUNT} aktivních otázek v databázi`
       : `${QUESTION_BANK_COUNT} active questions in the question bank`;
