@@ -26,9 +26,10 @@ jobs:
           node --check public/ucfr-brand.js
           node --check public/ucfr-details.js
           node --check server/ucfr-details-preload.js
+          node --check public/ucfr-logo-runtime.js
       - name: Validate member card template
         run: npm run test:cards
       - name: Validate API errors and news request budget
-        run: node --test tests/api-errors.test.mjs tests/public-news-store.test.mjs
+        run: node --test tests/api-errors.test.mjs tests/public-news-store.test.mjs tests/logo-runtime.test.mjs
       - name: Build
         run: npm run build

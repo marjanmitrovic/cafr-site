@@ -77,9 +77,15 @@
 
   function patchCardPrintEngine() {
     const engine = window.CAFRMemberCards;
-    if (!engine || engine.__ucfrOriginalLogoPatch) return false;
-    engine.printSvg = printSvgWithoutPopup;
-    engine.__ucfrOriginalLogoPatch = true;
+    if (!engine) return false;
+    if (engine.__ucfrOriginalLogoPatch) return true;
+    // The card API is intentionally frozen. Replace the exported facade
+    // instead of repeatedly trying to modify its read-only print method.
+    window.CAFRMemberCards = Object.freeze({
+      ...engine,
+      printSvg: printSvgWithoutPopup,
+      __ucfrOriginalLogoPatch: true,
+    });
     return true;
   }
 
