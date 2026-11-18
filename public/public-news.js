@@ -1,16 +1,12 @@
 (() => {
   'use strict';
 
-  const API_BASE =
-    localStorage.getItem('cafr-api-base') ||
-    ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-      ? 'http://localhost:3001'
-      : window.location.origin);
-
   const fallbackByGrid = new WeakMap();
   let articles = null;
   let loading = null;
   let previousArticleHash = '';
+  const AUTO_REFRESH_MS = 5 * 60 * 1000;
+  let lastAutoRefreshAt = Date.now();
 
   function isCzech() {
     return (localStorage.getItem('cafr-lang') || document.documentElement.lang || 'cs') !== 'en';
@@ -392,14 +388,8 @@
     if (articles && !force) return articles;
     if (loading) return loading;
 
-    const query = force ? `?refresh=${Date.now()}` : '';
-    loading = fetch(`${API_BASE}/api/news${query}`, {
-      headers: { Accept: 'application/json' },
-      cache: 'no-store',
-    })
-      .then(async (response) => {
-        const data = await response.json().catch(() => []);
-        if (!response.ok) throw new Error(data.error || 'News could not be loaded');
+    loading = window.UCFRPublicNews.load(force)
+      .then((data) => {
         articles = Array.isArray(data) ? data : [];
         return articles;
       })
@@ -507,7 +497,15 @@
     }
   });
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') refreshAndRender(true);
+    refreshAutomatically();
   });
-  window.setInterval(() => refreshAndRender(true), 60 * 1000);
+
+  function refreshAutomatically() {
+    if (document.visibilityState !== 'visible') return;
+    if (Date.now() - lastAutoRefreshAt < AUTO_REFRESH_MS) return;
+    lastAutoRefreshAt = Date.now();
+    refreshAndRender(true);
+  }
+
+  window.setInterval(refreshAutomatically, AUTO_REFRESH_MS);
 })();

@@ -24,8 +24,26 @@ const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME || '';
 const CLOUDINARY_UPLOAD_PRESET = process.env.CLOUDINARY_UPLOAD_PRESET || '';
 const CLOUDINARY_FOLDER = process.env.CLOUDINARY_FOLDER || 'cafr';
 
-app.use(cors({ origin: process.env.WEB_ORIGIN || true }));
+app.use(cors({
+  origin: process.env.WEB_ORIGIN || true,
+  exposedHeaders: ['X-UCFR-Request-ID', 'X-UCFR-Response-Source', 'Retry-After'],
+}));
 app.use(express.json({ limit: '50mb' }));
+app.use('/api/auth', (req, res, next) => {
+  const startedAt = Date.now();
+  const requestId = crypto.randomUUID();
+  res.set('Cache-Control', 'no-store');
+  res.set('X-UCFR-Request-ID', requestId);
+  res.set('X-UCFR-Response-Source', 'api');
+  res.once('finish', () => {
+    if (res.statusCode < 400) return;
+    console.warn('[AUTH HTTP]', JSON.stringify({
+      requestId, method: req.method, path: req.path,
+      status: res.statusCode, durationMs: Date.now() - startedAt,
+    }));
+  });
+  next();
+});
 app.use('/uploads', express.static(path.join(PUBLIC_DIR, 'uploads')));
 
 

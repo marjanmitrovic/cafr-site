@@ -1,4 +1,5 @@
 import './style.css';
+import { apiError } from './api-errors.js';
 
 const safeStorageGet = (storage, key) => {
   try { return storage.getItem(key); } catch { return null; }
@@ -156,10 +157,11 @@ async function api(path, options = {}) {
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(
-      data.error ||
-      `${response.status} ${response.statusText}`
-    );
+    const error = apiError(response, data, lang);
+    console.warn('[UČFR API]', {
+      path, status: error.status, source: error.source, requestId: error.requestId,
+    });
+    throw error;
   }
 
   return data;
@@ -1013,7 +1015,12 @@ async function submitRegistration(event) {
 async function submitLogin(event) {
   event.preventDefault();
 
-  const data = new FormData(event.currentTarget);
+  const form = event.currentTarget;
+  if (form.dataset.submitting === 'true') return;
+  form.dataset.submitting = 'true';
+  const submitButton = form.querySelector('button[type="submit"]');
+  if (submitButton) submitButton.disabled = true;
+  const data = new FormData(form);
   const message = document.querySelector('#loginMessage');
 
   message.textContent =
@@ -1053,6 +1060,9 @@ async function submitLogin(event) {
     }, 400);
   } catch (error) {
     message.textContent = error.message;
+  } finally {
+    delete form.dataset.submitting;
+    if (submitButton) submitButton.disabled = false;
   }
 }
 
@@ -1375,7 +1385,12 @@ async function renderAdmin() {
     document.querySelector('#adminLogin').onsubmit = async (event) => {
       event.preventDefault();
 
-      const data = new FormData(event.currentTarget);
+      const form = event.currentTarget;
+      if (form.dataset.submitting === 'true') return;
+      form.dataset.submitting = 'true';
+      const submitButton = form.querySelector('button[type="submit"]');
+      if (submitButton) submitButton.disabled = true;
+      const data = new FormData(form);
 
       try {
         const result = await api('/api/auth/login', {
@@ -1395,6 +1410,9 @@ async function renderAdmin() {
         renderAdmin();
       } catch (error) {
         document.querySelector('#adminMessage').textContent = error.message;
+      } finally {
+        delete form.dataset.submitting;
+        if (submitButton) submitButton.disabled = false;
       }
     };
 
