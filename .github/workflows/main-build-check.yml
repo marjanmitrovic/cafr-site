@@ -30,6 +30,6 @@ jobs:
       - name: Validate member card template
         run: npm run test:cards
       - name: Validate browser runtime and Render wakeup handling
-        run: node --test tests/api-errors.test.mjs tests/public-news-store.test.mjs tests/logo-runtime.test.mjs tests/backend-wakeup.test.mjs tests/render-proxy.test.mjs
+        run: node --test tests/api-errors.test.mjs tests/public-news-store.test.mjs tests/logo-runtime.test.mjs tests/backend-wakeup.test.mjs tests/render-proxy.test.mjs tests/admin-fetch-compat.test.mjs
       - name: Build
         run: npm run build
