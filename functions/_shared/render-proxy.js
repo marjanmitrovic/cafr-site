@@ -60,6 +60,8 @@ export async function proxyToRender(context) {
           'Retry-After': retryAfter,
           'X-Content-Type-Options': 'nosniff',
           'X-UCFR-Response-Source': 'render-wakeup',
+          'X-UCFR-Proxy': 'render',
+          'X-UCFR-Upstream-Status': '429',
           'X-UCFR-Request-ID': requestId,
           'X-Render-Routing': 'hibernate-rate-limited',
         },
@@ -67,6 +69,12 @@ export async function proxyToRender(context) {
     }
 
     const responseHeaders = new Headers(upstreamResponse.headers);
+    // Identify whether a rejected request reached this proxy. A Cloudflare
+    // challenge issued before the Worker runs cannot contain these headers.
+    responseHeaders.set('X-UCFR-Proxy', 'render');
+    responseHeaders.set('X-UCFR-Upstream-Status', String(upstreamResponse.status));
+    const mitigation = upstreamResponse.headers.get('cf-mitigated');
+    if (mitigation) responseHeaders.set('X-UCFR-Upstream-Mitigated', mitigation);
 
     // API and uploaded user content must never be cached at the edge.
     responseHeaders.set('Cache-Control', 'no-store');
@@ -89,6 +97,7 @@ export async function proxyToRender(context) {
         headers: {
           'Cache-Control': 'no-store',
           'Retry-After': '60',
+          'X-UCFR-Proxy': 'render',
         },
       },
     );

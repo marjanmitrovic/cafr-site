@@ -39,6 +39,19 @@ test('an upstream 429 without the hibernation marker is not reclassified', async
   assert.equal(response.headers.get('X-UCFR-Response-Source'), null);
 });
 
+test('an upstream Cloudflare challenge remains blocked and is identifiable as upstream', async (t) => {
+  t.mock.method(globalThis, 'fetch', async () => new Response('<title>Just a moment...</title>', {
+    status: 429,
+    headers: { 'Content-Type': 'text/html', 'cf-mitigated': 'challenge' },
+  }));
+  const response = await proxyToRender({ request: new Request('https://ucfr.cz/api/news'), env: {} });
+  assert.equal(response.status, 429);
+  assert.equal(response.headers.get('X-UCFR-Proxy'), 'render');
+  assert.equal(response.headers.get('X-UCFR-Upstream-Status'), '429');
+  assert.equal(response.headers.get('X-UCFR-Upstream-Mitigated'), 'challenge');
+  assert.equal(await response.text(), '<title>Just a moment...</title>');
+});
+
 test('login JSON, authorization and app errors pass through the proxy unchanged', async (t) => {
   const body = JSON.stringify({ email: 'diagnostic@example.invalid', password: 'test-only' });
   t.mock.method(globalThis, 'fetch', async (upstream) => {
