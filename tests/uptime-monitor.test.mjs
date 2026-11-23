@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { monitoringWindow, probeRenderUptime } from '../functions/_shared/uptime-monitor.js';
+import worker from '../cloudflare-worker.js';
 
 const NOW = new Date('2026-11-23T12:00:00Z');
 const enabled = { UCFR_UPTIME_MONITOR_ENABLED: 'true', UCFR_BACKEND_ORIGIN: 'https://cafr-site.onrender.com' };
@@ -77,5 +78,25 @@ test('a hanging probe times out without sending another request', async () => {
     return new Promise((_resolve, reject) => init.signal.addEventListener('abort', () => reject(init.signal.reason), { once: true }));
   } });
   assert.equal(result.error, 'timeout');
+  assert.equal(calls, 1);
+});
+
+test('the deployed worker wires the schedule and exposes its configuration without probing Render', async (t) => {
+  t.mock.timers.enable({ apis: ['Date'], now: NOW.getTime() });
+  let calls = 0;
+  t.mock.method(globalThis, 'fetch', async (url, init) => {
+    calls += 1;
+    assert.equal(url, 'https://cafr-site.onrender.com/');
+    assert.equal(init.method, 'HEAD');
+    return new Response(null, { status: 200 });
+  });
+  const health = await worker.fetch(new Request('https://ucfr.cz/api/edge-health'), enabled);
+  const data = await health.json();
+  assert.equal(calls, 0);
+  assert.deepEqual(data.uptimeMonitoring, {
+    configured: true, timeZone: 'Europe/Prague', startHour: 10, endHour: 21,
+    plannedMonitoringHoursThisMonth: 337.5, monthlyMonitoringLimitHours: 350,
+  });
+  await worker.scheduled({ scheduledTime: NOW.getTime() }, enabled);
   assert.equal(calls, 1);
 });

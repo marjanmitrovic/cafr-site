@@ -32,7 +32,7 @@ export function monitoringWindow(date) {
 export async function probeRenderUptime({ env = {}, scheduledTime, now = () => new Date(),
   fetchImpl = (...args) => fetch(...args), log = result => console.log('[UCFR UPTIME]', JSON.stringify(result)),
   timeoutMs = 8000 } = {}) {
-  // Keep preparation/deployment separate from activation after usage review.
+  // Allow monitoring to be disabled without changing application requests.
   if (env.UCFR_UPTIME_MONITOR_ENABLED !== 'true') return { skipped: 'disabled' };
   const currentTime = now();
   const scheduled = new Date(scheduledTime);

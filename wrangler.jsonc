@@ -15,11 +15,11 @@
   },
   "vars": {
     "UCFR_BACKEND_ORIGIN": "https://cafr-site.onrender.com",
-    "UCFR_UPTIME_MONITOR_ENABLED": "false"
+    "UCFR_UPTIME_MONITOR_ENABLED": "true"
   },
   "triggers": {
-    // Enable */10 * * * * only after checking the shared Render hour balance.
-    "crons": []
+    // The handler only probes from 10:00 to 21:00 Europe/Prague.
+    "crons": ["*/10 * * * *"]
   },
   "observability": {
     "enabled": true

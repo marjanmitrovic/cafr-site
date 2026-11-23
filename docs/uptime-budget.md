@@ -1,6 +1,6 @@
 # Render uptime monitoring budget
 
-The proposed monitor runs every 10 minutes only between 10:00 and 21:00 in
+The monitor runs every 10 minutes only between 10:00 and 21:00 in
 Europe/Prague, including weekends. Daylight saving changes follow that timezone.
 It sends a single credential-free HEAD request to the static Render homepage,
 not `/api/health`, which queries Neon. There are no retries or alternate routes.
@@ -15,11 +15,13 @@ outside this window, and other services share the workspace's free hour balance.
 Enforcing a hard account/runtime cap would require accurate usage accounting and
 potentially suspending the public service. This change does neither.
 
-Monitoring is prepared but disabled, with no Cron Trigger registered, until the
-current Render usage has been reviewed. To activate after that review, set
-`UCFR_UPTIME_MONITOR_ENABLED` to `true` and `triggers.crons` to
-`["*/10 * * * *"]` in `wrangler.jsonc`. The handler also rejects stale invocations
-and invocations outside the Prague window. Skipped events make no Render request.
+Monitoring is enabled after review of the current shared Render hour balance.
+`UCFR_UPTIME_MONITOR_ENABLED` is `true` and `triggers.crons` is
+`["*/10 * * * *"]` in `wrangler.jsonc`. To disable it, set the flag to `false`
+and remove the cron expression. The handler also rejects stale invocations and
+invocations outside the Prague window. Skipped events make no Render request.
+`/api/edge-health` reports the deployed configuration and planned monthly hours;
+it does not itself probe Render or claim that a scheduled check already ran.
 
 A static probe itself issues no SQL query. Application restarts and real users
 can still query Neon. Reduced Neon compute use must be verified in live metrics.
