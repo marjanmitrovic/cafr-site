@@ -14,7 +14,12 @@
     ]
   },
   "vars": {
-    "UCFR_BACKEND_ORIGIN": "https://cafr-site.onrender.com"
+    "UCFR_BACKEND_ORIGIN": "https://cafr-site.onrender.com",
+    "UCFR_UPTIME_MONITOR_ENABLED": "false"
+  },
+  "triggers": {
+    // Enable */10 * * * * only after checking the shared Render hour balance.
+    "crons": []
   },
   "observability": {
     "enabled": true

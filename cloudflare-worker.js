@@ -1,4 +1,5 @@
 import { proxyToRender } from './functions/_shared/render-proxy.js';
+import { probeRenderUptime } from './functions/_shared/uptime-monitor.js';
 
 function shouldProxy(pathname) {
   return pathname === '/api' ||
@@ -25,6 +26,9 @@ function edgeHealth(env) {
 }
 
 export default {
+  async scheduled(controller, env) {
+    await probeRenderUptime({ env, scheduledTime: controller.scheduledTime });
+  },
   async fetch(request, env) {
     const url = new URL(request.url);
 
