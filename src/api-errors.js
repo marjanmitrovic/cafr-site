@@ -3,7 +3,11 @@ export function apiError(response, data, language = 'cs') {
   const detail = typeof data?.error === 'string' ? data.error.trim() : '';
   let message = detail;
 
-  if (!message && response.status === 429) {
+  if (response.status === 503 && response.headers.get('X-UCFR-Response-Source') === 'render-wakeup') {
+    message = czech
+      ? 'Server se stále spouští. Zkuste se prosím přihlásit znovu za chvíli.'
+      : 'The server is still starting. Please try signing in again shortly.';
+  } else if (!message && response.status === 429) {
     message = czech
       ? 'Server dočasně omezuje provoz. Požadavek nyní nelze dokončit. Neodesílejte jej opakovaně.'
       : 'The server is temporarily limiting traffic. This request cannot be completed now. Please avoid submitting it repeatedly.';

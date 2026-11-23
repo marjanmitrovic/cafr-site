@@ -1,5 +1,6 @@
 import './style.css';
 import { apiError } from './api-errors.js';
+import { fetchWithWakeup } from './backend-wakeup.js';
 
 const safeStorageGet = (storage, key) => {
   try { return storage.getItem(key); } catch { return null; }
@@ -146,13 +147,14 @@ function getCurrentUser() {
 }
 
 async function api(path, options = {}) {
-  const response = await fetch(`${API_BASE}${path}`, {
-    ...options,
+  const { onServerWake, ...requestOptions } = options;
+  const response = await fetchWithWakeup(`${API_BASE}${path}`, {
+    ...requestOptions,
     headers: {
       'Content-Type': 'application/json',
       ...(options.headers || {})
     }
-  });
+  }, { onWaiting: onServerWake, language: lang });
 
   const data = await response.json().catch(() => ({}));
 
@@ -1031,6 +1033,11 @@ async function submitLogin(event) {
   try {
     const result = await api('/api/auth/login', {
       method: 'POST',
+      onServerWake: () => {
+        message.textContent = lang === 'cs'
+          ? 'Server se probouzí. Přihlášení bude pokračovat automaticky; vyčkejte prosím, může to trvat až dvě minuty.'
+          : 'The server is waking up. Sign-in will continue automatically; please wait up to two minutes.';
+      },
       body: JSON.stringify({
         email: data.get('email'),
         password: data.get('password')
@@ -1391,10 +1398,16 @@ async function renderAdmin() {
       const submitButton = form.querySelector('button[type="submit"]');
       if (submitButton) submitButton.disabled = true;
       const data = new FormData(form);
+      const message = document.querySelector('#adminMessage');
 
       try {
         const result = await api('/api/auth/login', {
           method: 'POST',
+          onServerWake: () => {
+            message.textContent = lang === 'cs'
+              ? 'Server se probouzí. Přihlášení bude pokračovat automaticky; vyčkejte prosím, může to trvat až dvě minuty.'
+              : 'The server is waking up. Sign-in will continue automatically; please wait up to two minutes.';
+          },
           body: JSON.stringify({
             email: data.get('email'),
             password: data.get('password')

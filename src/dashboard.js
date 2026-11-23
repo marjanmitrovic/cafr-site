@@ -1,4 +1,5 @@
 import './style.css';
+import { fetchWithWakeup } from './backend-wakeup.js';
 
 const API_BASE =
   localStorage.getItem('cafr-api-base') ||
@@ -90,7 +91,7 @@ function renderAttachments(attachments = []) {
 }
 
 async function api(path, options = {}) {
-  const response = await fetch(`${API_BASE}${path}`, {
+  const response = await fetchWithWakeup(`${API_BASE}${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',

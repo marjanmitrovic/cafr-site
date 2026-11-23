@@ -36,3 +36,12 @@ test('a rejected password remains a 401 application error', () => {
   assert.equal(error.message, 'Invalid email or password');
   assert.equal(error.status, 401);
 });
+
+test('a bounded wakeup failure identifies startup instead of too many login attempts', () => {
+  const response = new Response('', {
+    status: 503, headers: { 'X-UCFR-Response-Source': 'render-wakeup' },
+  });
+  const error = apiError(response, { code: 'BACKEND_WAKING_UP', error: 'Starting' });
+  assert.match(error.message, /Server se stále spouští/);
+  assert.equal(error.source, 'render-wakeup');
+});

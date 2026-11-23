@@ -36,11 +36,36 @@ export async function proxyToRender(context) {
     method,
     headers: forwardedHeaders(request, target),
     body: method === 'GET' || method === 'HEAD' ? undefined : request.body,
+    duplex: 'half',
     redirect: 'manual',
   });
 
   try {
     const upstreamResponse = await fetch(upstreamRequest);
+
+    // Render's router rejects this request before the application runs. This
+    // is a sleeping Free instance, not an application login rate limit.
+    if (upstreamResponse.status === 429 &&
+      upstreamResponse.headers.get('x-render-routing') === 'hibernate-rate-limited') {
+      const retryAfter = upstreamResponse.headers.get('Retry-After') || '10';
+      const requestId = upstreamResponse.headers.get('rndr-id') || '';
+      await upstreamResponse.body?.cancel().catch(() => {});
+      return Response.json({
+        code: 'BACKEND_WAKING_UP',
+        error: 'Členská sekce se právě spouští. Vyčkejte prosím a zkuste to znovu za chvíli.',
+      }, {
+        status: 503,
+        headers: {
+          'Cache-Control': 'no-store',
+          'Retry-After': retryAfter,
+          'X-Content-Type-Options': 'nosniff',
+          'X-UCFR-Response-Source': 'render-wakeup',
+          'X-UCFR-Request-ID': requestId,
+          'X-Render-Routing': 'hibernate-rate-limited',
+        },
+      });
+    }
+
     const responseHeaders = new Headers(upstreamResponse.headers);
 
     // API and uploaded user content must never be cached at the edge.
