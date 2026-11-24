@@ -23,6 +23,14 @@ invocations outside the Prague window. Skipped events make no Render request.
 `/api/edge-health` reports the deployed configuration and planned monthly hours;
 it does not itself probe Render or claim that a scheduled check already ran.
 
+Probes carry `X-UCFR-Uptime-Probe: 1` so the application can record arrivals as
+`[UPTIME HTTP]` in Render logs. These records contain the arrival time, method,
+static path, HTTP status, duration and CF-Ray only. They never include credentials,
+cookies, query strings or bodies. The marker grants no access or special routing.
+A successful scheduled arrival proves that request reached the running application;
+missing records alone cannot distinguish a missing cron invocation from a gateway
+block before the application. Deployment/configuration success is not runtime proof.
+
 A static probe itself issues no SQL query. Application restarts and real users
 can still query Neon. Reduced Neon compute use must be verified in live metrics.
 Gateway blocks are recorded with CF-Ray/Render identifiers for support; monitoring

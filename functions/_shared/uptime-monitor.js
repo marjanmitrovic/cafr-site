@@ -51,6 +51,7 @@ export async function probeRenderUptime({ env = {}, scheduledTime, now = () => n
   try {
     const response = await fetchImpl(target.toString(), {
       method: 'HEAD', redirect: 'manual', cache: 'no-store', credentials: 'omit', signal: controller.signal,
+      headers: { 'X-UCFR-Uptime-Probe': '1' },
     });
     result = {
       checkedAt: currentTime.toISOString(),

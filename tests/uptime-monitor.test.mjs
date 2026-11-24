@@ -49,7 +49,7 @@ test('an enabled probe only requests the static homepage with HEAD and no creden
     assert.equal(init.method, 'HEAD');
     assert.equal(init.credentials, 'omit');
     assert.equal(init.redirect, 'manual');
-    assert.equal(init.headers, undefined);
+    assert.deepEqual(init.headers, { 'X-UCFR-Uptime-Probe': '1' });
     assert.equal(init.body, undefined);
     return new Response(null, { status: 200 });
   } });

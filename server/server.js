@@ -8,6 +8,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { prisma } from './lib/prisma.js';
+import { uptimeProbeLogger } from './uptime-probe-logger.js';
 
 const PORT = Number(process.env.API_PORT || 3001);
 const TOKEN_SECRET = process.env.TOKEN_SECRET || process.env.JWT_SECRET || 'replace-this-secret-before-production';
@@ -24,6 +25,7 @@ const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME || '';
 const CLOUDINARY_UPLOAD_PRESET = process.env.CLOUDINARY_UPLOAD_PRESET || '';
 const CLOUDINARY_FOLDER = process.env.CLOUDINARY_FOLDER || 'cafr';
 
+app.use(uptimeProbeLogger);
 app.use(cors({
   origin: process.env.WEB_ORIGIN || true,
   exposedHeaders: ['X-UCFR-Request-ID', 'X-UCFR-Response-Source', 'Retry-After'],
