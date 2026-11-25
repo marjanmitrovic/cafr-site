@@ -105,6 +105,9 @@ await edit('public-member-count-preload.js',s=>{
  return prisma.user.count({where:{membershipStatus:'APPROVED'}});
 }`+s.slice(b+2);
 });
+// Preserve the production mail routes, but ensure provider failures are not logged as success.
+await edit('server.js',s=>replaceExact(s,"    const providerId = result?.data?.id || result?.id || null;","    if (result?.error) throw new Error('Email provider rejected the message');\n    const providerId = result?.data?.id || result?.id || null;"));
+await edit('brevo-password-reset-preload.js',s=>s.replaceAll('v Renderu','v nastavení serveru'));
 // Do not import startup-only data migrations/question seeding modules in the edge entry.
 // Keep the same order of all remaining production middleware.
 const preloads=['admin-status-guard-preload','rejected-user-delete-preload','facr-registration-guard-preload','ucfr-details-preload','brevo-password-reset-preload','public-member-count-preload','admin-users-pagination-preload','local-units-preload','news-preload'];
