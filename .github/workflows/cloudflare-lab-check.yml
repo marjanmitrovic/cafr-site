@@ -28,3 +28,10 @@ jobs:
       - run: npm install --no-audit --no-fund
       - run: npm test
       - run: npm run check
+      - name: Smoke test the Git-connected staging Worker
+        run: |
+          npx wrangler dev --local --port 8788 > "$RUNNER_TEMP/ucfr-staging.log" 2>&1 &
+          pid=$!
+          trap 'kill "$pid" 2>/dev/null || true; cat "$RUNNER_TEMP/ucfr-staging.log"' EXIT
+          curl -fsS --retry 40 --retry-all-errors --retry-delay 1 http://127.0.0.1:8788/health -o /dev/null
+          node staging-smoke.mjs

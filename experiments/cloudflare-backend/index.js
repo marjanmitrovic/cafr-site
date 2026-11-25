@@ -2,6 +2,7 @@ import { neon } from '@neondatabase/serverless';
 import bcrypt from 'bcryptjs';
 import { makeWorker } from './worker.js';
 import { createAuthPilot, TEST_EMAIL } from './auth-pilot.js';
+import candidate from './candidate/index.js';
 
 const fixturePasswordHash = '$2y$12$BRrlWOLxqxVr2eCyftc8wOlmC1xrkxwJ7uROkK/JCD6ldWLqBKe62';
 const connect = connectionString => neon(connectionString, {fetchOptions:{signal:AbortSignal.timeout(15000)}});
@@ -31,6 +32,11 @@ const diagnostics = makeWorker({
 });
 export default {
   async fetch(request, env) {
-    return (await authPilot(request, env)) ?? diagnostics.fetch(request,env);
+    const { pathname } = new URL(request.url);
+    if (pathname === '/health' || pathname === '/diagnostics' || pathname.startsWith('/diagnostics/') || pathname.startsWith('/lab/')) {
+      return (await authPilot(request, env)) ?? diagnostics.fetch(request, env);
+    }
+    if (/^\/(api|uploads)(\/|$)/.test(pathname)) return candidate.fetch(request, env);
+    return env.ASSETS.fetch(request);
   },
 };

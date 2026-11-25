@@ -1,6 +1,6 @@
 # Express migration candidate
 
-Uses the actual Express server and nine existing route preloads generated from the repository. This build does not deploy a Worker or run a database migration.
+Uses the actual Express server and nine existing route preloads generated from the repository. The Git-connected `cafr-site` staging Worker mounts this candidate under `/api/` and `/uploads/`. The following local build stages the standalone `ucfr-api-candidate` bundle.
 
 Build from repository root:
 1. npm ci
