@@ -31,6 +31,9 @@ async function load(env){
    delete process.env.RESEND_API_KEY;
    delete process.env.CLOUDINARY_CLOUD_NAME;
    delete process.env.CLOUDINARY_UPLOAD_PRESET;
+   const ciMail=env.CANDIDATE_CI_MAIL==='true' && candidateDatabase(env)==='postgresql://ucfr_test:ucfr_test@127.0.0.1:5432/ucfr_test';
+   process.env.UCFR_CI_MAIL=ciMail?'true':'false';
+   if(ciMail){process.env.BREVO_API_KEY='synthetic-ci-key';process.env.BREVO_SENDER_EMAIL='sender@example.invalid';}
    boot=import('./generated/boot.js');
  }
  return boot;
@@ -48,7 +51,7 @@ export default {
     db==='postgresql://ucfr_test:ucfr_test@127.0.0.1:5432/ucfr_test';
   const permittedWrite=(request.method==='PATCH' &&
     (p==='/api/auth/me'||p==='/api/auth/password'||/^\/api\/admin\/users\/[^/]+\/(status|role)$/.test(p))) ||
-    (request.method==='POST' && ['/api/admin/documents/upload','/api/incidents','/api/legal-requests'].includes(p));
+    (request.method==='POST' && ['/api/admin/documents/upload','/api/incidents','/api/legal-requests','/api/auth/forgot-password','/api/auth/reset-password'].includes(p));
   if(!['GET','HEAD'].includes(request.method)&&!(request.method==='POST'&&p==='/api/auth/login')&&!(ciWrites&&permittedWrite))return json({error:'Candidate writes disabled'},405);
   if(!db||typeof env.CANDIDATE_SESSION_SECRET!=='string'||env.CANDIDATE_SESSION_SECRET.length<32||
      env.CANDIDATE_SESSION_SECRET===env.CANDIDATE_ACCESS_TOKEN)return json({error:'Candidate not configured'},503);
