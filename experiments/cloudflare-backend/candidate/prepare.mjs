@@ -10,6 +10,7 @@ await rm(generated,{recursive:true,force:true});
 await mkdir(generated,{recursive:true});
 await cp(path.join(repo,'server'),src,{recursive:true});
 await cp(path.join(here,'storage.js'),path.join(src,'lib/storage.js'));
+await cp(path.join(here,'password.js'),path.join(src,'lib/password.js'));
 const edit=async(name,fn)=>{
  const p=path.join(src,name),original=await readFile(p,'utf8'),next=fn(original);
  if(next===original)throw Error('Expected adaptation not found: '+name);
@@ -51,6 +52,7 @@ await edit('local-units-preload.js',s=>{
  return s.slice(0,from)+s.slice(to);
 });
 await edit('server.js',s=>{
+ s=replaceExact(s,"import bcrypt from 'bcryptjs';","import bcrypt from './lib/password.js';");
  s=replaceExact(s,"import { prisma } from './lib/prisma.js';","import { prisma } from './lib/prisma.js';\nimport { saveStoredFile, serveStoredFile } from './lib/storage.js';");
  s=replaceExact(s,"const __filename = fileURLToPath(import.meta.url);\nconst __dirname = path.dirname(__filename);","const __dirname = '/tmp/ucfr-candidate/server';");
  s=replaceExact(s,"const TOKEN_SECRET = process.env.TOKEN_SECRET || process.env.JWT_SECRET || 'replace-this-secret-before-production';","const TOKEN_SECRET = process.env.TOKEN_SECRET;\nif (!TOKEN_SECRET || TOKEN_SECRET.length < 32) throw Error('Candidate token secret missing');");
