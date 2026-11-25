@@ -40,9 +40,14 @@ export default {
   if(p==='/health'&&request.method==='GET')return json({ok:true,service:'ucfr-api-candidate',production:false});
   if(!p.startsWith('/api/'))return json({error:'Not found'},404);
   if(!authorized(request,env.CANDIDATE_ACCESS_TOKEN))return json({error:'Unauthorized'},401);
-  // Read-only staging by default. Enable writes only after a dedicated non-production DB is verified.
-  if(!['GET','HEAD'].includes(request.method)&&!(request.method==='POST'&&p==='/api/auth/login'))return json({error:'Candidate writes disabled'},405);
   const db=candidateDatabase(env);
+  // Write integration tests are confined to the disposable CI PostgreSQL service.
+  // This cannot enable writes against any remote Neon endpoint.
+  const ciWrites=env.CANDIDATE_CI_WRITES==='true' &&
+    db==='postgresql://ucfr_test:ucfr_test@127.0.0.1:5432/ucfr_test';
+  const permittedWrite=request.method==='PATCH' &&
+    (p==='/api/auth/me'||p==='/api/auth/password'||/^\/api\/admin\/users\/[^/]+\/(status|role)$/.test(p));
+  if(!['GET','HEAD'].includes(request.method)&&!(request.method==='POST'&&p==='/api/auth/login')&&!(ciWrites&&permittedWrite))return json({error:'Candidate writes disabled'},405);
   if(!db||typeof env.CANDIDATE_SESSION_SECRET!=='string'||env.CANDIDATE_SESSION_SECRET.length<32||
      env.CANDIDATE_SESSION_SECRET===env.CANDIDATE_ACCESS_TOKEN)return json({error:'Candidate not configured'},503);
   try {
