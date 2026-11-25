@@ -38,7 +38,7 @@ test('disabled, out-of-window and delayed schedules make no network request', as
   assert.equal((await probeRenderUptime({ ...options, env: {}, fetchImpl })).skipped, 'disabled');
   const night = new Date('2026-11-23T22:00:00Z');
   assert.equal((await probeRenderUptime({ ...options, scheduledTime: night.getTime(), now: () => night, fetchImpl })).skipped, 'outside-window');
-  assert.equal((await probeRenderUptime({ ...options, scheduledTime: NOW.getTime() - 61_000, fetchImpl })).skipped, 'stale-schedule');
+  assert.equal((await probeRenderUptime({ ...options, scheduledTime: NOW.getTime() - 181_000, fetchImpl })).skipped, 'stale-schedule');
 });
 
 test('an enabled probe only requests the static homepage with HEAD and no credentials', async () => {
@@ -99,4 +99,16 @@ test('the deployed worker wires the schedule and exposes its configuration witho
   });
   await worker.scheduled({ scheduledTime: NOW.getTime() }, enabled);
   assert.equal(calls, 1);
+});
+
+
+test('a cron delayed by two minutes still makes exactly one static probe', async () => {
+  let calls = 0;
+  const result = await probeRenderUptime({ ...options, scheduledTime: NOW.getTime() - 120_000, fetchImpl: async () => {
+    calls += 1;
+    return new Response(null, { status: 200 });
+  } });
+  assert.equal(calls, 1);
+  assert.equal(result.delayMs, 120_000);
+  assert.equal(result.ok, true);
 });
