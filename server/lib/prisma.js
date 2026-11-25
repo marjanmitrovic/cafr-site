@@ -9,3 +9,6 @@ if (!process.env.DATABASE_URL) {
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 export const prisma = new PrismaClient({ adapter });
+
+// Render stores files outside PostgreSQL. Its create/update sequence is unchanged.
+export const withFileRecord = work => work();

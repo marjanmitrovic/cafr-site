@@ -26,15 +26,24 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@prisma/client';
 const context=new AsyncLocalStorage();
 export const prisma=new Proxy({}, {get(_,key){
- const client=context.getStore();
+ const client=context.getStore()?.client;
  if(!client)throw Error('Database outside request scope');
  const value=client[key];
  return typeof value==='function'?value.bind(client):value;
 }});
+export function withFileRecord(work){
+ const {client}=context.getStore();
+ return client.$transaction(tx=>context.run({client:tx,fileWrite:true},work),{timeout:30000});
+}
+export function fileTransaction(){
+ const scope=context.getStore();
+ if(!scope?.fileWrite)throw Error('File write outside parent transaction');
+ return scope.client;
+}
 export async function withDatabase(url,fn){
  const adapter=new PrismaPg({connectionString:url,max:1,connectionTimeoutMillis:15000});
  const client=new PrismaClient({adapter});
- try{return await context.run(client,fn)}finally{await client.$disconnect()}
+ try{return await context.run({client},fn)}finally{await client.$disconnect()}
 }
 `);
 // Do not allow any startup DB repair or seeding on an isolate cold start.
@@ -53,7 +62,7 @@ await edit('local-units-preload.js',s=>{
 });
 await edit('server.js',s=>{
  s=replaceExact(s,"import bcrypt from 'bcryptjs';","import bcrypt from './lib/password.js';");
- s=replaceExact(s,"import { prisma } from './lib/prisma.js';","import { prisma } from './lib/prisma.js';\nimport { saveStoredFile, serveStoredFile } from './lib/storage.js';");
+ s=replaceExact(s,"import { prisma, withFileRecord } from './lib/prisma.js';","import { prisma, withFileRecord } from './lib/prisma.js';\nimport { saveStoredFile, serveStoredFile } from './lib/storage.js';");
  s=replaceExact(s,"const __filename = fileURLToPath(import.meta.url);\nconst __dirname = path.dirname(__filename);","const __dirname = '/tmp/ucfr-candidate/server';");
  s=replaceExact(s,"const TOKEN_SECRET = process.env.TOKEN_SECRET || process.env.JWT_SECRET || 'replace-this-secret-before-production';","const TOKEN_SECRET = process.env.TOKEN_SECRET;\nif (!TOKEN_SECRET || TOKEN_SECRET.length < 32) throw Error('Candidate token secret missing');");
  s=replaceExact(s,"app.use('/uploads', express.static(path.join(PUBLIC_DIR, 'uploads')));","// Stored files are served by the authorized route below.");
@@ -85,7 +94,7 @@ await edit('server.js',s=>{
  return s;
 });
 await edit('news-preload.js',s=>{
- s=replaceExact(s,"import { prisma } from './lib/prisma.js';","import { prisma } from './lib/prisma.js';\nimport { saveStoredFile } from './lib/storage.js';");
+ s=replaceExact(s,"import { prisma, withFileRecord } from './lib/prisma.js';","import { prisma, withFileRecord } from './lib/prisma.js';\nimport { saveStoredFile } from './lib/storage.js';");
  const from=s.indexOf('  await fs.mkdir(NEWS_UPLOAD_DIR');
  const end=s.indexOf('\n}',from);
  if(from<0||end<0)throw Error('News upload markers changed');
@@ -105,8 +114,6 @@ await edit('public-member-count-preload.js',s=>{
  return prisma.user.count({where:{membershipStatus:'APPROVED'}});
 }`+s.slice(b+2);
 });
-// Preserve the production mail routes, but ensure provider failures are not logged as success.
-await edit('server.js',s=>replaceExact(s,"    const providerId = result?.data?.id || result?.id || null;","    if (result?.error) throw new Error('Email provider rejected the message');\n    const providerId = result?.data?.id || result?.id || null;"));
 await edit('brevo-password-reset-preload.js',s=>{
  s=s.replaceAll('v Renderu','v nastavení serveru');
  return replaceExact(s,"const BREVO_ENDPOINT = 'https://api.brevo.com/v3/smtp/email';","const BREVO_ENDPOINT = process.env.UCFR_CI_MAIL === 'true' ? 'http://127.0.0.1:8790/v3/smtp/email' : 'https://api.brevo.com/v3/smtp/email';");

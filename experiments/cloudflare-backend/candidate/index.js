@@ -33,6 +33,7 @@ async function load(env){
    delete process.env.CLOUDINARY_UPLOAD_PRESET;
    const ciMail=env.CANDIDATE_CI_MAIL==='true' && candidateDatabase(env)==='postgresql://ucfr_test:ucfr_test@127.0.0.1:5432/ucfr_test';
    process.env.UCFR_CI_MAIL=ciMail?'true':'false';
+   process.env.UCFR_SHARED_RESET_LIMIT=ciMail?'true':'false';
    if(ciMail){process.env.BREVO_API_KEY='synthetic-ci-key';process.env.BREVO_SENDER_EMAIL='sender@example.invalid';}
    boot=import('./generated/boot.js');
  }

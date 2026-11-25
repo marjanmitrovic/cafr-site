@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { Buffer } from 'node:buffer';
-import { prisma } from './prisma.js';
+import { prisma, fileTransaction } from './prisma.js';
 export const STORAGE_LIMIT=128*1024*1024;
 export const MAX_FILE=8*1024*1024;
 const MIME=new Set(['application/pdf','image/png','image/jpeg','image/webp','application/vnd.openxmlformats-officedocument.wordprocessingml.document','application/msword','text/plain']);
@@ -12,12 +12,12 @@ export async function saveStoredFile({decoded,originalName}){
  if(!buffer||buffer.length<1||buffer.length>MAX_FILE||!MIME.has(mime))throw Error('Invalid file');
  const name=String(originalName||'file').replace(/[^a-zA-Z0-9._-]/g,'-').slice(0,120)||'file';
  const id=randomUUID();
- await prisma.$transaction(async tx=>{
-  await tx.$queryRaw`SELECT pg_advisory_xact_lock(24417513)::text AS lock`;
-  const rows=await tx.$queryRaw`SELECT COALESCE(sum("sizeBytes"),0)::bigint AS total FROM "UcfrStoredFile"`;
-  if(BigInt(rows[0].total)+BigInt(buffer.length)>BigInt(STORAGE_LIMIT))throw Error('Storage capacity reached');
-  await tx.$executeRaw`INSERT INTO "UcfrStoredFile" (id,name,mime,content,"sizeBytes") VALUES (${id}::uuid,${name},${mime},${new Uint8Array(buffer)},${buffer.length})`;
- });
+ // The parent record and its bytes share the transaction opened by withFileRecord.
+ const tx=fileTransaction();
+ await tx.$queryRaw`SELECT pg_advisory_xact_lock(24417513)::text AS lock`;
+ const rows=await tx.$queryRaw`SELECT COALESCE(sum("sizeBytes"),0)::bigint AS total FROM "UcfrStoredFile"`;
+ if(BigInt(rows[0].total)+BigInt(buffer.length)>BigInt(STORAGE_LIMIT))throw Error('Storage capacity reached');
+ await tx.$executeRaw`INSERT INTO "UcfrStoredFile" (id,name,mime,content,"sizeBytes") VALUES (${id}::uuid,${name},${mime},${new Uint8Array(buffer)},${buffer.length})`;
  return {url:PREFIX+id+(imageExt[mime]||''),sizeBytes:buffer.length};
 }
 export async function serveStoredFile(req,res){

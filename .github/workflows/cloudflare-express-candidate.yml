@@ -4,11 +4,19 @@ on:
     branches: [experiment/cloudflare-backend]
     paths:
       - 'experiments/cloudflare-backend/candidate/**'
+      - 'cloudflare/**'
+      - 'server/**'
+      - 'prisma/**'
+      - 'tests/notification-mail.test.mjs'
       - '.github/workflows/cloudflare-express-candidate.yml'
   pull_request:
     branches: [main]
     paths:
       - 'experiments/cloudflare-backend/candidate/**'
+      - 'cloudflare/**'
+      - 'server/**'
+      - 'prisma/**'
+      - 'tests/notification-mail.test.mjs'
       - '.github/workflows/cloudflare-express-candidate.yml'
   workflow_dispatch:
 permissions:
@@ -53,9 +61,13 @@ jobs:
           await prisma.user.create({data:{email:'other@example.invalid',firstName:'Other',lastName:'Member',passwordHash,role:'MEMBER',membershipStatus:'APPROVED'}});
           await prisma.$executeRawUnsafe(await readFile('experiments/cloudflare-backend/candidate/storage.sql','utf8'));
           await prisma.$executeRawUnsafe(await readFile('experiments/cloudflare-backend/candidate/password.sql','utf8'));
+          const resetSchema = await readFile('cloudflare/reset-window.sql','utf8');
+          for (const statement of resetSchema.split(';').filter(sql => sql.trim())) await prisma.$executeRawUnsafe(statement);
           await prisma.$disconnect();
           NODE
       - run: npm ci --prefix experiments/cloudflare-backend --no-audit --no-fund
+      - run: node --test tests/notification-mail.test.mjs
+      - run: npm run build
       - run: node experiments/cloudflare-backend/candidate/prepare.mjs
       - name: Bundle and check size without deploying
         working-directory: experiments/cloudflare-backend
@@ -87,3 +99,21 @@ jobs:
           test "$(curl -s -o /tmp/ucfr-auth.json -w '%{http_code}' -H 'X-UCFR-Candidate-Token: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' http://localhost:8789/api/auth/me)" = 401
           node -e "if(require('/tmp/ucfr-auth.json').error!=='Unauthorized')process.exit(1)"
           node candidate/integration.mjs
+      - name: Test the combined Worker with the disposable database
+        run: |
+          cat > cloudflare/.dev.vars <<'EOF'
+          TOKEN_SECRET=rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr
+          UCFR_PREVIEW_TOKEN=pppppppppppppppppppppppppppppppppppppppppppppppp
+          DATABASE_URL=postgresql://ucfr_test:ucfr_test@127.0.0.1:5432/ucfr_test
+          BREVO_API_KEY=synthetic-local-no-send
+          EOF
+          wrangler=experiments/cloudflare-backend/node_modules/.bin/wrangler
+          "$wrangler" deploy --config cloudflare/wrangler.jsonc --dry-run
+          "$wrangler" dev --config cloudflare/wrangler.jsonc --local --port 8791 > /tmp/ucfr-combined.log 2>&1 &
+          pid=$!
+          trap 'kill "$pid" || true; rm -f cloudflare/.dev.vars' EXIT
+          for i in $(seq 1 30); do
+            if curl -sS http://127.0.0.1:8791/api/edge-health -o /dev/null; then break; fi
+            sleep 1
+          done
+          node cloudflare/test-local.mjs

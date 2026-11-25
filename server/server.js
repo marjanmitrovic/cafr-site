@@ -7,8 +7,10 @@ import { Resend } from 'resend';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { prisma } from './lib/prisma.js';
+import { prisma, withFileRecord } from './lib/prisma.js';
 import { uptimeProbeLogger } from './uptime-probe-logger.js';
+import { sendNotification } from './lib/notification-mail.js';
+import { createRegisteredUser, registrationFacrId } from './lib/member-registration.js';
 
 const PORT = Number(process.env.API_PORT || 3001);
 const TOKEN_SECRET = process.env.TOKEN_SECRET || process.env.JWT_SECRET || 'replace-this-secret-before-production';
@@ -50,7 +52,7 @@ app.use('/uploads', express.static(path.join(PUBLIC_DIR, 'uploads')));
 
 
 const WEB_ORIGIN = String(process.env.WEB_ORIGIN || 'http://localhost:5173').replace(/\/$/, '');
-const EMAIL_FROM = process.env.EMAIL_FROM || 'UČFR <onboarding@resend.dev>';
+const notificationProvider = process.env.UCFR_NOTIFICATION_PROVIDER === 'brevo' ? 'brevo' : 'resend';
 const configuredAdminNotifyEmails = String(process.env.ADMIN_NOTIFY_EMAIL || process.env.ADMIN_EMAIL || '')
   .split(',')
   .map((email) => email.trim().toLowerCase())
@@ -107,42 +109,35 @@ async function sendEmail({ to, subject, html, text, type, userId }) {
   const recipients = Array.isArray(to) ? to.filter(Boolean) : [to].filter(Boolean);
   if (!recipients.length) return { skipped: true, reason: 'NO_RECIPIENTS' };
 
-  if (process.env.EMAIL_DISABLED === 'true' || !resend) {
+  const configured = notificationProvider === 'brevo' ? Boolean(process.env.BREVO_API_KEY) : Boolean(resend);
+  if (process.env.EMAIL_DISABLED === 'true' || !configured) {
     console.log('[EMAIL SKIPPED]', { to: recipients, subject, type });
     await Promise.all(recipients.map((recipient) => logEmail({
       to: recipient,
       subject,
       type,
       status: 'SKIPPED',
-      provider: resend ? 'resend-disabled' : 'none',
-      error: resend ? 'EMAIL_DISABLED=true' : 'RESEND_API_KEY is not configured. Replace re_xxxxxxxxx in .env with your real API key.',
+      provider: configured ? notificationProvider + '-disabled' : 'none',
+      error: configured ? 'EMAIL_DISABLED=true' : 'Email provider is not configured.',
       userId,
     })));
     return { skipped: true };
   }
 
   try {
-    const result = await resend.emails.send({
-      from: EMAIL_FROM,
-      to: recipients,
-      subject,
-      html,
-      text: text || subject,
-    });
-
-    const providerId = result?.data?.id || result?.id || null;
+    const providerId = await sendNotification({ resend, provider: notificationProvider, recipients, subject, html, text });
 
     await Promise.all(recipients.map((recipient) => logEmail({
       to: recipient,
       subject,
       type,
       status: 'SENT',
-      provider: 'resend',
+      provider: notificationProvider,
       providerId,
       userId,
     })));
 
-    return result;
+    return { data: { id: providerId } };
   } catch (error) {
     console.error('Email send error:', error);
     await Promise.all(recipients.map((recipient) => logEmail({
@@ -150,7 +145,7 @@ async function sendEmail({ to, subject, html, text, type, userId }) {
       subject,
       type,
       status: 'FAILED',
-      provider: 'resend',
+      provider: notificationProvider,
       error: error.message,
       userId,
     })));
@@ -273,21 +268,26 @@ app.post('/api/auth/register', async (req, res) => {
     if (!normalizedEmail || !password || !firstName || !lastName) return res.status(400).json({ error: 'Email, password, firstName and lastName are required' });
     if (String(password).length < 8) return res.status(400).json({ error: 'Password must contain at least 8 characters' });
     if (await prisma.user.findUnique({ where: { email: normalizedEmail } })) return res.status(409).json({ error: 'An account with this email already exists' });
-    const user = await prisma.user.create({
-      data: {
-        email: normalizedEmail,
-        passwordHash: await bcrypt.hash(String(password), 12),
-        firstName: String(firstName).trim(),
-        lastName: String(lastName).trim(),
-        phone: phone ? String(phone).trim() : null,
-        region: region ? String(region).trim() : null,
-        refereeStatus: refereeStatus ? String(refereeStatus).trim() : null,
-        language: language === 'en' ? 'en' : 'cs',
-        role: 'MEMBER',
-        membershipStatus: 'PENDING',
-        isActive: true,
-      },
+    const user = await createRegisteredUser({
+      email: normalizedEmail,
+      passwordHash: await bcrypt.hash(String(password), 12),
+      firstName: String(firstName).trim(),
+      lastName: String(lastName).trim(),
+      phone: phone ? String(phone).trim() : null,
+      region: region ? String(region).trim() : null,
+      refereeStatus: refereeStatus ? String(refereeStatus).trim() : null,
+      language: language === 'en' ? 'en' : 'cs',
+      role: 'MEMBER',
+      membershipStatus: 'PENDING',
+      isActive: true,
     });
+    if (!user) {
+      return res.status(409).json({
+        code: 'FACR_ID_ALREADY_REGISTERED', facrId: registrationFacrId(refereeStatus),
+        error: language === 'en' ? 'A registration with this FAČR ID already exists. FAČR ID must be unique.'
+          : 'Registrace s tímto ID FAČR již existuje. ID FAČR musí být jedinečné.',
+      });
+    }
     await sendMemberEmail(
       user,
       'Přihláška UČFR přijata',
@@ -303,6 +303,7 @@ app.post('/api/auth/register', async (req, res) => {
 
     res.status(201).json({ message: 'Registration submitted', user: publicUser(user) });
   } catch (error) {
+    if (error.code === 'P2002') return res.status(409).json({ error: 'An account with this email already exists' });
     console.error('Register error:', error);
     res.status(500).json({ error: 'Registration failed' });
   }
@@ -426,16 +427,18 @@ app.post('/api/auth/reset-password', async (req, res) => {
       return res.status(400).json({ error: 'Reset link is invalid or expired' });
     }
 
-    await prisma.$transaction([
-      prisma.user.update({
-        where: { id: reset.userId },
-        data: { passwordHash: await bcrypt.hash(newPassword, 12) },
-      }),
-      prisma.passwordResetToken.update({
-        where: { id: reset.id },
-        data: { usedAt: new Date() },
-      }),
-    ]);
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    const changed = await prisma.$transaction(async tx => {
+      const now = new Date();
+      const claim = await tx.passwordResetToken.updateMany({
+        where: { id: reset.id, usedAt: null, expiresAt: { gt: now } },
+        data: { usedAt: now },
+      });
+      if (!claim.count) return false;
+      await tx.user.update({ where: { id: reset.userId }, data: { passwordHash } });
+      return true;
+    });
+    if (!changed) return res.status(400).json({ error: 'Reset link is invalid or expired' });
 
     res.json({ ok: true, message: 'Password reset successfully' });
   } catch (error) {
@@ -663,29 +666,31 @@ app.post('/api/incidents', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'incidentDate, matchInfo, incidentType and description are required' });
     }
     const allowedUrgency = ['NORMAL', 'HIGH', 'CRITICAL'];
-    const savedAttachments = await saveEvidenceAttachments(attachments, 'incidents');
-    const incident = await prisma.incident.create({
-      data: {
-        userId: req.user.id,
-        incidentDate: new Date(incidentDate),
-        matchInfo: String(matchInfo).trim(),
-        competition: competition ? String(competition).trim() : null,
-        location: location ? String(location).trim() : null,
-        incidentType: String(incidentType).trim(),
-        description: String(description).trim(),
-        urgency: allowedUrgency.includes(String(urgency)) ? String(urgency) : 'NORMAL',
-        contactPreference: contactPreference ? String(contactPreference).trim() : null,
-        attachments: savedAttachments.length ? { create: savedAttachments } : undefined,
-        events: {
-          create: {
-            actorId: req.user.id,
-            type: 'CREATED',
-            message: savedAttachments.length ? `Incident created with ${savedAttachments.length} attachment(s)` : 'Incident created',
-            newStatus: 'NEW',
+    const incident = await withFileRecord(async () => {
+      const savedAttachments = await saveEvidenceAttachments(attachments, 'incidents');
+      return prisma.incident.create({
+        data: {
+          userId: req.user.id,
+          incidentDate: new Date(incidentDate),
+          matchInfo: String(matchInfo).trim(),
+          competition: competition ? String(competition).trim() : null,
+          location: location ? String(location).trim() : null,
+          incidentType: String(incidentType).trim(),
+          description: String(description).trim(),
+          urgency: allowedUrgency.includes(String(urgency)) ? String(urgency) : 'NORMAL',
+          contactPreference: contactPreference ? String(contactPreference).trim() : null,
+          attachments: savedAttachments.length ? { create: savedAttachments } : undefined,
+          events: {
+            create: {
+              actorId: req.user.id,
+              type: 'CREATED',
+              message: savedAttachments.length ? `Incident created with ${savedAttachments.length} attachment(s)` : 'Incident created',
+              newStatus: 'NEW',
+            },
           },
         },
-      },
-      include: { attachments: true, events: { orderBy: { createdAt: 'asc' } } },
+        include: { attachments: true, events: { orderBy: { createdAt: 'asc' } } },
+      });
     });
     await sendAdminEmail(
       'Nový incident UČFR',
@@ -1031,17 +1036,19 @@ app.post('/api/legal-requests', requireAuth, async (req, res) => {
     if (!['NORMAL', 'HIGH', 'URGENT'].includes(urgency)) {
       return res.status(400).json({ error: 'Invalid urgency' });
     }
-    const savedAttachments = await saveEvidenceAttachments(req.body?.attachments || [], 'legal');
-    const legalRequest = await prisma.legalRequest.create({
-      data: {
-        userId: req.user.id,
-        subject,
-        category,
-        description,
-        urgency,
-        attachments: savedAttachments.length ? { create: savedAttachments } : undefined,
-      },
-      include: { attachments: { orderBy: { createdAt: 'asc' } } },
+    const legalRequest = await withFileRecord(async () => {
+      const savedAttachments = await saveEvidenceAttachments(req.body?.attachments || [], 'legal');
+      return prisma.legalRequest.create({
+        data: {
+          userId: req.user.id,
+          subject,
+          category,
+          description,
+          urgency,
+          attachments: savedAttachments.length ? { create: savedAttachments } : undefined,
+        },
+        include: { attachments: { orderBy: { createdAt: 'asc' } } },
+      });
     });
     await sendAdminEmail(
       'Nový právní dotaz UČFR',
@@ -1505,28 +1512,31 @@ app.post('/api/admin/documents/upload', requireAdmin, async (req, res) => {
     const originalName = sanitizeFileName(fileName);
     const extension = path.extname(originalName).toLowerCase() || allowedDocumentMimes.get(decoded.mime);
     const normalizedName = `${sanitizeFileName(path.basename(originalName, path.extname(originalName)) || 'document')}${extension}`;
-    const stored = await saveUploadedFile({
-      decoded,
-      originalName: normalizedName,
-      subfolder: '',
-      localBaseDir: DOCUMENT_UPLOAD_DIR,
-      publicPrefix: '/uploads/documents',
-    });
+    const { stored, url, document } = await withFileRecord(async () => {
+      const stored = await saveUploadedFile({
+        decoded,
+        originalName: normalizedName,
+        subfolder: '',
+        localBaseDir: DOCUMENT_UPLOAD_DIR,
+        publicPrefix: '/uploads/documents',
+      });
 
-    const url = stored.url;
+      const url = stored.url;
 
-    const document = await prisma.document.create({
-      data: {
-        titleCs: String(titleCs).trim(),
-        titleEn: String(titleEn).trim(),
-        descriptionCs: descriptionCs ? String(descriptionCs).trim() : null,
-        descriptionEn: descriptionEn ? String(descriptionEn).trim() : null,
-        category: String(category || 'GENERAL').trim().toUpperCase(),
-        url,
-        visibility: String(visibility),
-        status: String(status),
-        createdById: req.user.id,
-      },
+      const document = await prisma.document.create({
+        data: {
+          titleCs: String(titleCs).trim(),
+          titleEn: String(titleEn).trim(),
+          descriptionCs: descriptionCs ? String(descriptionCs).trim() : null,
+          descriptionEn: descriptionEn ? String(descriptionEn).trim() : null,
+          category: String(category || 'GENERAL').trim().toUpperCase(),
+          url,
+          visibility: String(visibility),
+          status: String(status),
+          createdById: req.user.id,
+        },
+      });
+      return { stored, url, document };
     });
 
     res.status(201).json({ document: documentResponse(document), file: { url, size: stored.sizeBytes, mime: decoded.mime, storage: cloudUploadsEnabled() ? 'cloudinary' : 'local' } });

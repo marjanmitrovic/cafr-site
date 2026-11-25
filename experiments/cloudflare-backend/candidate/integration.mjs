@@ -55,3 +55,51 @@ assert.match(download.headers.get('cache-control'),/no-store/);
 const guest=await fetch(origin+upload.body.file.url,{headers:{'X-UCFR-Candidate-Token':access}});
 assert.equal(guest.status,404);
 console.log('Stored document upload, private download and exact bytes passed.');
+
+// The fixture accepts only the synthetic member. Exercise the real reset routes
+// and inspect the captured message without printing its single-use token.
+const forgot = await request('/api/auth/forgot-password', { method: 'POST', body: { email: 'member@example.invalid' } });
+assert.equal(forgot.status, 200);
+assert.equal(forgot.body.resetUrl, undefined);
+const mail = await (await fetch('http://127.0.0.1:8790/fixture')).json();
+assert.match(mail.token, /^[a-f0-9]{64}$/);
+const resetPassword = 'ucfr-ci-obnovení-⚽';
+const resetRequest = () => request('/api/auth/reset-password', { method: 'POST', body: { token: mail.token, newPassword: resetPassword } });
+const resets = await Promise.all([resetRequest(), resetRequest()]);
+assert.deepEqual(resets.map(response => response.status).sort(), [200, 400]);
+assert.equal((await request('/api/auth/login', { method: 'POST', body: { email: 'member@example.invalid', password: resetPassword } })).status, 200);
+assert.equal((await request('/api/auth/login', { method: 'POST', body: { email: 'member@example.invalid', password: 'ucfr-ci-changed-only' } })).status, 401);
+console.log('Synthetic mail, single-use password reset and new login passed.');
+
+const evidence = { fileName: 'fixture.txt', fileData: 'data:text/plain;base64,' + fixtureBytes.toString('base64') };
+const legal = await request('/api/legal-requests', { method: 'POST', token, body: { subject: 'Test', category: 'TEST', description: 'Synthetic record', attachments: [evidence] } });
+assert.equal(legal.status, 201);
+const evidenceUrl = origin + legal.body.legalRequest.attachments[0].fileUrl;
+const getEvidence = bearer => fetch(evidenceUrl, { headers: { 'X-UCFR-Candidate-Token': access, Authorization: 'Bearer ' + bearer } });
+assert.deepEqual(Buffer.from(await (await getEvidence(token)).arrayBuffer()), fixtureBytes);
+const other = await request('/api/auth/login', { method: 'POST', body: { email: 'other@example.invalid', password: 'ucfr-ci-test-only' } });
+assert.equal((await getEvidence(other.body.token)).status, 404);
+console.log('Owner-only legal attachment returned the original bytes.');
+
+// Confirm that a failure while saving a later upload cannot consume quota for
+// an unlinked earlier file. This connection always targets the disposable DB.
+const { Client } = await import('pg');
+const fixtureDb = new Client({ connectionString: 'postgresql://ucfr_test:ucfr_test@127.0.0.1:5432/ucfr_test' });
+await fixtureDb.connect();
+try {
+  const countFiles = async () => (await fixtureDb.query('SELECT count(*)::int AS count FROM "UcfrStoredFile"')).rows[0].count;
+  const before = await countFiles();
+  const failed = await request('/api/legal-requests', { method: 'POST', token, body: {
+    subject: 'Rollback fixture', category: 'TEST', description: 'Synthetic record',
+    attachments: [evidence, { fileName: 'invalid.txt', fileData: 'not-a-file' }],
+  } });
+  assert.ok(failed.status >= 400);
+  assert.equal(await countFiles(), before);
+  const mailRecord = await fixtureDb.query('SELECT status, "providerId" FROM "EmailLog" WHERE provider = $1 AND type = $2', ['brevo-api', 'PASSWORD_RESET']);
+  assert.ok(mailRecord.rows.some(row => row.status === 'SENT' && row.providerId === 'synthetic-ci-message'));
+  const resetWindow = await fixtureDb.query('SELECT count(*)::int AS count FROM "UcfrResetWindow" WHERE hits = 1');
+  assert.equal(resetWindow.rows[0].count, 1);
+} finally {
+  await fixtureDb.end();
+}
+console.log('Rollback, provider receipt and shared recovery limit persisted correctly.');
