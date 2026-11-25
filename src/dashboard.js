@@ -1,4 +1,5 @@
 import './style.css';
+import { installStoredFileLinks } from './stored-file-links.js';
 import { fetchWithWakeup } from './backend-wakeup.js';
 
 const API_BASE =
@@ -11,6 +12,7 @@ const API_BASE =
   );
 const app = document.querySelector('#dashboardApp');
 const token = localStorage.getItem('cafr-token');
+installStoredFileLinks(() => localStorage.getItem('cafr-token'));
 let user = null;
 let statusSyncTimer = null;
 
