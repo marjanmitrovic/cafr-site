@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:16
+        image: postgres:18
         env:
           POSTGRES_USER: ucfr_test
           POSTGRES_PASSWORD: ucfr_test
@@ -52,6 +52,7 @@ jobs:
           await prisma.user.create({data:{email:'admin@example.invalid',firstName:'Synthetic',lastName:'Admin',passwordHash,role:'ADMIN',membershipStatus:'APPROVED'}});
           await prisma.user.create({data:{email:'other@example.invalid',firstName:'Other',lastName:'Member',passwordHash,role:'MEMBER',membershipStatus:'APPROVED'}});
           await prisma.$executeRawUnsafe(await readFile('experiments/cloudflare-backend/candidate/storage.sql','utf8'));
+          await prisma.$executeRawUnsafe(await readFile('experiments/cloudflare-backend/candidate/password.sql','utf8'));
           await prisma.$disconnect();
           NODE
       - run: npm ci --prefix experiments/cloudflare-backend --no-audit --no-fund
@@ -68,6 +69,7 @@ jobs:
           CANDIDATE_DATABASE_URL=postgresql://ucfr_test:ucfr_test@127.0.0.1:5432/ucfr_test
           CANDIDATE_DATABASE_HOST=127.0.0.1
           CANDIDATE_CI_WRITES=true
+          CANDIDATE_DB_BCRYPT=true
           EOF
           npx wrangler dev --config candidate/wrangler.jsonc --local --port 8789 > /tmp/ucfr-candidate.log 2>&1 &
           pid=$!
