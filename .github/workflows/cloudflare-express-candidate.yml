@@ -45,10 +45,13 @@ jobs:
           import { PrismaClient } from '@prisma/client';
           import { PrismaPg } from '@prisma/adapter-pg';
           import bcrypt from 'bcryptjs';
+          import { readFile } from 'node:fs/promises';
           const prisma=new PrismaClient({adapter:new PrismaPg({connectionString:process.env.DATABASE_URL})});
           const passwordHash=await bcrypt.hash('ucfr-ci-test-only',12);
           await prisma.user.create({data:{email:'member@example.invalid',firstName:'Synthetic',lastName:'Member',passwordHash,role:'MEMBER',membershipStatus:'APPROVED'}});
           await prisma.user.create({data:{email:'admin@example.invalid',firstName:'Synthetic',lastName:'Admin',passwordHash,role:'ADMIN',membershipStatus:'APPROVED'}});
+          await prisma.user.create({data:{email:'other@example.invalid',firstName:'Other',lastName:'Member',passwordHash,role:'MEMBER',membershipStatus:'APPROVED'}});
+          await prisma.$executeRawUnsafe(await readFile('experiments/cloudflare-backend/candidate/storage.sql','utf8'));
           await prisma.$disconnect();
           NODE
       - run: npm ci --prefix experiments/cloudflare-backend --no-audit --no-fund
