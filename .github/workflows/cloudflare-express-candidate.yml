@@ -70,10 +70,13 @@ jobs:
           CANDIDATE_DATABASE_HOST=127.0.0.1
           CANDIDATE_CI_WRITES=true
           CANDIDATE_DB_BCRYPT=true
+          CANDIDATE_CI_MAIL=true
           EOF
+          node candidate/mail-fixture.mjs > /tmp/ucfr-mail.log 2>&1 &
+          mailpid=$!
           npx wrangler dev --config candidate/wrangler.jsonc --local --port 8789 > /tmp/ucfr-candidate.log 2>&1 &
           pid=$!
-          trap 'kill "$pid" || true; cat /tmp/ucfr-candidate.log; rm -f candidate/.dev.vars' EXIT
+          trap 'kill "$pid" "$mailpid" || true; cat /tmp/ucfr-candidate.log; rm -f candidate/.dev.vars' EXIT
           for i in $(seq 1 30); do
             if curl -fsS http://localhost:8789/health > /tmp/ucfr-health.json; then break; fi
             sleep 2
