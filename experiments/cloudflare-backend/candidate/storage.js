@@ -1,9 +1,11 @@
 import { randomUUID } from 'node:crypto';
+import { Buffer } from 'node:buffer';
 import { prisma } from './prisma.js';
 export const STORAGE_LIMIT=128*1024*1024;
 export const MAX_FILE=8*1024*1024;
 const MIME=new Set(['application/pdf','image/png','image/jpeg','image/webp','application/vnd.openxmlformats-officedocument.wordprocessingml.document','application/msword','text/plain']);
 const PREFIX='/uploads/objects/';
+const imageExt={'image/png':'.png','image/jpeg':'.jpg','image/webp':'.webp'};
 const roles=new Set(['ADMIN','BOARD','QUESTION_EDITOR']);
 export async function saveStoredFile({decoded,originalName}){
  const buffer=decoded?.buffer,mime=decoded?.mime;
@@ -16,12 +18,13 @@ export async function saveStoredFile({decoded,originalName}){
   if(BigInt(rows[0].total)+BigInt(buffer.length)>BigInt(STORAGE_LIMIT))throw Error('Storage capacity reached');
   await tx.$executeRaw`INSERT INTO "UcfrStoredFile" (id,name,mime,content,"sizeBytes") VALUES (${id}::uuid,${name},${mime},${new Uint8Array(buffer)},${buffer.length})`;
  });
- return {url:PREFIX+id,sizeBytes:buffer.length};
+ return {url:PREFIX+id+(imageExt[mime]||''),sizeBytes:buffer.length};
 }
 export async function serveStoredFile(req,res){
- const id=String(req.params.id||'');
- if(!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(id))return res.status(404).end();
- const url=PREFIX+id;
+ const ref=String(req.params.id||'');
+ if(!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(?:\.(?:png|jpg|webp))?$/.test(ref))return res.status(404).end();
+ const id=ref.split('.')[0];
+ const url=PREFIX+ref;
  const user=req.user;
  const admin=user?.isActive&&roles.has(user.role);
  const active=user?.isActive;
