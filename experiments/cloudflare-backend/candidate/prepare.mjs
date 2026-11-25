@@ -9,6 +9,7 @@ const src=path.join(generated,'server');
 await rm(generated,{recursive:true,force:true});
 await mkdir(generated,{recursive:true});
 await cp(path.join(repo,'server'),src,{recursive:true});
+await cp(path.join(here,'storage.js'),path.join(src,'lib/storage.js'));
 const edit=async(name,fn)=>{
  const p=path.join(src,name),original=await readFile(p,'utf8'),next=fn(original);
  if(next===original)throw Error('Expected adaptation not found: '+name);
@@ -50,9 +51,23 @@ await edit('local-units-preload.js',s=>{
  return s.slice(0,from)+s.slice(to);
 });
 await edit('server.js',s=>{
+ s=replaceExact(s,"import { prisma } from './lib/prisma.js';","import { prisma } from './lib/prisma.js';\nimport { saveStoredFile, serveStoredFile } from './lib/storage.js';");
  s=replaceExact(s,"const __filename = fileURLToPath(import.meta.url);\nconst __dirname = path.dirname(__filename);","const __dirname = '/tmp/ucfr-candidate/server';");
  s=replaceExact(s,"const TOKEN_SECRET = process.env.TOKEN_SECRET || process.env.JWT_SECRET || 'replace-this-secret-before-production';","const TOKEN_SECRET = process.env.TOKEN_SECRET;\nif (!TOKEN_SECRET || TOKEN_SECRET.length < 32) throw Error('Candidate token secret missing');");
- s=replaceExact(s,"app.use('/uploads', express.static(path.join(PUBLIC_DIR, 'uploads')));","app.use('/uploads', (_req,res)=>res.status(503).json({error:'Persistent uploads not connected in candidate'}));");
+ s=replaceExact(s,"app.use('/uploads', express.static(path.join(PUBLIC_DIR, 'uploads')));","// Stored files are served by the authorized route below.");
+ s=replaceExact(s,"const publicQuestion = (q, lang) => (",`app.get('/uploads/objects/:id', async (req,res)=>{
+   const bearer=req.headers.authorization||'';
+   if(bearer){
+     try{
+       if(!bearer.startsWith('Bearer '))return res.status(401).end();
+       const p=jwt.verify(bearer.slice(7),TOKEN_SECRET,{algorithms:['HS256']});
+       req.user=await prisma.user.findUnique({where:{id:p.sub}});
+       if(!req.user?.isActive)return res.status(401).end();
+     }catch{return res.status(401).end();}
+   }
+   return serveStoredFile(req,res);
+ });
+ const publicQuestion = (q, lang) => (`);
  const start=s.indexOf("if (process.env.NODE_ENV === 'production') {\n  // HTML must revalidate");
  const end=s.indexOf("app.use((error, _req, res, _next)",start);
  if(start<0||end<0)throw Error('Static serving markers changed');
@@ -63,14 +78,16 @@ await edit('server.js',s=>{
  const local=s.indexOf("  await fs.mkdir(path.join(localBaseDir");
  const localEnd=s.indexOf('\n}\n',local);
  if(local<0||localEnd<0)throw Error('Local upload markers changed');
- s=s.slice(0,local)+"  throw new Error('Persistent storage is not configured for candidate');"+s.slice(localEnd);
+ s=s.slice(0,local)+"  return saveStoredFile({decoded,originalName});"+s.slice(localEnd);
+ s=replaceExact(s,"storage: cloudUploadsEnabled() ? 'cloudinary' : 'local'","storage: 'postgresql'");
  return s;
 });
 await edit('news-preload.js',s=>{
+ s=replaceExact(s,"import { prisma } from './lib/prisma.js';","import { prisma } from './lib/prisma.js';\nimport { saveStoredFile } from './lib/storage.js';");
  const from=s.indexOf('  await fs.mkdir(NEWS_UPLOAD_DIR');
  const end=s.indexOf('\n}',from);
  if(from<0||end<0)throw Error('News upload markers changed');
- s=s.slice(0,from)+"  throw new Error('Persistent storage is not configured for candidate');"+s.slice(end);
+ s=s.slice(0,from)+"  return (await saveStoredFile({decoded,originalName:storedName})).url;"+s.slice(end);
  // In-flight DB requests must not be shared across Worker request contexts.
  const a=s.indexOf('async function getPublicNews() {'), b=s.indexOf('\n}',a);
  if(a<0||b<0)throw Error('News cache markers changed');
