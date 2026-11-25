@@ -16,6 +16,17 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ucfr_test
+          POSTGRES_PASSWORD: ucfr_test
+          POSTGRES_DB: ucfr_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd 'pg_isready -U ucfr_test -d ucfr_test'
+          --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -24,19 +35,33 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - run: npm run db:generate
         env:
-          DATABASE_URL: postgresql://build:build@127.0.0.1:5432/build
+          DATABASE_URL: postgresql://ucfr_test:ucfr_test@127.0.0.1:5432/ucfr_test
+      - name: Prepare synthetic database only
+        env:
+          DATABASE_URL: postgresql://ucfr_test:ucfr_test@127.0.0.1:5432/ucfr_test
+        run: |
+          npm run db:push
+          node --input-type=module <<'NODE'
+          import { PrismaClient } from '@prisma/client';
+          import { PrismaPg } from '@prisma/adapter-pg';
+          import bcrypt from 'bcryptjs';
+          const prisma=new PrismaClient({adapter:new PrismaPg({connectionString:process.env.DATABASE_URL})});
+          const passwordHash=await bcrypt.hash('ucfr-ci-test-only',12);
+          await prisma.user.create({data:{email:'member@example.invalid',firstName:'Synthetic',lastName:'Member',passwordHash,role:'MEMBER',membershipStatus:'APPROVED'}});
+          await prisma.$disconnect();
+          NODE
       - run: npm ci --prefix experiments/cloudflare-backend --no-audit --no-fund
       - run: node experiments/cloudflare-backend/candidate/prepare.mjs
       - name: Bundle and check size without deploying
         working-directory: experiments/cloudflare-backend
         run: npx wrangler deploy --config candidate/wrangler.jsonc --dry-run --outdir candidate/.wrangler/dry-run
-      - name: Test real local Workers runtime, no external DB
+      - name: Test local Workers runtime with isolated synthetic PostgreSQL
         working-directory: experiments/cloudflare-backend
         run: |
           cat > candidate/.dev.vars <<'EOF'
           CANDIDATE_ACCESS_TOKEN=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
           CANDIDATE_SESSION_SECRET=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
-          CANDIDATE_DATABASE_URL=postgresql://fake:fake@127.0.0.1:5432/fake
+          CANDIDATE_DATABASE_URL=postgresql://ucfr_test:ucfr_test@127.0.0.1:5432/ucfr_test
           CANDIDATE_DATABASE_HOST=127.0.0.1
           EOF
           npx wrangler dev --config candidate/wrangler.jsonc --local --port 8789 > /tmp/ucfr-candidate.log 2>&1 &
@@ -51,3 +76,4 @@ jobs:
           test "$(curl -s -o /dev/null -w '%{http_code}' -X POST -H 'X-UCFR-Candidate-Token: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' http://localhost:8789/api/auth/register)" = 405
           test "$(curl -s -o /tmp/ucfr-auth.json -w '%{http_code}' -H 'X-UCFR-Candidate-Token: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' http://localhost:8789/api/auth/me)" = 401
           node -e "if(require('/tmp/ucfr-auth.json').error!=='Unauthorized')process.exit(1)"
+          node candidate/integration.mjs
