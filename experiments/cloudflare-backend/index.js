@@ -2,7 +2,8 @@ import { neon } from '@neondatabase/serverless';
 import bcrypt from 'bcryptjs';
 import { makeWorker } from './worker.js';
 import { createAuthPilot, TEST_EMAIL } from './auth-pilot.js';
-import candidate from './candidate/index.js';
+import { isPreviewOrigin } from '../../cloudflare/preview.js';
+import { serveSite } from '../../cloudflare/worker.js';
 
 const fixturePasswordHash = '$2y$12$BRrlWOLxqxVr2eCyftc8wOlmC1xrkxwJ7uROkK/JCD6ldWLqBKe62';
 const connect = connectionString => neon(connectionString, {fetchOptions:{signal:AbortSignal.timeout(15000)}});
@@ -32,11 +33,15 @@ const diagnostics = makeWorker({
 });
 export default {
   async fetch(request, env) {
-    const { pathname } = new URL(request.url);
+    const url = new URL(request.url);
+    if (!isPreviewOrigin(url)) return new Response(null, { status: 404 });
+    const { pathname } = url;
     if (pathname === '/health' || pathname === '/diagnostics' || pathname.startsWith('/diagnostics/') || pathname.startsWith('/lab/')) {
-      return (await authPilot(request, env)) ?? diagnostics.fetch(request, env);
+      const labEnabled = ![env.DATABASE_URL, env.TOKEN_SECRET, env.BREVO_API_KEY, env.UCFR_PREVIEW_TOKEN].some(Boolean);
+      if (pathname !== '/health' && !labEnabled) return new Response(null, { status: 404 });
+      const lab = { LAB_TOKEN: env.LAB_TOKEN, LAB_DATABASE_URL: env.LAB_DATABASE_URL, CF_VERSION_METADATA: env.CF_VERSION_METADATA, labEnabled };
+      return (await authPilot(request, lab)) ?? diagnostics.fetch(request, lab);
     }
-    if (/^\/(api|uploads)(\/|$)/.test(pathname)) return candidate.fetch(request, env);
-    return env.ASSETS.fetch(request);
+    return serveSite(request, env, { previewOnly: true });
   },
 };

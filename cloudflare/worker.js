@@ -1,20 +1,10 @@
 import { handleAsNodeRequest } from 'cloudflare:node';
-import { timingSafeEqual } from 'node:crypto';
-import { Buffer } from 'node:buffer';
+import { hasPreviewAccess, isPreviewOrigin, missingPreviewSettings, removePreviewCredentials, servePreviewPage } from './preview.js';
 
 const publicHosts = new Set(['ucfr.cz', 'www.ucfr.cz']);
 const json = (body, status) => Response.json(body, {
   status, headers: { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' },
 });
-
-function allowedHost(request, host, env) {
-  if (publicHosts.has(host)) return true;
-  const secret = env.UCFR_PREVIEW_TOKEN;
-  if (typeof secret !== 'string' || secret.length < 32 || secret === env.TOKEN_SECRET) return false;
-  const supplied = Buffer.from(request.headers.get('X-UCFR-Preview-Token') || '');
-  const expected = Buffer.from(secret);
-  return supplied.length === expected.length && timingSafeEqual(supplied, expected);
-}
 
 function databaseUrl(env, host) {
   const url = new URL(env.DATABASE_URL);
@@ -27,10 +17,10 @@ function databaseUrl(env, host) {
 }
 
 let server;
-function loadServer(env) {
+function loadServer(env, webOrigin) {
   if (!server) {
     if (typeof env.TOKEN_SECRET !== 'string' || env.TOKEN_SECRET.length < 32 || !env.BREVO_API_KEY) throw new Error();
-    process.env.WEB_ORIGIN = 'https://ucfr.cz';
+    process.env.WEB_ORIGIN = webOrigin;
     process.env.TOKEN_SECRET = env.TOKEN_SECRET;
     process.env.UCFR_DB_BCRYPT = 'true';
     process.env.UCFR_SHARED_RESET_LIMIT = 'true';
@@ -45,25 +35,32 @@ function loadServer(env) {
   return server;
 }
 
-export default {
-  async fetch(request, env) {
-    const url = new URL(request.url);
-    if (!allowedHost(request, url.hostname, env)) return json({ error: 'Not found' }, 404);
-    if (url.pathname === '/api/edge-health') return json({ ok: true, service: 'ucfr-cloudflare-edge', backend: 'cloudflare-worker' }, 200);
-    if (!/^\/(api|uploads)(\/|$)/.test(url.pathname)) return env.ASSETS.fetch(request);
-    try {
-      const db = databaseUrl(env, url.hostname);
-      const { withDatabase } = await loadServer(env);
-      const headers = new Headers(request.headers);
-      headers.delete('X-UCFR-Preview-Token');
-      const response = await withDatabase(db, () => handleAsNodeRequest(3001, new Request(request, { headers })));
-      const resultHeaders = new Headers(response.headers);
-      resultHeaders.set('Cache-Control', 'no-store');
-      resultHeaders.set('X-Content-Type-Options', 'nosniff');
-      resultHeaders.set('X-UCFR-Backend', 'cloudflare-worker');
-      return new Response(response.body, { status: response.status, headers: resultHeaders });
-    } catch {
-      return json({ error: 'Backend unavailable' }, 503);
-    }
-  },
-};
+export async function serveSite(request, env, { previewOnly = false } = {}) {
+  const url = new URL(request.url);
+  const preview = isPreviewOrigin(url);
+  if (!preview && (previewOnly || !publicHosts.has(url.hostname))) return json({ error: 'Not found' }, 404);
+  if (previewOnly && !['127.0.0.1', 'localhost'].includes(url.hostname) && url.origin !== env.UCFR_PREVIEW_ORIGIN) return json({ error: 'Not found' }, 404);
+  if (url.pathname === '/preview') return preview ? servePreviewPage(request, env, url) : json({ error: 'Not found' }, 404);
+  if (!/^\/(api|uploads)(\/|$)/.test(url.pathname)) return env.ASSETS.fetch(request);
+  if (preview && !hasPreviewAccess(request, env, url.origin)) {
+    return previewOnly ? json({ error: 'Unauthorized' }, 401) : json({ error: 'Not found' }, 404);
+  }
+  if (preview && missingPreviewSettings(env).length) return json({ error: 'Preview not configured' }, 503);
+  if (url.pathname === '/api/edge-health') return json({ ok: true, service: 'ucfr-cloudflare-edge', backend: 'cloudflare-worker' }, 200);
+  try {
+    const db = databaseUrl(env, url.hostname);
+    const { withDatabase } = await loadServer(env, previewOnly ? url.origin : 'https://ucfr.cz');
+    const headers = new Headers(request.headers);
+    removePreviewCredentials(headers);
+    const response = await withDatabase(db, () => handleAsNodeRequest(3001, new Request(request, { headers })));
+    const resultHeaders = new Headers(response.headers);
+    resultHeaders.set('Cache-Control', 'no-store');
+    resultHeaders.set('X-Content-Type-Options', 'nosniff');
+    resultHeaders.set('X-UCFR-Backend', 'cloudflare-worker');
+    return new Response(response.body, { status: response.status, headers: resultHeaders });
+  } catch {
+    return json({ error: 'Backend unavailable' }, 503);
+  }
+}
+
+export default { fetch: (request, env) => serveSite(request, env) };

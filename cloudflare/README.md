@@ -1,6 +1,8 @@
 # UČFR Worker deployment
 
-`cloudflare/wrangler.jsonc` builds `ucfr-site-next` with the Vite site and the Express API in one Worker. The repository-root configuration still deploys the existing Render proxy. The new configuration has no custom domain or scheduled Render probe.
+The Git-connected `cafr-site` Worker runs the Vite site and the combined Express API on its staging hostname. The standalone `cloudflare/wrangler.jsonc` builds the same application as `ucfr-site-next` for eventual promotion. The repository-root configuration deploys the current Render proxy.
+
+For the existing staging Worker, open [the preview page](https://cafr-site.panblesku.workers.dev/preview). It lists only missing or invalid runtime setting names. In Workers & Pages, select `cafr-site`, open Settings → Variables and Secrets and add each value with type Secret. Use Deploy to publish the bindings. A controlled browser test can open the site at `/preview` after entering the separate preview key. The grant lasts fifteen minutes and member and administrator routes still require the normal member credentials.
 
 Use the repository root as the build directory. The build command is below. The build-time PostgreSQL URL is a local placeholder used by Prisma to generate the client.
 
@@ -15,7 +17,7 @@ Deploy the separate Worker with `experiments/cloudflare-backend/node_modules/.bi
 | `DATABASE_URL` | TLS connection to the intended Neon database. The runtime verifies the server certificate. |
 | `TOKEN_SECRET` | Existing production signing secret, at least 32 characters, to preserve member sessions. Use a separate value with a synthetic staging database. |
 | `BREVO_API_KEY` | Transactional mail for password resets and membership notifications. Configure a verified sender with `BREVO_SENDER_EMAIL` and `BREVO_SENDER_NAME` when overriding the default `info@ucfr.cz`. |
-| `UCFR_PREVIEW_TOKEN` | Independent random secret of at least 32 characters. On the workers.dev hostname, API and upload requests require `X-UCFR-Preview-Token` in addition to the ordinary member session. Public static assets can be served directly. |
+| `UCFR_PREVIEW_TOKEN` | Independent random secret of 32–256 characters. The setup page can generate it locally. API clients may use `X-UCFR-Preview-Token`. Browsers receive a short-lived, host-only HttpOnly cookie after opening the preview. |
 
 Apply `experiments/cloudflare-backend/candidate/storage.sql` and `password.sql`, plus `cloudflare/reset-window.sql`, to the selected Neon database before running API tests. No schema push or seed runs when the Worker starts. Registration authorizes membership through the original routes. Password checks use PostgreSQL bcrypt and a transaction-local key to keep the password out of SQL bind values. Uploaded bytes and their owning record share one transaction. Existing provider-hosted links retain their original URLs.
 

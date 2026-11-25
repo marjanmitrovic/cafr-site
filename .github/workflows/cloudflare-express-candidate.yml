@@ -8,6 +8,7 @@ on:
       - 'server/**'
       - 'prisma/**'
       - 'tests/notification-mail.test.mjs'
+      - 'tests/cloudflare-preview.test.mjs'
       - '.github/workflows/cloudflare-express-candidate.yml'
   pull_request:
     branches: [main]
@@ -17,6 +18,7 @@ on:
       - 'server/**'
       - 'prisma/**'
       - 'tests/notification-mail.test.mjs'
+      - 'tests/cloudflare-preview.test.mjs'
       - '.github/workflows/cloudflare-express-candidate.yml'
   workflow_dispatch:
 permissions:
@@ -66,7 +68,7 @@ jobs:
           await prisma.$disconnect();
           NODE
       - run: npm ci --prefix experiments/cloudflare-backend --no-audit --no-fund
-      - run: node --test tests/notification-mail.test.mjs
+      - run: node --test tests/notification-mail.test.mjs tests/cloudflare-preview.test.mjs
       - run: npm run build
       - run: node experiments/cloudflare-backend/candidate/prepare.mjs
       - name: Bundle and check size without deploying
@@ -117,3 +119,18 @@ jobs:
             sleep 1
           done
           node cloudflare/test-local.mjs
+      - name: Test the Git-connected preview with the same synthetic database
+        working-directory: experiments/cloudflare-backend
+        run: |
+          cat > .dev.vars <<'EOF'
+          TOKEN_SECRET=rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr
+          UCFR_PREVIEW_TOKEN=pppppppppppppppppppppppppppppppppppppppppppppppp
+          DATABASE_URL=postgresql://ucfr_test:ucfr_test@127.0.0.1:5432/ucfr_test
+          BREVO_API_KEY=synthetic-local-no-send
+          EOF
+          npx wrangler dev --local --port 8788 > "$RUNNER_TEMP/ucfr-preview.log" 2>&1 &
+          pid=$!
+          trap 'kill "$pid" 2>/dev/null || true; rm -f .dev.vars; cat "$RUNNER_TEMP/ucfr-preview.log"' EXIT
+          curl -fsS --retry 40 --retry-all-errors --retry-delay 1 http://127.0.0.1:8788/health -o /dev/null
+          node staging-smoke.mjs
+          node ../../cloudflare/test-local.mjs staging

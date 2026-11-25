@@ -7,14 +7,16 @@
   "build": {
     "cwd": "../..",
     "command": "npm ci --include=dev --no-audit --no-fund && DATABASE_URL=postgresql://build:build@127.0.0.1:5432/build npm run db:generate && npm run build && node experiments/cloudflare-backend/candidate/prepare.mjs",
-    "watch_dir": ["../../server", "../../prisma", "../../public", "../../src"]
+    "watch_dir": ["../../cloudflare", "../../server", "../../prisma", "../../public", "../../src"]
   },
   "workers_dev": true,
   "preview_urls": false,
+  "keep_vars": true,
+  "vars": { "UCFR_PREVIEW_ORIGIN": "https://cafr-site.panblesku.workers.dev" },
   "assets": {
     "directory": "../../dist",
     "binding": "ASSETS",
-    "run_worker_first": ["/health", "/diagnostics", "/diagnostics/*", "/lab/*", "/api", "/api/*", "/uploads", "/uploads/*"]
+    "run_worker_first": ["/health", "/preview", "/diagnostics", "/diagnostics/*", "/lab/*", "/api", "/api/*", "/uploads", "/uploads/*"]
   },
   "version_metadata": { "binding": "CF_VERSION_METADATA" },
   "observability": {
