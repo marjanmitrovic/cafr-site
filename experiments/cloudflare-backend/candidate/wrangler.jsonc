@@ -1,0 +1,14 @@
+{
+  "name": "ucfr-api-candidate",
+  "main": "index.js",
+  "compatibility_date": "2026-08-05",
+  "compatibility_flags": [
+    "nodejs_compat",
+    "enable_nodejs_http_server_modules"
+  ],
+  "workers_dev": true,
+  "preview_urls": false,
+  "observability": {
+    "enabled": true
+  }
+}
