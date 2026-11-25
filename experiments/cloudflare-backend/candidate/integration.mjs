@@ -11,8 +11,32 @@ assert.equal(result.status,200);assert.equal(result.body.user.role,'MEMBER');ass
 const token=result.body.token;
 const me=await request('/api/auth/me',{token});assert.equal(me.status,200);assert.equal(me.body.user.id,result.body.user.id);
 assert.equal((await request('/api/admin/users',{token})).status,403);
-const memberCount=await request('/api/public/member-count');assert.equal(memberCount.status,200);assert.equal(memberCount.body.count,1);
+const memberCount=await request('/api/public/member-count');assert.equal(memberCount.status,200);assert.equal(memberCount.body.count,2);
 const news=await request('/api/news');assert.equal(news.status,200);assert.deepEqual(news.body,[]);
 assert.equal((await request('/api/documents',{token})).status,200);
 assert.equal((await request('/api/auth/me',{token:'invalid'})).status,401);
 console.log('Original API: health, bcrypt login, JWT session, role protection, public data and documents passed on isolated PostgreSQL.');
+
+// The following mutations are enabled ONLY against the disposable local CI database.
+const admin=await request('/api/auth/login',{method:'POST',body:{email:'admin@example.invalid',password:'ucfr-ci-test-only'}});
+assert.equal(admin.status,200);assert.equal(admin.body.user.role,'ADMIN');
+const adminToken=admin.body.token,memberId=result.body.user.id;
+assert.equal((await request('/api/admin/users',{token:adminToken})).status,200);
+const profile=await request('/api/auth/me',{method:'PATCH',token,body:{firstName:'Updated',language:'en'}});
+assert.equal(profile.status,200);assert.equal(profile.body.user.firstName,'Updated');
+assert.equal((await request('/api/auth/me',{token})).body.user.firstName,'Updated');
+const statusPath='/api/admin/users/'+memberId+'/status';
+const rolePath='/api/admin/users/'+memberId+'/role';
+assert.equal((await request(statusPath,{method:'PATCH',token,body:{membershipStatus:'SUSPENDED'}})).status,403);
+assert.equal((await request(rolePath,{method:'PATCH',token:adminToken,body:{role:'ADMIN'}})).status,403);
+const changed=await request(statusPath,{method:'PATCH',token:adminToken,body:{membershipStatus:'SUSPENDED'}});
+assert.equal(changed.status,200);assert.equal(changed.body.user.membershipStatus,'SUSPENDED');
+const notices=await request('/api/notifications/me',{token});
+assert.equal(notices.status,200);assert.ok(notices.body.notifications.some(n=>n.type==='MEMBERSHIP_STATUS'));
+assert.equal((await request('/api/public/member-count')).body.count,1);
+assert.equal((await request(statusPath,{method:'PATCH',token:adminToken,body:{membershipStatus:'APPROVED'}})).status,200);
+assert.equal((await request('/api/auth/password',{method:'PATCH',token,body:{currentPassword:'wrong',newPassword:'ucfr-ci-changed-only'}})).status,400);
+assert.equal((await request('/api/auth/password',{method:'PATCH',token,body:{currentPassword:'ucfr-ci-test-only',newPassword:'ucfr-ci-changed-only'}})).status,200);
+assert.equal((await request('/api/auth/login',{method:'POST',body:{email:'member@example.invalid',password:'ucfr-ci-test-only'}})).status,401);
+assert.equal((await request('/api/auth/login',{method:'POST',body:{email:'member@example.invalid',password:'ucfr-ci-changed-only'}})).status,200);
+console.log('Original API: admin permissions, profile update, transactional status/notification and password change passed.');
