@@ -18,8 +18,7 @@ potentially suspending the public service. This change does neither.
 Monitoring is enabled after review of the current shared Render hour balance.
 `UCFR_UPTIME_MONITOR_ENABLED` is `true` and `triggers.crons` is
 `["*/10 * * * *"]` in `wrangler.jsonc`. To disable it, set the flag to `false`
-and remove the cron expression. The handler also rejects stale invocations and
-invocations outside the Prague window. Skipped events make no Render request.
+and remove the cron expression. The handler tolerates up to three minutes of cron dispatch delay, allows up to 90 seconds for one cold-start response, logs stale dispatches, and rejects invocations outside the Prague window. Skipped events make no Render request.
 `/api/edge-health` reports the deployed configuration and planned monthly hours;
 it does not itself probe Render or claim that a scheduled check already ran.
 
@@ -35,3 +34,5 @@ A static probe itself issues no SQL query. Application restarts and real users
 can still query Neon. Reduced Neon compute use must be verified in live metrics.
 Gateway blocks are recorded with CF-Ray/Render identifiers for support; monitoring
 does not remove a managed challenge or guarantee that the sign-in problem is fixed.
+
+Login proxy traces in Cloudflare Observability record the edge and upstream Ray IDs, status, Render request ID, duration and whether the application or a gateway challenge responded. No login payload, credentials or cookies are logged. The trace does not bypass challenges or change application rate limits. The time window and number of scheduled probes remain unchanged.
