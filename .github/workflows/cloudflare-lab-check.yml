@@ -6,6 +6,11 @@ on:
     paths:
       - 'experiments/cloudflare-backend/**'
       - '.github/workflows/cloudflare-lab-check.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'experiments/cloudflare-backend/**'
+      - '.github/workflows/cloudflare-lab-check.yml'
   workflow_dispatch:
 permissions:
   contents: read
