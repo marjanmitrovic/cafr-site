@@ -31,13 +31,17 @@ export function monitoringWindow(date) {
 
 export async function probeRenderUptime({ env = {}, scheduledTime, now = () => new Date(),
   fetchImpl = (...args) => fetch(...args), log = result => console.log('[UCFR UPTIME]', JSON.stringify(result)),
-  timeoutMs = 8000 } = {}) {
+  timeoutMs = 90_000 } = {}) {
   // Allow monitoring to be disabled without changing application requests.
   if (env.UCFR_UPTIME_MONITOR_ENABLED !== 'true') return { skipped: 'disabled' };
   const currentTime = now();
   const scheduled = new Date(scheduledTime);
   const ageMs = currentTime.getTime() - scheduled.getTime();
-  if (!Number.isFinite(ageMs) || ageMs < 0 || ageMs > 60_000) return { skipped: 'stale-schedule' };
+  if (!Number.isFinite(ageMs) || ageMs < 0 || ageMs > 180_000) {
+    const result = { skipped: 'stale-schedule', ageMs: Number.isFinite(ageMs) ? ageMs : null };
+    log(result);
+    return result;
+  }
   const window = monitoringWindow(currentTime);
   if (!window.allowed || !monitoringWindow(scheduled).allowed) return { skipped: 'outside-window' };
 
@@ -55,6 +59,8 @@ export async function probeRenderUptime({ env = {}, scheduledTime, now = () => n
     });
     result = {
       checkedAt: currentTime.toISOString(),
+      scheduledAt: scheduled.toISOString(),
+      delayMs: ageMs,
       status: response.status,
       ok: response.ok,
       challenge: response.headers.get('cf-mitigated') === 'challenge',
@@ -65,7 +71,7 @@ export async function probeRenderUptime({ env = {}, scheduledTime, now = () => n
     };
     await response.body?.cancel().catch(() => {});
   } catch {
-    result = { checkedAt: currentTime.toISOString(), ok: false, error: controller.signal.aborted ? 'timeout' : 'network' };
+    result = { checkedAt: currentTime.toISOString(), scheduledAt: scheduled.toISOString(), delayMs: ageMs, ok: false, error: controller.signal.aborted ? 'timeout' : 'network' };
   } finally {
     clearTimeout(timer);
   }

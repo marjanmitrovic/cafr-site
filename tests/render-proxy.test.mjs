@@ -94,3 +94,26 @@ test('the proxy and browser recover together while the login app executes only o
   assert.equal(applicationCalls, 1);
   assert.deepEqual(waits, [10_000]);
 });
+
+
+test('a blocked login records trace metadata only and is never retried by the proxy', async (t) => {
+  const logs = [];
+  let calls = 0;
+  t.mock.method(console, 'info', (...args) => logs.push(args));
+  t.mock.method(globalThis, 'fetch', async () => {
+    calls += 1;
+    return new Response('Blocked', { status: 429, headers: { 'cf-mitigated': 'challenge', 'cf-ray': 'upstream-ray' } });
+  });
+  const response = await proxyToRender({ request: new Request('https://ucfr.cz/api/auth/login', {
+    method: 'POST', body: '{"password":"never-log-me"}', headers: { 'cf-ray': 'edge-ray', 'Authorization': 'never-log-token' },
+  }), env: {} });
+  assert.equal(calls, 1);
+  assert.equal(response.status, 429);
+  assert.equal(logs.length, 1);
+  const record = JSON.parse(logs[0][1]);
+  assert.equal(record.challenge, true);
+  assert.equal(record.application, false);
+  assert.equal(record.traceId, response.headers.get('X-UCFR-Request-ID'));
+  assert.equal(record.upstreamRay, 'upstream-ray');
+  assert.doesNotMatch(JSON.stringify(logs), /never-log/);
+});
