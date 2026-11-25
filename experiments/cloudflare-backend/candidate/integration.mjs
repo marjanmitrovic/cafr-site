@@ -11,7 +11,7 @@ assert.equal(result.status,200);assert.equal(result.body.user.role,'MEMBER');ass
 const token=result.body.token;
 const me=await request('/api/auth/me',{token});assert.equal(me.status,200);assert.equal(me.body.user.id,result.body.user.id);
 assert.equal((await request('/api/admin/users',{token})).status,403);
-const memberCount=await request('/api/public/member-count');assert.equal(memberCount.status,200);assert.equal(memberCount.body.count,2);
+const memberCount=await request('/api/public/member-count');assert.equal(memberCount.status,200);assert.equal(memberCount.body.count,3);
 const news=await request('/api/news');assert.equal(news.status,200);assert.deepEqual(news.body,[]);
 assert.equal((await request('/api/documents',{token})).status,200);
 assert.equal((await request('/api/auth/me',{token:'invalid'})).status,401);
@@ -33,10 +33,25 @@ const changed=await request(statusPath,{method:'PATCH',token:adminToken,body:{me
 assert.equal(changed.status,200);assert.equal(changed.body.user.membershipStatus,'SUSPENDED');
 const notices=await request('/api/notifications/me',{token});
 assert.equal(notices.status,200);assert.ok(notices.body.notifications.some(n=>n.type==='MEMBERSHIP_STATUS'));
-assert.equal((await request('/api/public/member-count')).body.count,1);
+assert.equal((await request('/api/public/member-count')).body.count,2);
 assert.equal((await request(statusPath,{method:'PATCH',token:adminToken,body:{membershipStatus:'APPROVED'}})).status,200);
 assert.equal((await request('/api/auth/password',{method:'PATCH',token,body:{currentPassword:'wrong',newPassword:'ucfr-ci-changed-only'}})).status,400);
 assert.equal((await request('/api/auth/password',{method:'PATCH',token,body:{currentPassword:'ucfr-ci-test-only',newPassword:'ucfr-ci-changed-only'}})).status,200);
 assert.equal((await request('/api/auth/login',{method:'POST',body:{email:'member@example.invalid',password:'ucfr-ci-test-only'}})).status,401);
 assert.equal((await request('/api/auth/login',{method:'POST',body:{email:'member@example.invalid',password:'ucfr-ci-changed-only'}})).status,200);
 console.log('Original API: admin permissions, profile update, transactional status/notification and password change passed.');
+
+
+// Synthetic storage fixture; no production files are used.
+const fixtureBytes=Buffer.from('Synthetic document fixture');
+const documentFixture={titleCs:'Test',titleEn:'Test',category:'GENERAL',fileName:'test.pdf',fileData:'data:application/pdf;base64,'+fixtureBytes.toString('base64')};
+const upload=await request('/api/admin/documents/upload',{method:'POST',token:adminToken,body:{...documentFixture,visibility:'APPROVED_MEMBERS'}});
+assert.equal(upload.status,201,JSON.stringify(upload.body));
+assert.equal(upload.body.file.storage,'postgresql');
+const download=await fetch(origin+upload.body.file.url,{headers:{'X-UCFR-Candidate-Token':access,Authorization:'Bearer '+token}});
+assert.equal(download.status,200);
+assert.deepEqual(Buffer.from(await download.arrayBuffer()),fixtureBytes);
+assert.match(download.headers.get('cache-control'),/no-store/);
+const guest=await fetch(origin+upload.body.file.url,{headers:{'X-UCFR-Candidate-Token':access}});
+assert.equal(guest.status,404);
+console.log('Stored document upload, private download and exact bytes passed.');
