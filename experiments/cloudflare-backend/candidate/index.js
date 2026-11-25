@@ -13,6 +13,8 @@ function candidateDatabase(env){
    const u=new URL(env.CANDIDATE_DATABASE_URL);
    const host=String(env.CANDIDATE_DATABASE_HOST||'').toLowerCase();
    if(!['postgresql:','postgres:'].includes(u.protocol)||!host||u.hostname!==host||!u.username||!u.password)return null;
+   // Reject the current production Neon endpoint, including its pooler alias.
+   if(/^ep-super-sound-astudi34(?:-pooler)?\./i.test(u.hostname))return null;
    return u.toString();
  } catch {return null}
 }
