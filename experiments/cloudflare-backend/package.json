@@ -6,7 +6,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "test": "node --test worker.test.mjs",
+    "test": "node --test worker.test.mjs auth-pilot.test.mjs",
     "check": "wrangler deploy --dry-run --outdir .wrangler/dry-run",
     "deploy": "wrangler deploy"
   },
