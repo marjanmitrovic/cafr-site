@@ -107,7 +107,10 @@ await edit('public-member-count-preload.js',s=>{
 });
 // Preserve the production mail routes, but ensure provider failures are not logged as success.
 await edit('server.js',s=>replaceExact(s,"    const providerId = result?.data?.id || result?.id || null;","    if (result?.error) throw new Error('Email provider rejected the message');\n    const providerId = result?.data?.id || result?.id || null;"));
-await edit('brevo-password-reset-preload.js',s=>s.replaceAll('v Renderu','v nastavení serveru'));
+await edit('brevo-password-reset-preload.js',s=>{
+ s=s.replaceAll('v Renderu','v nastavení serveru');
+ return replaceExact(s,"const BREVO_ENDPOINT = 'https://api.brevo.com/v3/smtp/email';","const BREVO_ENDPOINT = process.env.UCFR_CI_MAIL === 'true' ? 'http://127.0.0.1:8790/v3/smtp/email' : 'https://api.brevo.com/v3/smtp/email';");
+});
 // Do not import startup-only data migrations/question seeding modules in the edge entry.
 // Keep the same order of all remaining production middleware.
 const preloads=['admin-status-guard-preload','rejected-user-delete-preload','facr-registration-guard-preload','ucfr-details-preload','brevo-password-reset-preload','public-member-count-preload','admin-users-pagination-preload','local-units-preload','news-preload'];
