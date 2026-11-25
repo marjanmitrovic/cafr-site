@@ -24,6 +24,7 @@ async function load(env){
    // Separate secrets and disabled external effects. No production fallback.
    process.env.TOKEN_SECRET=env.CANDIDATE_SESSION_SECRET;
    process.env.EMAIL_DISABLED='true';
+   process.env.UCFR_DB_BCRYPT=env.CANDIDATE_DB_BCRYPT==='true'?'true':'false';
    process.env.FILE_STORAGE='disabled';
    process.env.WEB_ORIGIN='https://candidate.invalid';
    delete process.env.BREVO_API_KEY;
