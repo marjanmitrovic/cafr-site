@@ -1,0 +1,37 @@
+name: Cloudflare backend lab check
+on:
+  push:
+    branches:
+      - experiment/cloudflare-backend
+    paths:
+      - 'experiments/cloudflare-backend/**'
+      - '.github/workflows/cloudflare-lab-check.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'experiments/cloudflare-backend/**'
+      - '.github/workflows/cloudflare-lab-check.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: experiments/cloudflare-backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - run: npm test
+      - run: npm run check
+      - name: Smoke test the Git-connected staging Worker
+        run: |
+          npx wrangler dev --local --port 8788 > "$RUNNER_TEMP/ucfr-staging.log" 2>&1 &
+          pid=$!
+          trap 'kill "$pid" 2>/dev/null || true; cat "$RUNNER_TEMP/ucfr-staging.log"' EXIT
+          curl -fsS --retry 40 --retry-all-errors --retry-delay 1 http://127.0.0.1:8788/health -o /dev/null
+          node staging-smoke.mjs

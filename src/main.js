@@ -1,4 +1,5 @@
 import './style.css';
+import { installStoredFileLinks } from './stored-file-links.js';
 import { apiError } from './api-errors.js';
 import { fetchWithWakeup } from './backend-wakeup.js';
 
@@ -18,6 +19,7 @@ const API_BASE =
 let lang = safeStorageGet(localStorage, 'cafr-lang') === 'en' ? 'en' : 'cs';
 let adminToken =
   safeStorageGet(sessionStorage, 'cafr-admin-token') || '';
+installStoredFileLinks(() => adminToken || safeStorageGet(localStorage, 'cafr-token'));
 
 let activeTest = null;
 let timerId = null;

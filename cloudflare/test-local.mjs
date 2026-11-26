@@ -1,0 +1,40 @@
+import assert from 'node:assert/strict';
+
+const connected = process.argv[2] === 'staging';
+const origin = connected ? 'http://127.0.0.1:8788' : 'http://127.0.0.1:8791';
+const preview = { 'X-UCFR-Preview-Token': 'p'.repeat(48) };
+const get = (path, headers = preview) => fetch(origin + path, { headers });
+const post = (path, body, headers = preview) => fetch(origin + path, {
+  method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+});
+assert.equal((await get('/api/edge-health', {})).status, connected ? 401 : 404);
+assert.equal((await (await get('/api/edge-health')).json()).backend, 'cloudflare-worker');
+assert.match((await get('/')).headers.get('Content-Type'), /text\/html/);
+assert.equal((await get('/api/health')).status, 200);
+assert.equal((await (await get('/api/debug-origin')).json()).WEB_ORIGIN, connected ? origin : 'https://ucfr.cz');
+assert.equal((await get('/api/auth/me')).status, 401);
+assert.equal((await get('/api/test-email')).status, 404);
+assert.equal((await post('/api/auth/register', {})).status, 400);
+assert.equal((await get('/preview', {})).status, 200);
+const grant = await fetch(origin + '/preview', { method: 'POST', headers: { ...preview, Origin: origin } });
+assert.equal(grant.status, 204);
+const cookie = { Cookie: grant.headers.get('Set-Cookie').split(';')[0] };
+const anonymous = await get('/api/auth/me', cookie);
+assert.equal(anonymous.status, 401);
+assert.equal(anonymous.headers.get('X-UCFR-Backend'), 'cloudflare-worker');
+assert.equal((await get('/api/auth/me', { ...cookie, Authorization: 'Bearer ' + cookie.Cookie.split('=')[1] })).status, 401);
+const login = await post('/api/auth/login', { email: 'admin@example.invalid', password: 'ucfr-ci-test-only' }, cookie);
+assert.equal(login.status, 200);
+assert.equal(login.headers.get('X-UCFR-Backend'), 'cloudflare-worker');
+const session = { ...cookie, Authorization: 'Bearer ' + (await login.json()).token };
+assert.equal((await (await get('/api/auth/me', session)).json()).user.role, 'ADMIN');
+const bytes = Buffer.from('Combined Worker storage fixture');
+const upload = await post('/api/admin/documents/upload', { titleCs: 'Test', titleEn: 'Test', visibility: 'ADMIN_ONLY', fileName: 'fixture.pdf', fileData: 'data:application/pdf;base64,' + bytes.toString('base64') }, session);
+assert.equal(upload.status, 201);
+const { file } = await upload.json();
+assert.equal(file.storage, 'postgresql');
+assert.equal((await get(file.url)).status, 404);
+const download = await get(file.url, session);
+assert.equal(download.status, 200);
+assert.deepEqual(Buffer.from(await download.arrayBuffer()), bytes);
+console.log('Combined Worker passed static delivery, database health, login, private upload and exact download locally.');

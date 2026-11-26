@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { prisma } from './lib/prisma.js';
+import { prisma, withFileRecord } from './lib/prisma.js';
 
 const originalListen = express.application.listen;
 const TOKEN_SECRET = process.env.TOKEN_SECRET || process.env.JWT_SECRET || 'replace-this-secret-before-production';
@@ -208,27 +208,29 @@ if (!express.application.__ucfrPublicNewsInstalled) {
             return res.status(400).json({ error: 'Invalid article status' });
           }
 
-          let imageUrl = existing.url;
-          if (req.body?.fileData || req.body?.fileName) {
-            if (!req.body?.fileData || !req.body?.fileName) {
-              return res.status(400).json({ error: 'Both fileName and fileData are required' });
-            }
-            imageUrl = await uploadNewsImage(req.body.fileName, req.body.fileData);
+          if (Boolean(req.body?.fileData) !== Boolean(req.body?.fileName)) {
+            return res.status(400).json({ error: 'Both fileName and fileData are required' });
           }
+          const article = await withFileRecord(async () => {
+            let imageUrl = existing.url;
+            if (req.body?.fileData || req.body?.fileName) {
+              imageUrl = await uploadNewsImage(req.body.fileName, req.body.fileData);
+            }
 
-          const article = await prisma.document.update({
-            where: { id: existing.id },
-            data: {
-              titleCs,
-              titleEn: titleEn || titleCs,
-              descriptionCs: textCs,
-              descriptionEn: textEn || textCs,
-              category: 'NEWS',
-              visibility: 'PUBLIC',
-              status,
-              url: imageUrl,
-              createdById: existing.createdById || user.id,
-            },
+            return prisma.document.update({
+              where: { id: existing.id },
+              data: {
+                titleCs,
+                titleEn: titleEn || titleCs,
+                descriptionCs: textCs,
+                descriptionEn: textEn || textCs,
+                category: 'NEWS',
+                visibility: 'PUBLIC',
+                status,
+                url: imageUrl,
+                createdById: existing.createdById || user.id,
+              },
+            });
           });
 
           invalidatePublicNewsCache();

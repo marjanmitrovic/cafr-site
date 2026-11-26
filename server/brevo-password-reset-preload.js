@@ -44,6 +44,28 @@ function isRateLimited(req, email) {
   return current.count > RATE_LIMIT_MAX;
 }
 
+// Record only attempts against an active account. A Worker isolate can be
+// recycled or another isolate can serve the next request within this window.
+async function sharedResetLimit(req, userId) {
+  if (process.env.UCFR_SHARED_RESET_LIMIT !== 'true') return false;
+  const id = crypto.createHmac('sha256', process.env.TOKEN_SECRET)
+    .update(JSON.stringify([userId, requestIp(req)])).digest('hex');
+  const windowEnd = new Date(Date.now() + RATE_LIMIT_WINDOW_MS);
+  const [counter] = await prisma.$queryRaw`
+    WITH expired AS (
+      DELETE FROM "UcfrResetWindow" WHERE id IN (
+        SELECT id FROM "UcfrResetWindow" WHERE expires <= now() AND id <> ${id}
+        ORDER BY expires LIMIT 32 FOR UPDATE SKIP LOCKED
+      )
+    )
+    INSERT INTO "UcfrResetWindow" AS w (id, hits, expires) VALUES (${id}, 1, ${windowEnd})
+    ON CONFLICT (id) DO UPDATE SET
+      hits = CASE WHEN w.expires <= now() THEN 1 ELSE least(w.hits + 1, ${RATE_LIMIT_MAX + 1}::int) END,
+      expires = CASE WHEN w.expires <= now() THEN EXCLUDED.expires ELSE w.expires END
+    RETURNING hits`;
+  return counter.hits > RATE_LIMIT_MAX;
+}
+
 async function logResetEmail({ userId, to, status, providerId = null, error = null }) {
   try {
     await prisma.emailLog.create({
@@ -174,6 +196,10 @@ async function brevoPasswordResetHandler(req, res) {
     user = await prisma.user.findUnique({ where: { email } });
     if (!user || !user.isActive) {
       return res.json({ message: genericMessage });
+    }
+
+    if (await sharedResetLimit(req, user.id)) {
+      return res.status(429).json({ error: 'Příliš mnoho žádostí. Zkuste to znovu za 15 minut.' });
     }
 
     await prisma.passwordResetToken.deleteMany({ where: { userId: user.id } });
