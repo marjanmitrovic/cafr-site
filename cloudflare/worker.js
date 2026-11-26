@@ -2,6 +2,7 @@ import { handleAsNodeRequest } from 'cloudflare:node';
 import { hasPreviewAccess, isPreviewOrigin, missingPreviewSettings, removePreviewCredentials, servePreviewPage } from './preview.js';
 
 const publicHosts = new Set(['ucfr.cz', 'www.ucfr.cz']);
+export const isProductionOrigin = url => url.protocol === 'https:' && publicHosts.has(url.hostname) && !url.port;
 const json = (body, status) => Response.json(body, {
   status, headers: { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' },
 });
@@ -38,7 +39,7 @@ function loadServer(env, webOrigin) {
 export async function serveSite(request, env, { previewOnly = false } = {}) {
   const url = new URL(request.url);
   const preview = isPreviewOrigin(url);
-  if (!preview && (previewOnly || !publicHosts.has(url.hostname))) return json({ error: 'Not found' }, 404);
+  if (!preview && (previewOnly || !isProductionOrigin(url))) return json({ error: 'Not found' }, 404);
   if (previewOnly && !['127.0.0.1', 'localhost'].includes(url.hostname) && url.origin !== env.UCFR_PREVIEW_ORIGIN) return json({ error: 'Not found' }, 404);
   if (url.pathname === '/preview') return preview ? servePreviewPage(request, env, url) : json({ error: 'Not found' }, 404);
   if (!/^\/(api|uploads)(\/|$)/.test(url.pathname)) return env.ASSETS.fetch(request);
@@ -49,7 +50,7 @@ export async function serveSite(request, env, { previewOnly = false } = {}) {
   if (url.pathname === '/api/edge-health') return json({ ok: true, service: 'ucfr-cloudflare-edge', backend: 'cloudflare-worker' }, 200);
   try {
     const db = databaseUrl(env, url.hostname);
-    const { withDatabase } = await loadServer(env, previewOnly ? url.origin : 'https://ucfr.cz');
+    const { withDatabase } = await loadServer(env, previewOnly && ['localhost', '127.0.0.1'].includes(url.hostname) ? url.origin : 'https://ucfr.cz');
     const headers = new Headers(request.headers);
     removePreviewCredentials(headers);
     const response = await withDatabase(db, () => handleAsNodeRequest(3001, new Request(request, { headers })));
