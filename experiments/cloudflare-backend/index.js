@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import { makeWorker } from './worker.js';
 import { createAuthPilot, TEST_EMAIL } from './auth-pilot.js';
 import { isPreviewOrigin } from '../../cloudflare/preview.js';
-import { serveSite } from '../../cloudflare/worker.js';
+import { serveSite, isProductionOrigin } from '../../cloudflare/worker.js';
 
 const fixturePasswordHash = '$2y$12$BRrlWOLxqxVr2eCyftc8wOlmC1xrkxwJ7uROkK/JCD6ldWLqBKe62';
 const connect = connectionString => neon(connectionString, {fetchOptions:{signal:AbortSignal.timeout(15000)}});
@@ -34,6 +34,7 @@ const diagnostics = makeWorker({
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (isProductionOrigin(url)) return serveSite(request, env);
     if (!isPreviewOrigin(url)) return new Response(null, { status: 404 });
     const { pathname } = url;
     if (pathname === '/health' || pathname === '/diagnostics' || pathname.startsWith('/diagnostics/') || pathname.startsWith('/lab/')) {
